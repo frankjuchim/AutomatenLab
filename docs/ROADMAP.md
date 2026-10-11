@@ -5,18 +5,20 @@ Jeder Punkt eignet sich als GitHub-Issue. Reihenfolge = Vorschlag. ✅ = erledig
 ## Phase 0 – Repository (Version 1.0)
 - ✅ Web-App, Material-Pipeline, Videoreihe, Dokumentation in einem Repository
 - ✅ Material-Build ohne absolute Pfade (`materials/build_all.sh`), Ergebnis identisch zur ausgelieferten Version 1.0
-- [ ] Repository anlegen, ersten Stand pushen, Release **v1.0** mit `Automaten_LK.zip` (Materialpaket) erstellen
-- [ ] GitHub-Secrets für Deployment setzen (siehe `docs/DEPLOYMENT.md`)
+- ✅ Repository anlegen, ersten Stand pushen
+- [ ] Release **v1.0** mit `Automaten_LK.zip` (Materialpaket) erstellen
+- ✅ Deployment per CapRover-Webhook aus dem Wurzelordner (`captain-definition`, `Dockerfile`), GitHub-Prüfung mit allen Deep-Links
+- [ ] `.github`-Dateien aus dem ersten Paket fehlen: Release-Workflow für das Materialpaket, Issue-Vorlagen (PR-Vorlage und Prüfung neu angelegt)
 - [ ] Lizenz festlegen
 
 ## Phase 1 – Analyse und Angleichung an AlgoQuest
-- [ ] AlgoQuest analysieren: Stack, Login, Rollen, Datenmodell, UI-Muster, Deployment, Tests → `docs/ALGOQUEST_VERGLEICH.md`
+- ✅ AlgoQuest analysieren: Stack, Login, Rollen, Datenmodell, UI-Muster, Deployment, Tests → `docs/ALGOQUEST_VERGLEICH.md`
 - [ ] Entscheidungen dokumentieren (`docs/ENTSCHEIDUNGEN.md`): übernehmen / anpassen / bewusst anders
 - [ ] Offene Fragen aus `docs/LOGIN_KONZEPT.md`, Abschnitt 9, mit Frank klären
 
 ## Phase 2 – Server-Grundgerüst
 - [ ] `server/` mit Framework, SQLite, Migrationen, Konfiguration (`.env.example`), Logging
-- [ ] Ein Container für App + API (Dockerfile im Wurzelordner, `captain-definition` anpassen, persistentes Volume `/data`)
+- [ ] Ein Container für App + API (Dockerfile im Wurzelordner zum Node-Container umbauen, persistentes Verzeichnis `/app/data`)
 - [ ] Health-Endpoint, Sicherheits-Header/CSP wie bisher
 - [ ] CI: Server-Tests
 

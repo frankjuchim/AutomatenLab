@@ -7,7 +7,8 @@
 | `LOGIN_KONZEPT.md` | Rollen, Datensparsamkeit, Datenmodell, API, Oberfläche, Abnahmekriterien |
 | `ROADMAP.md` | Phasen 0–6 als Checklisten (→ GitHub-Issues) |
 | `ENTSCHEIDUNGEN.md` | Architekturentscheidungen (fortschreiben) |
-| `DEPLOYMENT.md` | CapRover, GitHub Actions, Secrets, Backup |
+| `DEPLOYMENT.md` | CapRover (Webhook, `main` = live), GitHub-Prüfung, Backup |
+| `ALGOQUEST_VERGLEICH.md` | Analyse AlgoQuest, Empfehlungen für Login/Server, offene Fragen |
 | `DATENSCHUTZ.md` | Arbeitsgrundlage und Text-Entwurf für die Datenschutzseite |
 | `MATERIALIEN.md` | Wie die Word-/PowerPoint-Dateien erzeugt und geprüft werden |
 | `einheit/PLAN.md` | Didaktische Planung, **verbindliche Notation**, KC-Bezug, App-Module |
