@@ -1,5 +1,13 @@
 # AlgoQuest ↔ AutomatenLab – Vergleich und Empfehlungen für den Login
 
+> **Teilweise überholt (2026-10-11):** Login und Konten kommen aus dem Portal **InfoLabs** (Vertrag
+> https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1). Alles zu eigenen Konten, Passwörtern,
+> SuS-Zugängen, Einladungen, Rate-Limits beim Login und gemeinsamem Login (§2.1–2.3, §3, F2–F6) ist damit erledigt;
+> maßgeblich ist jetzt `docs/VERBUND.md`. Weiterhin gültig: Server-Technik nach Algo Quest, Fortschritt als JSON-Stand
+> mit abgeleiteten Ereignissen (§2.4/2.5), Oberfläche und Dashboard (§2.7), Tests/CI (§2.8). Entschieden: F1 wie
+> empfohlen. Revidiert: F9 – der Server wird **CommonJS in `src/`** (wie Algo Quest und Portal), weil `src/jwt.js` und
+> `scripts/vertrag_pruefen.js` unverändert kopiert werden müssen; Node 22 bleibt.
+
 Stand: 2026-10-11 · Grundlage: `frankjuchim/AlgoQuest` (Commit `2d45fc2`, v2.3.0, README Teil A–G, `src/`, `test/`,
 `Dockerfile`) und `docs/LOGIN_KONZEPT.md` (Entwurf v1).
 Legende: **übernehmen** = wie AlgoQuest · **anpassen** = AlgoQuest-Lösung mit Änderung · **anders** = bewusst
@@ -182,22 +190,9 @@ GET  /api/admin/lehrkraefte · POST …/:id/status · …/:id/einmalpasswort · 
 | F8 | Standard-Ablaufdatum eines Kurses? | **31. Juli des laufenden Schuljahres** (max. 12 Monate, verlängerbar), Hinweis an die Lehrkraft 14 Tage vorher im Dashboard. |
 | F9 | Node 22 LTS und ES-Module im Server (Abweichung von AlgoQuest)? | **Ja** (siehe 2.3); AlgoQuest bei Gelegenheit ebenfalls auf Node 22 heben. |
 
-## 5. Umsetzungsplan Phase 2–5 (je Meilenstein ein Branch + Pull Request)
+## 5. Umsetzungsplan
 
-Jeder PR: `npm test` (App + Server) grün, `qa/qa-routes.mjs` gegen den gebauten Container grün, Doku nachgezogen.
-Merge nach `main` (= live) nur nach Franks Freigabe und außerhalb der Unterrichtszeit.
-
-| PR | Meilenstein | Inhalt | fertig, wenn |
-|---|---|---|---|
-| 1 | **Server-Grundgerüst** (Phase 2) | `server/` (ESM, Express 5), Auslieferung von `app/` mit den Cache-/Sicherheits-Headern aus `nginx.conf` + gzip, `/healthz` (Version), SQLite in `/app/data` mit Migrations-Läufer, Konfiguration + `.env.example`, Logging; Dockerfile → Node 22 nach AlgoQuest-Muster; Server-Tests in der CI. | Container startet mit leerem Volume, legt Schema an; Neustart behält Daten; alle Deep-Links unverändert; Header-Test (CSP, noindex). |
-| 2 | **Konten** (Phase 3a) | `security.js`, `validate.js`, `konten.js` aus AlgoQuest; Admin aus ENV; Lehrkraft-Anfrage → Freigabe → Login/Logout/Passwort/Einmal-Passwort; Rate-Limits, CSRF; Rechte-Matrix-Test. Oberfläche: Kopfzeile „Anmelden“, `#/login` (Reiter Lehrkraft), `#/admin` (Lehrkräfte). | Abnahmekriterien 5 (Teil Lehrkraft/Admin) und 6. |
-| 3 | **Kurse und SuS-Zugänge** (Phase 3b) | Kurse (Ablaufdatum), Zugänge erzeugen (Pseudonym + Code, einmal sichtbar), Zugangskarten A4 mit QR, neuer Code, Notiz, Löschen; SuS-Login (Name + Code), optionaler Selbst-Beitritt, SuS löschen eigenes Konto. Oberfläche `#/lehrkraft` (Kurse, Zugänge), `#/login` (Reiter Schüler:in), `#/konto`. | 25 Zugänge erzeugen + Karten drucken; SuS sehen keine fremden Daten (Kriterium 5 vollständig). |
-| 4 | **Fortschritt synchronisieren** (Phase 4) | `app/js/core/merge.js` (DOM-frei, getestet, auch im Server), Speicher-Adapter in `progress.js` (API unverändert), `GET/PUT /api/fortschritt`, Beacon, Version/409, Gast-Übernahme mit Rückfrage, Offline-Kennzeichen, Abmelden löscht Kontokopie; Ereignisse serverseitig aus der Differenz. `qa/qa-login.mjs` mit zwei Browser-Kontexten. | Kriterien 2 und 3. |
-| 5 | **Lernstand-Dashboard** (Phase 5a) | `app/js/data/zuordnung.js` (Aufgabe → Level, Test: vollständig), Matrix Level 1–16 × Pseudonym wie AlgoQuest, Details je Modul, letzte Aktivität, CSV. | Kriterium 4 (Arena-Runde erscheint im Dashboard). |
-| 6 | **Aufträge und Freischaltung** (Phase 5b) | Aufträge (Routen + Fälligkeit) anlegen, Anzeige auf der Startseite angemeldeter SuS; Freischaltung Pflicht/Vertiefung/Bonus je Kurs (Startseite/Level-Karte; Deep-Links bleiben erreichbar). | Auftrag erscheint bei den SuS; Freischaltung wirkt nur auf angemeldete SuS des Kurses. |
-| 7 | **Löschkonzept, Datenschutz, Abnahme** (Phase 5c) | täglicher Lösch-Job (Hinweis 14 Tage vorher), Test mit gestellter Uhr; `#/datenschutz`, `#/impressum`; Backup/Restore (JSON) im Admin-Bereich; `docs/DATENSCHUTZ.md`, `docs/DEPLOYMENT.md`, README; Abnahme aller Kriterien aus `LOGIN_KONZEPT.md` §8. | Kriterien 7–9; Checkliste §8 abgehakt. |
-
-Der Gastmodus (F1) betrifft PR 2 (Kopfzeile/Startseite) und PR 6 (Startseite). Bis zur Entscheidung bleibt alles wie heute.
+Überholt – der aktuelle Plan steht in `docs/ROADMAP.md` (Phasen 2–5 im Verbund).
 
 ## 6. Was AlgoQuest von AutomatenLab übernehmen könnte
 

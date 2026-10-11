@@ -33,15 +33,18 @@ Wurzelordner – deshalb schlug der Build fehl und die Seite zeigte nur die CapR
 Deep-Links aus `app/README.md` (`qa/qa-routes.mjs`). Die Prüfung blockiert den Webhook-Build nicht – sie ist die
 Freigabe-Voraussetzung für den Merge nach `main`.
 
-## Mit Login (Zielbild, ab Phase 2)
+## Mit Server und Portal-Anmeldung (ab Phase 2)
 
-* Ein Container: Node-Server (API + statische App aus `app/`), wie AlgoQuest. Persistentes Verzeichnis **`/app/data`**
-  (bereits eingerichtet), SQLite-Datei `automatenlab.db`.
-* Umgebungsvariablen (App Configs → Environmental Variables): siehe `.env.example` (`SESSION_SECRET` mit
-  `openssl rand -hex 32` erzeugen, `ADMIN_EMAIL`, `ADMIN_PASSWORD`).
-* Backup: SQLite-Datei aus `/app/data` regelmäßig sichern (JSON-Backup im Admin-Bereich wie bei AlgoQuest, zusätzlich
-  CapRover-Backup).
-* Instanzanzahl 1 (SQLite).
+* Ein Container: Node-Server (API + statische App aus `app/`), wie Algo Quest. Persistentes Verzeichnis **`/app/data`**
+  (bereits eingerichtet), SQLite-Datei `automatenlab.db`. Instanzanzahl 1 (SQLite).
+* Umgebungsvariablen (CapRover → App Configs → Environmental Variables) nach Vertrag §8 – Werte und Erklärung in
+  `docs/VERBUND.md` §4, Vorlage `.env.example`:
+  `PLATTFORM_ID`, `PLATTFORM_URL`, `PORTAL_URL`, `PORTAL_PUBLIC_KEY`, `AUTH_MODUS=portal`, `SESSION_SECRET`.
+  Kein `ADMIN_EMAIL`/`ADMIN_PASSWORD` (der Superadmin kommt vom Portal).
+* Nach dem Deploy mit SSO (Phase 3): Plattform im Portal eintragen (`docs/VERBUND.md` §5).
+* Schlüsselwechsel im Portal: neuen öffentlichen Schlüssel zusätzlich in `PORTAL_PUBLIC_KEY` eintragen (mehrere
+  PEM-Blöcke erlaubt), erst danach tauscht das Portal den privaten Schlüssel.
+* Backup: SQLite-Datei aus `/app/data` regelmäßig sichern.
 
 ## Materialpaket als Release
 

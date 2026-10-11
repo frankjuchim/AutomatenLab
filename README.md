@@ -37,12 +37,12 @@ Erzeugte Dateien (`materials/build`, `materials/out`, `materials/dist`) sind nic
 
 ## Weiterentwicklung
 
-Die Entwicklung läuft mit Claude Code. Einstieg: `CLAUDE.md` (Regeln für den Agenten) und `docs/UEBERGABE_CLAUDE_CODE.md` (Start-Prompt). Nächster großer Schritt: **Login mit Kursverwaltung und Fortschritts-Synchronisation** – siehe `docs/LOGIN_KONZEPT.md` und `docs/ROADMAP.md`.
+Die Entwicklung läuft mit Claude Code. Einstieg: `CLAUDE.md` (Regeln für den Agenten). Nächster großer Schritt: **Anschluss an den Plattform-Verbund InfoLabs** – Anmeldung über das Portal https://labs.frankjuchim.de, Fortschritts-Synchronisation und Lehrkraft-Dashboard. Verbindlich ist der Vertrag des Plattform-Verbunds: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.1). Umsetzung: `docs/VERBUND.md`, Plan: `docs/ROADMAP.md`.
 
 Wichtig für alle Änderungen:
 
 * Die App-Routen (`#/arena?…`) stehen als QR-Codes auf gedruckten Materialien – **sie dürfen nicht brechen**.
-* Die App bleibt **ohne Anmeldung nutzbar** (Gastmodus); der Login ist ein Zusatz.
+* Die App bleibt **ohne Anmeldung nutzbar** (Gastmodus); die Anmeldung läuft nur über das Portal InfoLabs und ist ein Zusatz.
 * Fachliche Notation strikt nach `docs/einheit/PLAN.md`, Abschnitt 1.
 
 ## Lizenz

@@ -1,5 +1,11 @@
 # Login, Kurse und Fortschritt – Konzept (Stand: Entwurf v1)
 
+> **Abgelöst (2026-10-11):** AutomatenLab baut kein eigenes Login. Konten, Kurse, Kurscodes, persönliche Codes und
+> Ablaufdaten verwaltet das Portal **InfoLabs**; verbindlich ist der Vertrag
+> https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.1), Umsetzung in `docs/VERBUND.md`.
+> Aus diesem Konzept gelten weiter: Synchronisation (Abschnitt 5), Lernstand-Matrix, Aufträge, Freischaltung (Abschnitt 7)
+> und die Abnahmekriterien 1–5, 8, 9 sinngemäß. Der Rest bleibt als Vorgeschichte stehen.
+
 > Ziel: Lehrkräfte legen Kurse an und sehen den Lernstand ihrer Schülerinnen und Schüler; Schülerinnen und Schüler behalten ihren Fortschritt geräteübergreifend. Die App bleibt **ohne Anmeldung voll nutzbar**.
 >
 > **Ausrichtung an AlgoQuest:** Das Repository `frankjuchim/AlgoQuest` hat bereits einen Login. Vor der Umsetzung wird dessen Lösung (Stack, Rollen, Datenmodell, Login-Oberfläche, Deployment) analysiert. Wo sie gleichwertig ist, wird sie **übernommen**, damit beide Apps gleich funktionieren und gleich gewartet werden. Die Vorgaben unten gelten, soweit AlgoQuest nichts Besseres vorgibt; Abweichungen werden in `docs/ENTSCHEIDUNGEN.md` begründet.
