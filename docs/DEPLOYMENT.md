@@ -1,29 +1,50 @@
 # Deployment
 
+> ⚠️ **`main` ist per Webhook direkt mit CapRover verbunden: Jeder Push auf `main` startet sofort den Live-Build.**
+> Immer auf Feature-Branches arbeiten; nach `main` nur über einen geprüften Pull Request (Prüfung grün) und nicht
+> während des Unterrichts. Danach die Live-Seite prüfen.
+
 ## Heute (Version 1.0): statische App auf CapRover
 
-* CapRover-App `automatenlab`, Domain <https://automatenlab.frankjuchim.de>, Container-Port 80.
-* Image: `app/Dockerfile` (nginx, nur statische Dateien), `app/captain-definition`.
-* Manuell deployen: `cd app && npx caprover deploy` (CapRover-CLI) oder Tarball (Anleitung in `app/README.md`).
+* CapRover-App `automatenlab`, Domain <https://automatenlab.frankjuchim.de>, Container-Port **80**.
+* Build aus dem **Wurzelordner** des Repositorys: `captain-definition` → `./Dockerfile` (nginx, liefert nur `app/` ohne
+  Tests aus, Konfiguration `app/nginx.conf`). Der Build-Kontext wird über `.dockerignore` auf `app/` beschränkt
+  (Materialien, Doku, QA kommen nicht ins Image).
+* CapRover: App → **Deployment** → „Method 3: Deploy from Github/Bitbucket/Gitlab“, Branch `main`; der Webhook ist bei
+  GitHub hinterlegt. Ein Push auf `main` baut und startet die neue Version (ca. 1 min).
+* Persistentes Verzeichnis ist in CapRover bereits angelegt: **`/app/data`** (wird erst ab Phase 2 genutzt).
 
-## Automatisch aus GitHub (Workflow `.github/workflows/deploy.yml`)
+Lokal wie auf CapRover bauen und prüfen:
 
-1. In CapRover: App → **Deployment** → **App Token** erzeugen (Method 1 / „Enable App Token“).
-2. Im GitHub-Repository: **Settings → Secrets and variables → Actions**
-   * `CAPROVER_SERVER` = `https://captain.<deine-domain>` (Adresse des CapRover-Dashboards)
-   * `CAPROVER_APP` = `automatenlab`
-   * `CAPROVER_APP_TOKEN` = der App-Token aus Schritt 1
-3. Deploy läuft manuell (**Actions → Deploy → Run workflow**) oder bei jedem Release-Tag `v*`.
+```bash
+docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
+node qa/qa-routes.mjs http://localhost:8080/      # alle Deep-Links
+```
 
-Solange die App statisch ist, wird der Ordner `app/` deployt. Sobald es einen Server gibt (Login), wird der Workflow auf den Wurzelordner umgestellt (eigenes `captain-definition` im Wurzelordner) – das ist Teil von Phase 2 der Roadmap.
+Notfall-Deploy ohne GitHub: CapRover-CLI im Wurzelordner `npx caprover deploy` oder Tarball aus dem Wurzelordner
+(`git archive --format=tar -o AutomatenLab_CapRover.tar HEAD`) unter „Method 2: Tarball“ hochladen.
 
-## Mit Login (Zielbild)
+Bis 2026-10 lagen `captain-definition` und `Dockerfile` in `app/`. CapRover sucht beim Webhook-Build aber im
+Wurzelordner – deshalb schlug der Build fehl und die Seite zeigte nur die CapRover-Platzhalterseite.
 
-* Ein Container: Node-Server (API + statische App). Persistentes Verzeichnis in CapRover: **App Configs → Persistent Directories**: `/data` → Label `automatenlab-data`. **Vor dem ersten Deploy mit Server einrichten**, sonst gehen Daten bei jedem Deploy verloren.
-* Umgebungsvariablen (App Configs → Environmental Variables): siehe `server/.env.example` (`SESSION_SECRET` mit `openssl rand -hex 32` erzeugen).
-* Backup: SQLite-Datei aus `/data` regelmäßig sichern (z. B. CapRover-Backup oder nächtlicher `sqlite3 .backup` per Cron im Container).
+## GitHub-Prüfung
+
+`.github/workflows/pruefung.yml` läuft bei jedem Push und Pull Request: App-Tests sowie Bau des Images und Aufruf aller
+Deep-Links aus `app/README.md` (`qa/qa-routes.mjs`). Die Prüfung blockiert den Webhook-Build nicht – sie ist die
+Freigabe-Voraussetzung für den Merge nach `main`.
+
+## Mit Login (Zielbild, ab Phase 2)
+
+* Ein Container: Node-Server (API + statische App aus `app/`), wie AlgoQuest. Persistentes Verzeichnis **`/app/data`**
+  (bereits eingerichtet), SQLite-Datei `automatenlab.db`.
+* Umgebungsvariablen (App Configs → Environmental Variables): siehe `.env.example` (`SESSION_SECRET` mit
+  `openssl rand -hex 32` erzeugen, `ADMIN_EMAIL`, `ADMIN_PASSWORD`).
+* Backup: SQLite-Datei aus `/app/data` regelmäßig sichern (JSON-Backup im Admin-Bereich wie bei AlgoQuest, zusätzlich
+  CapRover-Backup).
 * Instanzanzahl 1 (SQLite).
 
 ## Materialpaket als Release
 
-`.github/workflows/release-materials.yml` baut bei einem Tag `v*` alle Word-/PowerPoint-Dateien und hängt `Automaten_LK.zip` an das GitHub-Release. Erstes Release (v1.0): das vorhandene `Automaten_LK.zip` manuell hochladen.
+Das Materialpaket (`Automaten_LK.zip`) wird lokal mit `npm run materials:build` und `npm run materials:package` erzeugt
+und an ein GitHub-Release gehängt. Ein Release-Workflow (`.github/workflows/release-materials.yml`) war geplant, ist
+aber beim ersten Upload nicht im Repository angekommen (siehe `docs/ROADMAP.md`, Phase 6).

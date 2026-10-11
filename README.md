@@ -26,11 +26,12 @@ Vorschaubilder (PDF/PNG) brauchen zusätzlich LibreOffice (`brew install --cask 
 
 | Ordner | Inhalt |
 |---|---|
-| `app/` | Web-App (statisch, Vanilla-JS-ES-Module, kein Build-Schritt), Dockerfile + `captain-definition` für CapRover, Node-Tests. Details: `app/README.md`, `app/ARCHITECTURE.md` |
+| `app/` | Web-App (statisch, Vanilla-JS-ES-Module, kein Build-Schritt), nginx-Konfiguration, Node-Tests. Details: `app/README.md`, `app/ARCHITECTURE.md` |
 | `materials/` | Material-Pipeline: `lib/` (automata.py, docstyle.js, deckstyle.js, videostyle.js), `content/dsXX/` je Doppelstunde, `content/video/`, `build_all.sh` |
 | `qa/` | Playwright-Prüfskripte (alle Deep-Links, Konsolenfehler, Screenshots) |
 | `docs/` | Planung der Einheit, Styleguide, Architektur, **Login-Konzept**, Roadmap, Deployment, Übergabe an Claude Code |
-| `.github/` | CI, Release-Workflow für das Materialpaket, Issue-/PR-Vorlagen |
+| `.github/` | GitHub-Prüfung (Tests + alle Deep-Links im Container), PR-Vorlage |
+| `Dockerfile`, `captain-definition` | Deployment auf CapRover (Webhook: jeder Push auf `main` geht live, siehe `docs/DEPLOYMENT.md`) |
 
 Erzeugte Dateien (`materials/build`, `materials/out`, `materials/dist`) sind nicht versioniert. Das fertige Lehrkräfte-Paket hängt als ZIP an den **GitHub-Releases**.
 

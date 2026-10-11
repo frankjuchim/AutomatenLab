@@ -5,34 +5,16 @@ Statische Seite, kein Login, keine Cookies, keine externen Server. Fortschritt b
 
 ## Deployment auf CapRover
 
-1. In CapRover eine neue App anlegen, z. B. `automatenlab` (HTTPS aktivieren).
-2. Diesen Ordner (`app/`) deployen – er enthält `captain-definition` (schemaVersion 2 → `./Dockerfile`):
-   * als fertiges Paket `AutomatenLab_CapRover.tar` (siehe „Deploy from tarball“ unten) oder
-   * per CLI: `cd app && caprover deploy`.
-3. Container-Port ist 80 (Standard). Fertig – die App ist unter `https://automatenlab.<deine-domain>/` erreichbar.
+Gebaut wird aus dem **Wurzelordner des Repositorys** (`captain-definition` → `Dockerfile`, beide im Wurzelordner): Jeder Push auf `main` startet per Webhook den Live-Build. Details, Notfall-Deploy und Prüfung: `docs/DEPLOYMENT.md`.
 
-### Deploy from tarball (Schritt für Schritt)
-
-1. Im CapRover-Dashboard links **Apps** öffnen, unter „Create A New App“ einen Namen eintragen (z. B. `automatenlab`), **Create New App**.
-2. Die neue App anklicken → Reiter **HTTP Settings**: **Enable HTTPS** (Domain `automatenlab.<deine-domain>` bzw. eigene Domain verbinden). „Container HTTP Port“ bleibt **80**.
-3. Reiter **Deployment** → Abschnitt **„Method 2: Tarball“** → `AutomatenLab_CapRover.tar` auswählen → **Upload & Deploy**.
-   Das Archiv enthält `captain-definition`, `Dockerfile` und `nginx.conf` direkt auf oberster Ebene (kein Unterordner!) sowie die App-Dateien.
-4. Den Build-Log abwarten („Build has finished successfully“, ca. 1 Minute) und die App im Browser öffnen. Optional unter **App Configs** „Force HTTPS“ einschalten.
-5. Update später: neues Tarball genauso hochladen – `index.html` wird nicht gecacht, die SuS sehen die neue Version beim nächsten Aufruf.
-
-Tarball selbst erzeugen (aus dem Ordner `app/`, ohne Tests und `node_modules`):
-```bash
-tar -cf AutomatenLab_CapRover.tar captain-definition Dockerfile nginx.conf .dockerignore index.html css js assets vendor README.md
-```
-
-Das Image basiert auf `nginx:alpine` und liefert nur statische Dateien aus: gzip an (Graphviz 1,2 MB → ca. 470 KB), `index.html` ohne Cache (Updates kommen sofort an), Schriften/Graphviz lange gecacht, Content-Security-Policy erlaubt nur eigene Dateien.
+Das Image basiert auf `nginx:alpine` und liefert nur statische Dateien aus `app/` aus (Konfiguration `app/nginx.conf`): gzip an (Graphviz 1,2 MB → ca. 470 KB), `index.html` ohne Cache (Updates kommen sofort an), Schriften/Graphviz lange gecacht, Content-Security-Policy erlaubt nur eigene Dateien.
 
 Lokal testen:
 ```bash
 cd app
 python3 -m http.server 8080          # dann http://localhost:8080/
-# oder mit Docker:
-docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
+# oder mit Docker (aus dem Wurzelordner des Repositorys):
+cd .. && docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 npm test                              # Engine- und Inhaltstests (Node ≥ 20)
 ```
 

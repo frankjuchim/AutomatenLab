@@ -1,0 +1,12 @@
+node_modules/
+.DS_Store
+*.log
+.env
+data/
+# erzeugte Dateien
+materials/build/
+materials/out/
+materials/dist/
+qa/shots*/
+__pycache__/
+*.pyc

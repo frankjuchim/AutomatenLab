@@ -1,0 +1,12 @@
+# Build-Kontext = Wurzelordner. Ins Image kommt nur app/ (ohne Tests), siehe Dockerfile.
+.git
+.github
+**/node_modules
+**/.DS_Store
+materials
+docs
+qa
+app/tests
+*.md
+package.json
+package-lock.json
