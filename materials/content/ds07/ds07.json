@@ -1,0 +1,53 @@
+{
+ "tuer": {
+  "EEAA": [
+   true,
+   "S0 –E→ S1 –E→ S2 –A→ S1 –A→ S0"
+  ],
+  "EAEA": [
+   true,
+   "S0 –E→ S1 –A→ S0 –E→ S1 –A→ S0"
+  ],
+  "EEEEAAAA": [
+   false,
+   "S0 –E→ S1 –E→ S2 –E→ S3 –E→ Fehlerzustand"
+  ],
+  "AEEA": [
+   false,
+   "S0 –A→ Fehlerzustand"
+  ],
+  "EEA": [
+   false,
+   "S0 –E→ S1 –E→ S2 –A→ S1"
+  ],
+  "EEEAAA": [
+   true,
+   "S0 –E→ S1 –E→ S2 –E→ S3 –A→ S2 –A→ S1 –A→ S0"
+  ]
+ },
+ "zaehler": {
+  "aabb": [
+   true,
+   "S0 –a→ S1 –a→ S2 –b→ S3 –b→ S4"
+  ],
+  "aaabb": [
+   true,
+   "S0 –a→ S1 –a→ S2 –a→ S2 –b→ S3 –b→ S4"
+  ],
+  "aaabbb": [
+   false,
+   "S0 –a→ S1 –a→ S2 –a→ S2 –b→ S3 –b→ S4 –b→ Fehlerzustand"
+  ],
+  "aab": [
+   false,
+   "S0 –a→ S1 –a→ S2 –b→ S3"
+  ]
+ },
+ "kartoffel3": {
+  "12": "K",
+  "111": "K",
+  "22": "K1",
+  "2211": "K1",
+  "1221": "KK"
+ }
+}

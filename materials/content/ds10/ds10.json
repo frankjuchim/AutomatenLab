@@ -1,0 +1,1318 @@
+{
+ "palc": {
+  "abcba": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "A#",
+     "#",
+     "a"
+    ],
+    [
+     "S0",
+     "BA#",
+     "A",
+     "b"
+    ],
+    [
+     "S1",
+     "BA#",
+     "B",
+     "c"
+    ],
+    [
+     "S1",
+     "A#",
+     "B",
+     "b"
+    ],
+    [
+     "S1",
+     "#",
+     "A",
+     "a"
+    ],
+    [
+     "S2",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "abcba"
+  },
+  "abcab": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "A#",
+     "#",
+     "a"
+    ],
+    [
+     "S0",
+     "BA#",
+     "A",
+     "b"
+    ],
+    [
+     "S1",
+     "BA#",
+     "B",
+     "c"
+    ]
+   ],
+   "accepted": false,
+   "grund": "kein Übergang für (B, a) in S1 – Eingabe nicht vollständig gelesen",
+   "word": "abcab"
+  },
+  "bacab": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "B#",
+     "#",
+     "b"
+    ],
+    [
+     "S0",
+     "AB#",
+     "B",
+     "a"
+    ],
+    [
+     "S1",
+     "AB#",
+     "A",
+     "c"
+    ],
+    [
+     "S1",
+     "B#",
+     "A",
+     "a"
+    ],
+    [
+     "S1",
+     "#",
+     "B",
+     "b"
+    ],
+    [
+     "S2",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "bacab"
+  }
+ },
+ "pal": {
+  "abba": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "A#",
+     "#",
+     "a"
+    ],
+    [
+     "S0",
+     "BA#",
+     "A",
+     "b"
+    ],
+    [
+     "S1",
+     "BA#",
+     "B",
+     "ε"
+    ],
+    [
+     "S1",
+     "A#",
+     "B",
+     "b"
+    ],
+    [
+     "S1",
+     "#",
+     "A",
+     "a"
+    ],
+    [
+     "S2",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "abba"
+  },
+  "aaaa": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "A#",
+     "#",
+     "a"
+    ],
+    [
+     "S0",
+     "AA#",
+     "A",
+     "a"
+    ],
+    [
+     "S1",
+     "AA#",
+     "A",
+     "ε"
+    ],
+    [
+     "S1",
+     "A#",
+     "A",
+     "a"
+    ],
+    [
+     "S1",
+     "#",
+     "A",
+     "a"
+    ],
+    [
+     "S2",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "aaaa"
+  }
+ },
+ "guess": {
+  "abba": [
+   [
+    "nach 0 Zeichen",
+    "nein",
+    "1. Zeichen a passt nicht zu # oben"
+   ],
+   [
+    "nach 1 Zeichen",
+    "nein",
+    "2. Zeichen b passt nicht zu A oben"
+   ],
+   [
+    "nach 2 Zeichen",
+    "ja",
+    "Keller wieder bei #, S2 erreicht"
+   ],
+   [
+    "nach 3 Zeichen",
+    "nein",
+    "4. Zeichen a passt nicht zu B oben"
+   ],
+   [
+    "nach 4 Zeichen",
+    "nein",
+    "Eingabe gelesen, aber A liegt oben"
+   ]
+  ],
+  "abab": [
+   [
+    "nach 0 Zeichen",
+    "nein",
+    "1. Zeichen a passt nicht zu # oben"
+   ],
+   [
+    "nach 1 Zeichen",
+    "nein",
+    "2. Zeichen b passt nicht zu A oben"
+   ],
+   [
+    "nach 2 Zeichen",
+    "nein",
+    "3. Zeichen a passt nicht zu B oben"
+   ],
+   [
+    "nach 3 Zeichen",
+    "nein",
+    "4. Zeichen b passt nicht zu A oben"
+   ],
+   [
+    "nach 4 Zeichen",
+    "nein",
+    "Eingabe gelesen, aber B liegt oben"
+   ]
+  ],
+  "aaaa": [
+   [
+    "nach 0 Zeichen",
+    "nein",
+    "1. Zeichen a passt nicht zu # oben"
+   ],
+   [
+    "nach 1 Zeichen",
+    "nein",
+    "3. Zeichen a passt nicht zu # oben"
+   ],
+   [
+    "nach 2 Zeichen",
+    "ja",
+    "Keller wieder bei #, S2 erreicht"
+   ],
+   [
+    "nach 3 Zeichen",
+    "nein",
+    "Eingabe gelesen, aber A liegt oben"
+   ],
+   [
+    "nach 4 Zeichen",
+    "nein",
+    "Eingabe gelesen, aber A liegt oben"
+   ]
+  ]
+ },
+ "trainer": {
+  "table": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "S#",
+     "#",
+     "3"
+    ],
+    [
+     "S0",
+     "#",
+     "S",
+     "0"
+    ],
+    [
+     "S0",
+     "N#",
+     "#",
+     "0"
+    ],
+    [
+     "S0",
+     "N#",
+     "N",
+     "1"
+    ],
+    [
+     "S0",
+     "NN#",
+     "N",
+     "0"
+    ],
+    [
+     "S1",
+     "NN#",
+     "N",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "30010"
+  },
+  "seq": [
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S0",
+    "S#"
+   ],
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S0",
+    "N#"
+   ],
+   [
+    "S0",
+    "N#"
+   ],
+   [
+    "S0",
+    "NN#"
+   ],
+   [
+    "S1",
+    "NN#"
+   ]
+  ],
+  "unique": [
+   "30010"
+  ]
+ },
+ "spielfeld": {
+  "table": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "_"
+    ],
+    [
+     "S1",
+     "T#",
+     "#",
+     "\\"
+    ],
+    [
+     "S1",
+     "TT#",
+     "T",
+     "\\"
+    ],
+    [
+     "S1",
+     "TT#",
+     "T",
+     "_"
+    ],
+    [
+     "S1",
+     "T#",
+     "T",
+     "/"
+    ],
+    [
+     "S1",
+     "#",
+     "T",
+     "/"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "ε"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "_"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "_\\\\_//_"
+  },
+  "seq": [
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S1",
+    "T#"
+   ],
+   [
+    "S1",
+    "TT#"
+   ],
+   [
+    "S1",
+    "TT#"
+   ],
+   [
+    "S1",
+    "T#"
+   ],
+   [
+    "S1",
+    "#"
+   ],
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S0",
+    "#"
+   ]
+  ],
+  "word": "_\\\\_//_",
+  "doc": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "T#",
+     "#",
+     "\\"
+    ],
+    [
+     "S1",
+     "T#",
+     "T",
+     "_"
+    ],
+    [
+     "S1",
+     "TT#",
+     "T",
+     "\\"
+    ],
+    [
+     "S1",
+     "T#",
+     "T",
+     "/"
+    ],
+    [
+     "S1",
+     "#",
+     "T",
+     "/"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "\\_\\//"
+  },
+  "huegel": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "_"
+    ]
+   ],
+   "accepted": false,
+   "grund": "kein Übergang für (#, /) in S0 – Eingabe nicht vollständig gelesen",
+   "word": "_/\\_"
+  }
+ },
+ "kritv": {
+  "111-21": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "A#",
+     "#",
+     "1"
+    ],
+    [
+     "S1",
+     "AA#",
+     "A",
+     "1"
+    ],
+    [
+     "S1",
+     "AAA#",
+     "A",
+     "1"
+    ],
+    [
+     "S2",
+     "AAA#",
+     "A",
+     "-"
+    ],
+    [
+     "S3",
+     "AA#",
+     "A",
+     "2"
+    ],
+    [
+     "S2",
+     "A#",
+     "A",
+     "ε"
+    ],
+    [
+     "S2",
+     "#",
+     "A",
+     "1"
+    ],
+    [
+     "S5",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "111-21"
+  },
+  "12-3": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "A#",
+     "#",
+     "1"
+    ],
+    [
+     "S1",
+     "AA#",
+     "A",
+     "2"
+    ],
+    [
+     "S2",
+     "AA#",
+     "A",
+     "-"
+    ],
+    [
+     "S4",
+     "A#",
+     "A",
+     "3"
+    ],
+    [
+     "S3",
+     "#",
+     "A",
+     "ε"
+    ]
+   ],
+   "accepted": false,
+   "grund": "Eingabe gelesen, aber S3 ist kein Endzustand und kein weiterer Übergang möglich",
+   "word": "12-3"
+  },
+  "2131-31": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "A#",
+     "#",
+     "2"
+    ],
+    [
+     "S1",
+     "AA#",
+     "A",
+     "1"
+    ],
+    [
+     "S1",
+     "AAA#",
+     "A",
+     "3"
+    ],
+    [
+     "S1",
+     "AAAA#",
+     "A",
+     "1"
+    ],
+    [
+     "S2",
+     "AAAA#",
+     "A",
+     "-"
+    ],
+    [
+     "S4",
+     "AAA#",
+     "A",
+     "3"
+    ],
+    [
+     "S3",
+     "AA#",
+     "A",
+     "ε"
+    ],
+    [
+     "S2",
+     "A#",
+     "A",
+     "ε"
+    ],
+    [
+     "S2",
+     "#",
+     "A",
+     "1"
+    ],
+    [
+     "S5",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "2131-31"
+  }
+ },
+ "kart": {
+  "1112KE": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S1",
+     "eee#",
+     "e",
+     "1"
+    ],
+    [
+     "S1",
+     "ee#",
+     "e",
+     "1"
+    ],
+    [
+     "S1",
+     "e#",
+     "e",
+     "1"
+    ],
+    [
+     "S2",
+     "#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "r#",
+     "#",
+     "ε"
+    ],
+    [
+     "S3",
+     "r#",
+     "r",
+     "K"
+    ],
+    [
+     "S3",
+     "#",
+     "r",
+     "E"
+    ],
+    [
+     "S4",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "1112KE"
+  },
+  "22K": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S2",
+     "eee#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "ee#",
+     "e",
+     "ε"
+    ],
+    [
+     "S2",
+     "e#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "#",
+     "e",
+     "ε"
+    ],
+    [
+     "S3",
+     "#",
+     "#",
+     "K"
+    ],
+    [
+     "S4",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "22K"
+  },
+  "212KE": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S2",
+     "eee#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "ee#",
+     "e",
+     "ε"
+    ],
+    [
+     "S1",
+     "e#",
+     "e",
+     "1"
+    ],
+    [
+     "S2",
+     "#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "r#",
+     "#",
+     "ε"
+    ],
+    [
+     "S3",
+     "r#",
+     "r",
+     "K"
+    ],
+    [
+     "S3",
+     "#",
+     "r",
+     "E"
+    ],
+    [
+     "S4",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "212KE"
+  },
+  "122KE": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S1",
+     "eee#",
+     "e",
+     "1"
+    ],
+    [
+     "S2",
+     "ee#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "e#",
+     "e",
+     "ε"
+    ],
+    [
+     "S2",
+     "#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "r#",
+     "#",
+     "ε"
+    ],
+    [
+     "S3",
+     "r#",
+     "r",
+     "K"
+    ],
+    [
+     "S3",
+     "#",
+     "r",
+     "E"
+    ],
+    [
+     "S4",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "122KE"
+  },
+  "211K": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S2",
+     "eee#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "ee#",
+     "e",
+     "ε"
+    ],
+    [
+     "S1",
+     "e#",
+     "e",
+     "1"
+    ],
+    [
+     "S1",
+     "#",
+     "e",
+     "1"
+    ],
+    [
+     "S3",
+     "#",
+     "#",
+     "K"
+    ],
+    [
+     "S4",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "211K"
+  },
+  "1122KE": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S1",
+     "eee#",
+     "e",
+     "1"
+    ],
+    [
+     "S1",
+     "ee#",
+     "e",
+     "1"
+    ],
+    [
+     "S2",
+     "e#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "#",
+     "e",
+     "ε"
+    ]
+   ],
+   "accepted": false,
+   "grund": "kein Übergang für (#, 2) in S1 – Eingabe nicht vollständig gelesen",
+   "word": "1122KE"
+  },
+  "122K": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "eeee#",
+     "#",
+     "ε"
+    ],
+    [
+     "S1",
+     "eee#",
+     "e",
+     "1"
+    ],
+    [
+     "S2",
+     "ee#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "e#",
+     "e",
+     "ε"
+    ],
+    [
+     "S2",
+     "#",
+     "e",
+     "2"
+    ],
+    [
+     "S1",
+     "r#",
+     "#",
+     "ε"
+    ],
+    [
+     "S3",
+     "r#",
+     "r",
+     "K"
+    ]
+   ],
+   "accepted": false,
+   "grund": "Eingabe gelesen, aber S3 ist kein Endzustand und kein weiterer Übergang möglich",
+   "word": "122K"
+  }
+ },
+ "boss_doc": {
+  "rows": [
+   [
+    "S0",
+    "#",
+    "–",
+    "–"
+   ],
+   [
+    "S1",
+    "B#",
+    "#",
+    "b"
+   ],
+   [
+    "S1",
+    "IB#",
+    "B",
+    "i"
+   ],
+   [
+    "S1",
+    "B#",
+    "I",
+    "/i"
+   ],
+   [
+    "S1",
+    "BB#",
+    "B",
+    "b"
+   ],
+   [
+    "S1",
+    "B#",
+    "B",
+    "/b"
+   ],
+   [
+    "S1",
+    "#",
+    "B",
+    "/b"
+   ],
+   [
+    "S0",
+    "#",
+    "#",
+    "ε"
+   ]
+  ],
+  "accepted": true,
+  "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+  "word": "b i /i b /b /b"
+ },
+ "boss_rw": {
+  "table": {
+   "rows": [
+    [
+     "S0",
+     "#",
+     "–",
+     "–"
+    ],
+    [
+     "S1",
+     "I#",
+     "#",
+     "i"
+    ],
+    [
+     "S1",
+     "BI#",
+     "I",
+     "b"
+    ],
+    [
+     "S1",
+     "I#",
+     "B",
+     "/b"
+    ],
+    [
+     "S1",
+     "#",
+     "I",
+     "/i"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "ε"
+    ],
+    [
+     "S1",
+     "B#",
+     "#",
+     "b"
+    ],
+    [
+     "S1",
+     "#",
+     "B",
+     "/b"
+    ],
+    [
+     "S0",
+     "#",
+     "#",
+     "ε"
+    ]
+   ],
+   "accepted": true,
+   "grund": "Eingabe vollständig gelesen, Endzustand erreicht",
+   "word": "i b /b /i b /b"
+  },
+  "seq": [
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S1",
+    "I#"
+   ],
+   [
+    "S1",
+    "BI#"
+   ],
+   [
+    "S1",
+    "I#"
+   ],
+   [
+    "S1",
+    "#"
+   ],
+   [
+    "S0",
+    "#"
+   ],
+   [
+    "S1",
+    "B#"
+   ],
+   [
+    "S1",
+    "#"
+   ],
+   [
+    "S0",
+    "#"
+   ]
+  ]
+ },
+ "boss_wrong": null,
+ "boss_g": 2047
+}

@@ -1,0 +1,3 @@
+# Python-Pakete für die Material-Pipeline (zusätzlich: Graphviz „dot“ im PATH, z. B. brew install graphviz)
+segno==1.6.6
+pillow>=10

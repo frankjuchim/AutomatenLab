@@ -1,0 +1,84 @@
+{
+ "produkt_eq": [
+  [
+   "S2",
+   "S3"
+  ]
+ ],
+ "produkt_tests": {
+  "ε": "S0  ⇒  abgelehnt",
+  "b": "S0 –b→ S1  ⇒  akzeptiert",
+  "ab": "S0 –a→ S2 –b→ S3  ⇒  abgelehnt",
+  "aab": "S0 –a→ S2 –a→ S0 –b→ S1  ⇒  akzeptiert",
+  "abab": "S0 –a→ S2 –b→ S3 –a→ S0 –b→ S1  ⇒  akzeptiert",
+  "aaba": "S0 –a→ S2 –a→ S0 –b→ S1 –a→ S2  ⇒  abgelehnt"
+ },
+ "a2_tests": [
+  [
+   "ε",
+   "nein",
+   "S0  ⇒  abgelehnt"
+  ],
+  [
+   "aba",
+   "ja",
+   "S0 –a→ S1 –b→ S2 –a→ S3  ⇒  akzeptiert"
+  ],
+  [
+   "aaba",
+   "ja",
+   "S0 –a→ S1 –a→ S1 –b→ S2 –a→ S3  ⇒  akzeptiert"
+  ],
+  [
+   "abab",
+   "nein",
+   "S0 –a→ S1 –b→ S2 –a→ S3 –b→ S2  ⇒  abgelehnt"
+  ],
+  [
+   "ababa",
+   "ja",
+   "S0 –a→ S1 –b→ S2 –a→ S3 –b→ S2 –a→ S3  ⇒  akzeptiert"
+  ],
+  [
+   "abba",
+   "nein",
+   "S0 –a→ S1 –b→ S2 –b→ S0 –a→ S1  ⇒  abgelehnt"
+  ]
+ ],
+ "a2_bug_cex": "ababa",
+ "a3_falsch": [
+  "b",
+  "aa",
+  "ba",
+  "bb",
+  "aaa",
+  "aab",
+  "baa",
+  "bab",
+  "bba",
+  "bbb"
+ ],
+ "a4_oder_finals": [
+  "S0",
+  "S1",
+  "S3"
+ ],
+ "kv_tests": {
+  "AOXE": "S0 –A→ S3 –O→ S4 –X→ S5 –E→ S6  ⇒  akzeptiert",
+  "OOBE": "S0 –O→ S1 –O→ S2 –B→ S2 –E→ Fehlerzustand  ⇒  abgelehnt",
+  "XXE": "S0 –X→ S4 –X→ S5 –E→ S6  ⇒  akzeptiert",
+  "BXOE": "S0 –B→ S0 –X→ S4 –O→ S5 –E→ S6  ⇒  akzeptiert",
+  "AOE": "S0 –A→ S3 –O→ S4 –E→ Fehlerzustand  ⇒  abgelehnt"
+ },
+ "ka_states": 8,
+ "kv_states": 7,
+ "kv_unterscheide": "OE",
+ "kv_z_paths": [
+  "S0 –X→ S4 –O→ S5 –E→ S6  ⇒  akzeptiert",
+  "S0 –O→ S1 –O→ S2 –E→ Fehlerzustand  ⇒  abgelehnt"
+ ],
+ "m02_muster": [
+  "S0 –a→ S1 –b→ S2 –a→ S3  ⇒  akzeptiert",
+  "S0 –b→ S0 –a→ S1  ⇒  abgelehnt"
+ ]
+}

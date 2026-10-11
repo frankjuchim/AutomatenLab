@@ -1,0 +1,38 @@
+# Material-Pipeline
+
+Alle Arbeitsblätter, Handreichungen, Folien, Merkblätter, Boss-Level, die Übungsklausur, die Einheitsplanung und die Videoreihe werden aus Quelltexten erzeugt. Fachliche Inhalte (Automaten, Grammatiken, Läufe, Tabellen) werden dabei **automatisch geprüft** – so bleibt alles korrekt, wenn etwas geändert wird.
+
+## Ablauf (`materials/build_all.sh`)
+
+1. **Grafiken + Prüfung (Python):** `content/*/automata_*.py` definiert jeden Automaten/jede Grammatik mit `lib/automata.py`, prüft ihn mit `check()` gegen eine Beschreibung der Sprache (alle Wörter bis Länge n) und rendert Graphviz-Grafiken nach `build/img/<ordner>/`. Lösungen (Zustandsfolgen, Kellertabellen, Ableitungen, Minimierungsrunden) werden als JSON abgelegt.
+2. **Dokumente (Node):** `content/*/build_*.js` setzt Word-Dateien mit `lib/docstyle.js` und Folien mit `lib/deckstyle.js` (Videofolien: `lib/videostyle.js`) zusammen → `out/`.
+3. **Paket:** `scripts/package_dist.js` ordnet alles wie das ausgelieferte Paket → `dist/Automaten_LK/` (1_Pflicht, 2_Vertiefung, 3_Bonus_und_Extra-Uebungen, Merkblaetter, 4_Videoreihe, LIESMICH.txt).
+
+```bash
+./materials/build_all.sh              # alles (ca. 3–4 min)
+./materials/build_all.sh ds05 video   # nur Dokumente dieser Ordner neu (Grafiken immer komplett)
+AUTOMATENLAB_URL=https://… ./materials/build_all.sh   # QR-Codes auf andere Adresse
+```
+
+## Ordner
+
+| Ordner | Inhalt |
+|---|---|
+| `content/ds01` … `ds16` | je Doppelstunde: `automata_dsXX.py`, `build_dsXX.js` (AB, Handreichung, Folien), ggf. `build_mXX.js` (Merkblatt), Boss-Level |
+| `content/abschluss` | Übungsklausur + Erwartungshorizont, M12 |
+| `content/planung` | Einheitsplanung, Lernlandkarte |
+| `content/video` | Videoreihe: `videos.js`/`videos_b.js` (Ablaufpläne + Folien als Daten), Decks, OBS-Overlays, Thumbnails, Planung |
+| `lib/` | Bibliotheken (Designsystem, Automaten-Engine), `pptx-theme.js` |
+| `fonts/` | Caladea/Carlito für Overlays und Thumbnails |
+| `templates/` | `LIESMICH.txt` des Pakets |
+
+## Typische Änderungen
+
+* **Aufgabe auf einem AB ändern:** `content/dsXX/build_dsXX.js`; betrifft sie einen Automaten, zuerst `automata_dsXX.py` anpassen und `check()` laufen lassen; Lösung in der Handreichung aus den erzeugten Daten übernehmen (nicht von Hand schreiben).
+* **Neue App-Route auf einem Blatt:** nur Routen aus `app/README.md` („Routen für QR-Codes“) verwenden.
+* **Vorschau ansehen:** `D.preview(file)` / `S.preview(file)` erzeugen PNGs (LibreOffice nötig, Pfad über `SOFFICE` setzbar).
+* Regeln für Inhalt, Notation und Qualität: `docs/einheit/STYLEGUIDE.md` und `docs/einheit/PLAN.md` (Abschnitt 1 = verbindliche Notation).
+
+## Abhängigkeiten
+
+Node ≥ 20 (`npm install` im Wurzelordner: docx, pptxgenjs, jszip, react, react-dom, react-icons, sharp), Python ≥ 3.10 (`segno`, `pillow`), Graphviz (`dot`), optional LibreOffice für Vorschauen.

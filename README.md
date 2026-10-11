@@ -1,0 +1,49 @@
+# AutomatenLab – Maschinen, die Sprache verstehen
+
+Unterrichtseinheit **Automaten und formale Sprachen** (Informatik Sek II, KC Niedersachsen, Notation nach den Ergänzenden Hinweisen 2025) mit
+
+* **Web-App „AutomatenLab“** – 13 interaktive Übungsmodule (Akzeptor-Arena, Baukasten, Keller-Labor, Ableitungs-Rallye, Turing-Labor …), live unter <https://automatenlab.frankjuchim.de>
+* **Unterrichtsmaterial** – 16 Doppelstunden (Pflicht/Vertiefung/Bonus) mit Arbeitsblatt, Lehrkraft-Handreichung und Folien, 12 Merkblätter, Boss-Level, Übungsklausur
+* **Erklärvideo-Reihe** – 9 Videos + 2 Extras: Folien, Ablaufpläne, OBS-Overlays, Thumbnails
+
+Alle Materialien werden per Skript erzeugt; jeder Automat, jede Grammatik und jede Lösung wird dabei automatisch geprüft.
+
+## Schnellstart
+
+```bash
+# Voraussetzungen: Node ≥ 20, Python ≥ 3.10, Graphviz (macOS: brew install graphviz)
+npm install                              # Node-Pakete für Materialien + Playwright (QA)
+python3 -m pip install -r materials/requirements.txt
+
+npm run app:serve                        # Web-App unter http://localhost:8080
+npm test                                 # Engine- und Inhaltstests der App
+npm run materials:build                  # alle Word-/PowerPoint-Dateien → materials/dist/Automaten_LK (ca. 3–4 min)
+```
+
+Vorschaubilder (PDF/PNG) brauchen zusätzlich LibreOffice (`brew install --cask libreoffice`).
+
+## Aufbau
+
+| Ordner | Inhalt |
+|---|---|
+| `app/` | Web-App (statisch, Vanilla-JS-ES-Module, kein Build-Schritt), Dockerfile + `captain-definition` für CapRover, Node-Tests. Details: `app/README.md`, `app/ARCHITECTURE.md` |
+| `materials/` | Material-Pipeline: `lib/` (automata.py, docstyle.js, deckstyle.js, videostyle.js), `content/dsXX/` je Doppelstunde, `content/video/`, `build_all.sh` |
+| `qa/` | Playwright-Prüfskripte (alle Deep-Links, Konsolenfehler, Screenshots) |
+| `docs/` | Planung der Einheit, Styleguide, Architektur, **Login-Konzept**, Roadmap, Deployment, Übergabe an Claude Code |
+| `.github/` | CI, Release-Workflow für das Materialpaket, Issue-/PR-Vorlagen |
+
+Erzeugte Dateien (`materials/build`, `materials/out`, `materials/dist`) sind nicht versioniert. Das fertige Lehrkräfte-Paket hängt als ZIP an den **GitHub-Releases**.
+
+## Weiterentwicklung
+
+Die Entwicklung läuft mit Claude Code. Einstieg: `CLAUDE.md` (Regeln für den Agenten) und `docs/UEBERGABE_CLAUDE_CODE.md` (Start-Prompt). Nächster großer Schritt: **Login mit Kursverwaltung und Fortschritts-Synchronisation** – siehe `docs/LOGIN_KONZEPT.md` und `docs/ROADMAP.md`.
+
+Wichtig für alle Änderungen:
+
+* Die App-Routen (`#/arena?…`) stehen als QR-Codes auf gedruckten Materialien – **sie dürfen nicht brechen**.
+* Die App bleibt **ohne Anmeldung nutzbar** (Gastmodus); der Login ist ein Zusatz.
+* Fachliche Notation strikt nach `docs/einheit/PLAN.md`, Abschnitt 1.
+
+## Lizenz
+
+Noch festzulegen (Vorschlag: Code MIT, Unterrichtsmaterial CC BY-SA 4.0). Schriften in `materials/fonts/`: Caladea (Apache 2.0), Carlito (OFL 1.1); App-Schrift Atkinson Hyperlegible (OFL 1.1).

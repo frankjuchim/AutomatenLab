@@ -1,0 +1,167 @@
+{
+ "bar": {
+  "1101": "S0 –1→ S1 –1→ S2 –0→ S3 –1→ S3  ⇒  akzeptiert",
+  "1110": "S0 –1→ S1 –1→ S2 –1→ Fehlerzustand  ⇒  abgelehnt",
+  "0110": "S0 –0→ Fehlerzustand  ⇒  abgelehnt"
+ },
+ "qs": {
+  "1232": "S0 –1→ S1 –2→ S1 –3→ S0 –2→ S0  ⇒  akzeptiert",
+  "3112": "S0 –3→ S1 –1→ S0 –1→ S1 –2→ S1  ⇒  abgelehnt"
+ },
+ "pn": {
+  "2-12": "S0 –2→ S1 –„-“→ S3 –1→ S4 –2→ S4  ⇒  akzeptiert",
+  "13-22": "S0 –1→ S2 –3→ S1 –„-“→ S3 –2→ S5 –2→ S5  ⇒  abgelehnt",
+  "21-3": "S0 –2→ S1 –1→ S2 –„-“→ Fehlerzustand  ⇒  abgelehnt"
+ },
+ "pw": {
+  "kgzz": "S0 –k→ S0 –g→ S1 –z→ S2 –z→ S2  ⇒  akzeptiert",
+  "zgkz": "S0 –z→ S0 –g→ S1 –k→ S1 –z→ S2  ⇒  akzeptiert",
+  "gzk": "S0 –g→ S1 –z→ S2 –k→ S1  ⇒  abgelehnt",
+  "kkzz": "S0 –k→ S0 –k→ S0 –z→ S0 –z→ S0  ⇒  abgelehnt"
+ },
+ "v": {
+  "abba": "S0 –a→ S1 –b→ S3 –b→ S0 –a→ S1  ⇒  abgelehnt",
+  "baab": "S0 –b→ S0 –a→ S1 –a→ S2 –b→ S3  ⇒  akzeptiert",
+  "bab": "S0 –b→ S0 –a→ S1 –b→ S3  ⇒  akzeptiert"
+ },
+ "a1b_table": [
+  [
+   "δ",
+   "0",
+   "1"
+  ],
+  [
+   "→ S0",
+   "S1",
+   "S0"
+  ],
+  [
+   "S1",
+   "S2",
+   "S0"
+  ],
+  [
+   "* S2",
+   "S2",
+   "S0"
+  ]
+ ],
+ "a1_table": [
+  [
+   "δ",
+   "a",
+   "b"
+  ],
+  [
+   "→ S0",
+   "S0",
+   "S1"
+  ],
+  [
+   "S1",
+   "S1",
+   "S2"
+  ],
+  [
+   "* S2",
+   "S2",
+   "S2"
+  ]
+ ],
+ "m1_table": [
+  [
+   "δ",
+   "a",
+   "b"
+  ],
+  [
+   "→ * S0",
+   "S1",
+   "S0"
+  ],
+  [
+   "S1",
+   "S0",
+   "S1"
+  ]
+ ],
+ "pn_eq": [
+  [
+   "S3",
+   "S5"
+  ]
+ ],
+ "m": {
+  "m1": [
+   "ε",
+   "a",
+   "aa",
+   "ab",
+   "bab",
+   "abab",
+   "aaa"
+  ]
+ },
+ "pw_bsp": [
+  "gkz",
+  "kgkzz"
+ ],
+ "mtest": {
+  "m1": {
+   "ε": true,
+   "a": false,
+   "b": true,
+   "aa": true,
+   "ab": false,
+   "ba": false,
+   "bb": true,
+   "aba": true,
+   "bab": false,
+   "abba": true,
+   "baab": true,
+   "aab": true
+  },
+  "m2": {
+   "ε": false,
+   "a": false,
+   "b": true,
+   "aa": false,
+   "ab": true,
+   "ba": false,
+   "bb": true,
+   "aba": false,
+   "bab": true,
+   "abba": false,
+   "baab": true,
+   "aab": true
+  },
+  "m3": {
+   "ε": false,
+   "a": true,
+   "b": true,
+   "aa": true,
+   "ab": false,
+   "ba": false,
+   "bb": true,
+   "aba": true,
+   "bab": true,
+   "abba": true,
+   "baab": true,
+   "aab": false
+  },
+  "m4": {
+   "ε": true,
+   "a": true,
+   "b": true,
+   "aa": false,
+   "ab": true,
+   "ba": true,
+   "bb": true,
+   "aba": true,
+   "bab": true,
+   "abba": true,
+   "baab": false,
+   "aab": false
+  }
+ }
+}

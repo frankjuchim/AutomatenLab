@@ -1,0 +1,42 @@
+const __MAT = require('path').resolve(__dirname, '../..'); // Wurzel: materials/
+// M12 – Merkblatt „Abi-Spickzettel: Operatoren & Antwortmuster“ (Automaten und formale Sprachen)
+const D = require((__MAT + '/lib/docstyle.js'));
+const OUT = (__MAT + '/out/');
+
+const W = [3.9, 7.7, 5.8];
+const SZ = 16;
+const tbl = (rows) => D.table([['Aufgabenstellung', 'So antwortest du', 'Musterbeispiel (kurz)'], ...rows], { widthsCm: W, size: SZ, firstColBold: true });
+
+(async () => {
+  const body = [
+    D.p('Im Zentralabitur (Block 2, eA) kehren dieselben Aufgabentypen wieder. Für jeden Typ: das **Antwortmuster** (was in einer vollständigen Antwort steht) und ein kurzes Beispiel.', { size: 17, after: 40 }),
+    D.h2('A  Automaten: DEA, Mealy, Grenzen, Kellerautomat'),
+    tbl([
+      ['**Stellen Sie** die Verarbeitung der Eingabe … **dar**.', 'Zustandsfolge mit gelesenen Zeichen; am Ende Ergebnis **mit Begründung**: Endzustand ⇒ akzeptiert, kein Endzustand / Fehlerzustand ⇒ abgelehnt. Bei langen Wörtern Tabelle.', '`LOOL`: S0 –L→ S1 –O→ S2 –O→ S0 –L→ S1 ⇒ abgelehnt, da S1 kein Endzustand ist.'],
+      ['**Erläutern Sie** die Bedeutung des Zustands Si (in Bezug auf die Problemstellung).', 'Satzmuster: „Der Automat befindet sich genau dann in Si, wenn bisher …“ – **im Sachzusammenhang**, nicht nur „nach dem Lesen von L“. Ggf. ergänzen, was noch fehlt, damit akzeptiert wird.', 'Kaffeeautomat, S3: „Es wurden bisher genau 30 ct eingeworfen; es fehlen 10 ct, daher kein Endzustand.“'],
+      ['**Untersuchen Sie**, welche Eingaben akzeptiert werden. / **Beschreiben Sie** die Sprache.', 'Wege vom Start zu den Endzuständen verfolgen; Bedingung in Worten (und als Menge) angeben; mit zwei Beispielen und einem Gegenbeispiel absichern.', '„Akzeptiert werden genau die Wörter über {a, b}, die auf ab enden“: L = {w ∈ Σ* | w endet auf ab}; aab ✓, ba ✗.'],
+      ['**Ergänzen Sie** den Zustandsgraphen. / **Entwickeln Sie** einen endlichen Automaten, der …', 'Erst sammeln, was sich der Automat **merken** muss (→ Zustände), dann Übergänge, Start-/Endzustände, Σ. **Vollständig** zeichnen oder Hinweis setzen. Grenzfälle testen (ε, kürzestes Wort, ein Zeichen zu viel).', 'Hinweis-Satz: „Alle nicht eingezeichneten Übergänge führen in einen Fehlerzustand.“ Zählen modulo 3 ⇒ drei Zustände S0, S1, S2 (Rest 0, 1, 2).'],
+      ['**Untersuchen Sie**, inwieweit Zustände zusammengefasst werden können.', 'Endzustand / Nicht-Endzustand ⇒ unterscheidbar. **Äquivalent**, wenn sie für jedes Zeichen in gleiche (oder äquivalente) Zustände wechseln. Ergebnis: welche Paare, neuer Automat oder „bereits minimal“.', '„S2 und S4 sind äquivalent: Beide sind Endzustände und wechseln mit a nach S1 und mit b nach S3, also in dieselben Zustände. S0 und S2 sind unterscheidbar (End- / Nicht-Endzustand).“'],
+      ['**Begründen Sie**, dass sich der Automat nach u und nach v in verschiedenen Zuständen befinden muss. / dass mindestens n Zustände nötig sind.', 'Ein **unterscheidendes Wort** w angeben: uw wird akzeptiert, vw nicht (oder umgekehrt). Wären die Zustände gleich, würde der Automat beide gleich behandeln – Widerspruch. Für „mindestens n“: n paarweise unterscheidbare Präfixe.', 'Trainer (Entlassung nach drei Spielen ohne Sieg): „Nach 30 und 03 verschieden: Mit Fortsetzung 00 wird 3000 akzeptiert (entlassen), 0300 nicht.“'],
+      ['Mealy: **Geben Sie** die Ausgabe **an**. / **Entwickeln Sie** einen Mealy-Automaten, der …', 'Lauf mit „Eingabe / Ausgabe“ notieren, Ausgabe zusammensetzen (ε = nichts). Entwurf: Σ, Ω angeben, **keine Endzustände**, vollständiger Graph, Zustand = das, was für die nächste Ausgabe wichtig ist.', 'Süßigkeitenautomat: S0 –M / ε→ S1 –H / B→ S0, Ausgabe B; Ω = {B}.'],
+
+      ['**Begründen Sie**, dass es keinen endlichen Automaten gibt, der …', '**Schubfachargument:** (1) Annahme: DEA mit k Zuständen. (2) k + 1 Präfixe a¹, …, aᵏ⁺¹ – zwei (aⁱ, aʲ, i ≠ j) enden im selben Zustand. (3) Gleiche Fortsetzung bⁱ: aⁱbⁱ ∈ L akzeptiert ⇒ aʲbⁱ ebenfalls. (4) aʲbⁱ ∉ L – Widerspruch. Sachbezug: „muss **unbeschränkt** zählen“.', 'Klammern: Präfixe (, ((, (((, …; zwei im selben Zustand; Fortsetzung )ⁱ ⇒ falsch geklammertes Wort akzeptiert.'],
+      ['**Begründen Sie** die Verwendung eines Kellerautomaten (in Bezug auf die Problemstellung).', 'Zwei Teile: (1) Warum kein DEA: Es muss eine **unbeschränkte** Anzahl gemerkt / verglichen werden (Argument wie oben, kurz). (2) Wie der Keller hilft: pro gelesener Einheit ein Kellerzeichen ablegen, beim Vergleichen abbauen; Akzeptanz, wenn … aufgeht.', '„Die Quersumme der ersten Folge kann beliebig groß werden; der Keller speichert sie als Anzahl Z und baut pro Zeichen der zweiten Folge ein Z ab.“'],
+      ['**Dokumentieren Sie** die Verarbeitung durch den Kellerautomaten (Tabelle).', 'Spalten: Zustand | Belegung Kellerspeicher | oberstes Kellersymbol | verarbeitetes Eingabezeichen. Erste Zeile S0 | # | – | –. Oberstes Zeichen **links**; ε-Übergang eigene Zeile. Schluss: „akzeptiert: ja/nein“ (Endzustand nach **vollständiger** Eingabe).', 'aabb: S0 | # | – | – → S0 | A# | # | a → S0 | AA# | A | a → S1 | A# | A | b → S1 | # | A | b → S2 | # | # | ε ⇒ akzeptiert: ja.'],
+      ['**Erläutern Sie** die Bedeutung des Kellerspeichers im Sachzusammenhang.', '„Jedes Zeichen X im Keller steht für ein/e … (gelesene Einheit, offene Klammer, noch zu … Element).“ Kellerhöhe = aktuelle Differenz / offener Rest. Sagen, was passiert, wenn der Keller nur noch # enthält.', '„Jedes A steht für ein gelesenes a, für das noch kein b gelesen wurde.“'],
+      ['**Bestimmen Sie** das Eingabewort aus Zustands- und Kellerfolge.', 'Zeile für Zeile: Welcher Übergang erklärt (Zustand, Kelleränderung)? Daraus das Eingabezeichen (oder ε) ablesen; Wort zusammensetzen und zur Kontrolle einmal vorwärts prüfen.', 'K: # → A# in S0 ⇒ Übergang (#, a) : A# ⇒ Zeichen a.'],
+    ]),
+    D.h2('B  Grammatiken und formale Sprachen'),
+    tbl([
+      ['**Zeigen Sie**, dass das Wort w erzeugt wird.', 'Ableitung mit ⇒ vom Startsymbol bis w, jede Regelanwendung ein Schritt (Linksableitung); bei Bedarf die verwendete Regel daneben notieren.', 'S ⇒ aSb ⇒ aaSbb ⇒ aaabbb (dreimal S → aSb, dann S → ab).'],
+      ['**Beschreiben Sie** die Sprache, die die Grammatik erzeugt.', 'Einige kurze Wörter ableiten, Muster erkennen (Wiederholung, Paare, Verschachtelung), Bedingung in Worten und als Menge angeben.', '„Alle Wörter aus n a gefolgt von n b, n ≥ 1“: L = {aⁿbⁿ | n ≥ 1}.'],
+      ['**Entwickeln Sie** eine reguläre Grammatik.', 'Aus dem DEA übersetzen: Zustand ↔ Nichtterminal, Si –a→ Sj ↔ Si → aSj, Endzustand ↔ Si → ε. **N, T, S, P vollständig** angeben; nur Regeln der Form A → aB | a | ε (rechtsregulär). Fehlerzustand weglassen.', 'DEA S0 –a→ S1 (Endzustand): S0 → aS1, S1 → ε (oder S0 → a).'],
+      ['**Entwickeln Sie** eine (kontextfreie) Grammatik.', 'Bausteine: Paare S → aSb | ab; Klammern S → (S)S | ε; Spiegel S → aSa | bSb | ε; Folgen A → aA | ε. Ein Nichtterminal je „Rolle“. Mit zwei Wörtern (kurz, verschachtelt) testen.', 'Palindrome über {0, 1}: S → 0S0 | 1S1 | 0 | 1 | ε.'],
+      ['**Begründen Sie**, dass die Grammatik (nicht) regulär ist. / dass die Sprache nicht regulär ist.', '**Grammatik:** Regelform prüfen – nur A → aB | a | ε ⇒ regulär; zwei Nichtterminale oder Terminal rechts vom Nichtterminal ⇒ nicht regulär. Achtung: „Grammatik nicht regulär“ heißt **nicht** „Sprache nicht regulär“! **Sprache:** Schubfachargument (A).', '„S → aSb ist nicht rechtsregulär (Terminal nach dem Nichtterminal).“ – „A → 0A | 1A | ε ist regulär.“'],
+      ['**Verändern / Erweitern Sie** die Grammatik so, dass …', 'Regel ergänzen oder ersetzen; prüfen, dass gewünschte Wörter weiterhin ableitbar sind und unerwünschte nicht; ein neues Wort ableiten.', '„Auch das leere Wort soll erzeugt werden“: S → aSb | ab wird zu S → aSb | ε; Test: S ⇒ ε.'],
+    ]),
+    D.p('**Faustregeln:** nennen/angeben = ohne Begründung · begründen = Argument mit „da/weil“ · erläutern = erklären **plus** Sachzusammenhang · beurteilen = Urteil + Begründung + Gegenargument · Zeit: etwa **3 Minuten pro BE** · Notation wie in den Merkblättern.', { size: 16, before: 40 }),
+  ];
+  const f = await D.save(D.doc({ kind: 'MB', title: 'Abi-Spickzettel: Operatoren & Antwortmuster', subtitle: 'Merkblatt M12 · Automaten und formale Sprachen · Was in einer vollständigen Antwort steht', metaText: 'M12  ·  Zusatz', code: 'M12 · Abi-Spickzettel', titleSize: 34, body }), OUT + 'M12_Merkblatt_Abi-Spickzettel.docx');
+  console.log(f);
+})();

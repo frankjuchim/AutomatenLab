@@ -1,0 +1,120 @@
+{
+ "lol": {
+  "LLOL": [
+   true,
+   "{S0} –L→ {S0, S1} –L→ {S0, S1} –O→ {S0, S2} –L→ {S0, S1, S3}"
+  ],
+  "XLOLO": [
+   true,
+   "{S0} –X→ {S0} –L→ {S0, S1} –O→ {S0, S2} –L→ {S0, S1, S3} –O→ {S0, S2, S3}"
+  ],
+  "LOOL": [
+   false,
+   "{S0} –L→ {S0, S1} –O→ {S0, S2} –O→ {S0} –L→ {S0, S1}"
+  ],
+  "LOLOL": [
+   true,
+   "{S0} –L→ {S0, S1} –O→ {S0, S2} –L→ {S0, S1, S3} –O→ {S0, S2, S3} –L→ {S0, S1, S3}"
+  ]
+ },
+ "lol_dea_states": 6,
+ "gratis": {
+  "GGRATIS": [
+   true,
+   "{S0} –G→ {S0, S1} –G→ {S0, S1} –R→ {S0, S2} –A→ {S0, S3} –T→ {S0, S4} –I→ {S0, S5} –S→ {S0, S6}"
+  ],
+  "GRAGRATIS": [
+   true,
+   "{S0} –G→ {S0, S1} –R→ {S0, S2} –A→ {S0, S3} –G→ {S0, S1} –R→ {S0, S2} –A→ {S0, S3} –T→ {S0, S4} –I→ {S0, S5} –S→ {S0, S6}"
+  ]
+ },
+ "gratis_dea_states": 12,
+ "vz": {
+  "+101": [
+   true,
+   "{S0, S1} –+→ {S1} –1→ {S2} –0→ {S2} –1→ {S2}"
+  ],
+  "10": [
+   true,
+   "{S0, S1} –1→ {S2} –0→ {S2}"
+  ],
+  "-": [
+   false,
+   "{S0, S1} –-→ {S1}"
+  ],
+  "+-1": [
+   false,
+   "{S0, S1} –+→ {S1} –-→ ∅ –1→ ∅"
+  ]
+ },
+ "oder": {
+  "aab": true,
+  "aba": true,
+  "ba": false,
+  "aaa": false,
+  "abab": true,
+  "ε": true
+ },
+ "eab_table": [
+  [
+   "{S0}",
+   "{S0, S1}",
+   "{S0}",
+   "nein"
+  ],
+  [
+   "{S0, S1}",
+   "{S0, S1}",
+   "{S0, S2}",
+   "nein"
+  ],
+  [
+   "{S0, S2}",
+   "{S0, S1}",
+   "{S0}",
+   "ja"
+  ]
+ ],
+ "eab": {
+  "abab": "{S0} –a→ {S0, S1} –b→ {S0, S2} –a→ {S0, S1} –b→ {S0, S2}",
+  "aab": "{S0} –a→ {S0, S1} –a→ {S0, S1} –b→ {S0, S2}",
+  "aba": "{S0} –a→ {S0, S1} –b→ {S0, S2} –a→ {S0, S1}"
+ },
+ "d3_states": 8,
+ "vz_table": [
+  [
+   "{S0, S1}",
+   "{S1}",
+   "{S1}",
+   "{S2}",
+   "{S2}",
+   "nein"
+  ],
+  [
+   "{S1}",
+   "∅",
+   "∅",
+   "{S2}",
+   "{S2}",
+   "nein"
+  ],
+  [
+   "{S2}",
+   "∅",
+   "∅",
+   "{S2}",
+   "{S2}",
+   "ja"
+  ],
+  [
+   "∅",
+   "∅",
+   "∅",
+   "∅",
+   "∅",
+   "nein"
+  ]
+ ],
+ "lol_min": 4,
+ "gratis_min": 7
+}

@@ -1,0 +1,24 @@
+Maschinen, die Sprache verstehen – Automaten und formale Sprachen (Informatik eA, Q-Phase)
+=====================================================================================
+
+Start: 00_Einheitsplanung.docx öffnen – Seite 1 „Schnellstart“, Seite 2 „Wochenplan“,
+ab Abschnitt 3 der Ablaufplan je Doppelstunde (Phasen, Kopierliste, App-Link, Hausaufgabe).
+
+Umfang
+  1_Pflicht                    9 Doppelstunden = 3 Wochen à 3 DS, deckt alle KC-Kompetenzen (eA) ab
+  2_Vertiefung                 3 Doppelstunden für eine 4. Woche (Minimierung, Keller-Profis, Abi-Training)
+  3_Bonus_und_Extra-Uebungen   Werkstatt, NEA, Projekt, Turingmaschine, Boss-Level A–C, Übungsklausur
+
+Je Doppelstunde: Arbeitsblatt (AB), Lehrkraft-Handreichung (Verlauf + Lösungen), Folien.
+Merkblaetter: M01–M12 zur Sicherung (M12 = Abi-Spickzettel).
+00_Lernlandkarte.docx: Kompetenzraster für die SuS (in Level 1 austeilen).
+
+Web-App AutomatenLab: https://automatenlab.frankjuchim.de
+(ohne Anmeldung, keine Datenerhebung; QR-Codes auf Blättern und Folien führen direkt zur Übung;
+ Vertiefungs- und Bonus-Level sind auf der Level-Karte markiert)
+
+4_Videoreihe (Erklärvideos für YouTube, je 5–7 min)
+  00_Videoreihe_Planung.docx   Reihe, Bildschirm-Konzept (2 OBS-Szenen), Ablaufplan je Video, YouTube-Texte
+  Folien/                      Videofolien mit freier Kamerafläche unten rechts, Sprechimpulse in den Notizen
+  OBS-Overlays/                Seitenleiste für die AutomatenLab-Szene (Titel, QR-Code, Kamerarahmen)
+  Thumbnails/                  Vorschaubilder 1280 × 720
