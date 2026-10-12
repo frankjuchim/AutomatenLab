@@ -36,8 +36,11 @@ function verbundRoutes(app, h) {
     next();
   };
 
+  /** Schreibende Aufrufe nur als JSON (nach der Token-Prüfung, damit Unbefugte nur 401 sehen). */
+  const nurJson = (req, res, next) => (req.is('application/json') ? next() : res.status(415).json({ error: 'Nur JSON-Anfragen erlaubt.' }));
+
   // Alle Daten eines Kontos bzw. Kurses löschen – idempotent, innerhalb der Anfrage (§10)
-  r.post('/loeschen', token('loeschen'), (req, res) => {
+  r.post('/loeschen', token('loeschen'), nurJson, (req, res) => {
     const b = req.body || {};
     if (typeof b.sub === 'string' && svc.konten.SUB.test(b.sub)) return res.json({ geloescht: svc.konten.loescheKonto(b.sub) });
     if (typeof b.kurs === 'string' && svc.konten.KURS.test(b.kurs)) return res.json({ geloescht: svc.konten.loescheKurs(b.kurs) });
@@ -52,7 +55,7 @@ function verbundRoutes(app, h) {
   });
 
   // Kurs umbenannt bzw. Plattform für den Kurs ab-/wieder eingeschaltet
-  r.post('/kurse/:kursId', token('kurs-aendern'), (req, res) => {
+  r.post('/kurse/:kursId', token('kurs-aendern'), nurJson, (req, res) => {
     if (!svc.konten.KURS.test(req.params.kursId)) return res.status(404).json({ error: 'Kurs unbekannt.' });
     const b = req.body || {};
     if (b.name !== undefined && (typeof b.name !== 'string' || !b.name.trim())) return res.status(400).json({ error: 'name ungültig.' });

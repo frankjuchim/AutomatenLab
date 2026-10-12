@@ -74,7 +74,8 @@ function createApp(opts) {
   // Anmeldung über das Portal (Vertrag §5): nur mit PORTAL_URL, gültigem PORTAL_PUBLIC_KEY und AUTH_MODUS ≠ lokal
   let publicKey = [];
   try {
-    publicKey = opts.portalPublicKey ? schluesselListe(opts.portalPublicKey) : [];
+    // Nur Ed25519-Schlüssel zählen (Vertrag §5) – ein anderer parsebarer Schlüssel (z. B. RSA) würde jedes Token ablehnen
+    publicKey = opts.portalPublicKey ? schluesselListe(opts.portalPublicKey).filter((k) => k.asymmetricKeyType === 'ed25519') : [];
   } catch (e) {
     log(`FEHLER: PORTAL_PUBLIC_KEY ist ungültig (${e.message}) – Anmeldung über das Portal abgeschaltet.`);
   }

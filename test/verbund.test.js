@@ -68,6 +68,17 @@ test('loeschen: Kurs → Kurs und Mitgliedschaften weg, Konten bleiben; idempote
   }
 });
 
+test('Schreibende Verbund-Aufrufe nur als JSON: 415 nach gültigem Token, ohne Token weiterhin 401', async () => {
+  const app = await H.verbundApp();
+  await H.angemeldet(app);
+  for (const [pfad, zweck] of [['/api/verbund/loeschen', 'loeschen'], ['/api/verbund/kurse/k%3A17', 'kurs-aendern']]) {
+    const r = await mit(app, 'post', pfad, H.verbundToken(app.now, zweck)).type('text').send('name=X');
+    assert.equal(r.status, 415, pfad);
+    assert.equal((await request(app).post(pfad).type('text').send('x')).status, 401, pfad + ' ohne Token');
+  }
+  assert.equal(app.locals.svc.konten.kurs('k:17').name, 'LK Informatik 13', 'nichts geändert');
+});
+
 test('Kursübersicht: Format nach §6 (nur Mitglieder, Welten mit nr und kennung); unbekannter Kurs 404', async () => {
   const app = await H.verbundApp();
   await H.angemeldet(app);

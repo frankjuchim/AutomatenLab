@@ -162,7 +162,8 @@ test('Manifest mit Portal-Anmeldung: auth.modus portal, sso true, ssoStart/ssoEn
 });
 
 test('Ohne Schlüssel oder mit AUTH_MODUS=lokal: keine Anmeldung, Manifest „lokal“, SSO-Seiten 503', async () => {
-  for (const extra of [{ portalPublicKey: '' }, { authModus: 'lokal' }, { portalPublicKey: 'kein Schlüssel' }]) {
+  const rsa = require('node:crypto').generateKeyPairSync('rsa', { modulusLength: 2048 }).publicKey.export({ type: 'spki', format: 'pem' });
+  for (const extra of [{ portalPublicKey: '' }, { authModus: 'lokal' }, { portalPublicKey: 'kein Schlüssel' }, { portalPublicKey: rsa }]) {
     const app = await H.verbundApp(extra);
     const m = (await request(app).get('/api/plattform')).body;
     assert.deepEqual(m.auth, { modus: 'lokal', portal: H.PORTAL, sso: false });
@@ -173,9 +174,19 @@ test('Ohne Schlüssel oder mit AUTH_MODUS=lokal: keine Anmeldung, Manifest „lo
   }
 });
 
-test('Ein gelöschtes Konto ist sofort abgemeldet', async () => {
+test('Ein gelöschtes Konto ist sofort abgemeldet, auch die Aktivitätsmarke im Arbeitsspeicher ist weg', async () => {
   const app = await H.verbundApp();
   const a = await H.angemeldet(app);
+  await a.get('/api/sitzung');
+  assert.equal(app.locals.svc.konten.hatAktivitaetsmarke('s:1042'), true);
   app.locals.svc.konten.loescheKonto('s:1042');
+  assert.equal(app.locals.svc.konten.hatAktivitaetsmarke('s:1042'), false);
   assert.equal((await a.get('/api/sitzung')).body.konto, null);
+});
+
+test('Mehrere Schlüssel (Schlüsselwechsel): RSA-Block wird ignoriert, Ed25519-Block gilt', async () => {
+  const rsa = require('node:crypto').generateKeyPairSync('rsa', { modulusLength: 2048 }).publicKey.export({ type: 'spki', format: 'pem' });
+  const app = await H.verbundApp({ portalPublicKey: rsa + H.PUBLIC_PEM });
+  assert.equal(app.locals.sso.aktiv, true);
+  await H.angemeldet(app);
 });

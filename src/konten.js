@@ -105,11 +105,14 @@ function createKonten(ctx) {
   /* ---------- Verbund-API (§6) ---------- */
 
   /** Alle Daten eines Kontos löschen; idempotent. Liefert die Zahl gelöschter Datensätze. */
-  const loescheKonto = db.transaction((sub) => {
-    let n = db.prepare('DELETE FROM kurs_mitglieder WHERE sub = ?').run(sub).changes;
-    n += db.prepare('DELETE FROM konten WHERE sub = ?').run(sub).changes;
-    return n;
-  });
+  const loescheKonto = (sub) => {
+    letzte.delete(sub); // auch die Aktivitätsmarke im Arbeitsspeicher (vollständige Löschung, §10)
+    return db.transaction(() => {
+      let n = db.prepare('DELETE FROM kurs_mitglieder WHERE sub = ?').run(sub).changes;
+      n += db.prepare('DELETE FROM konten WHERE sub = ?').run(sub).changes;
+      return n;
+    })();
+  };
 
   /** Alle Daten eines Kurses löschen (Einstellungen, Mitgliedschaften); Lernstände hängen an sub, nicht am Kurs. */
   const loescheKurs = db.transaction((kursId) => {
@@ -155,7 +158,10 @@ function createKonten(ctx) {
       .all(kursId);
   }
 
-  return { tokenInhalt, anmelden, konto, ausSitzung, aktiv, kurseVon, ansicht, sitzungenBeenden, loescheKonto, loescheKurs, kurs, kursAendern, mitglieder, SUB, KURS };
+  /** Nur für Tests: Aktivitätsmarke im Arbeitsspeicher vorhanden? */
+  const hatAktivitaetsmarke = (sub) => letzte.has(sub);
+
+  return { hatAktivitaetsmarke, tokenInhalt, anmelden, konto, ausSitzung, aktiv, kurseVon, ansicht, sitzungenBeenden, loescheKonto, loescheKurs, kurs, kursAendern, mitglieder, SUB, KURS };
 }
 
 module.exports = { createKonten, anzeigename };

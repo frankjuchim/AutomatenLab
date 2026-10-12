@@ -26,12 +26,18 @@ export default {
         seite(h('p', { class: 'notice' }, 'Dieser Bereich ist nur für Lehrkräfte.'), h('p', null, h('a', { class: 'btn', href: '#/' }, 'Zur Übersicht')));
         return;
       }
-      let kurse = [];
+      let kurse = null;
       try {
         const r = await fetch('/api/lehrer/kurse', { credentials: 'same-origin' });
+        // Sitzung inzwischen abgelaufen: still neu anmelden (INTEGRATION.md §3.1)
+        if (r.status === 401) { if (aktiv) location.replace(anmeldeLink('/lehrer')); return; }
         if (r.ok) kurse = await r.json();
-      } catch { /* Netzfehler: leere Liste mit Hinweis */ }
+      } catch { /* Netzfehler: Hinweis unten */ }
       if (!aktiv) return;
+      if (!Array.isArray(kurse)) {
+        seite(h('p', { class: 'notice notice-error' }, 'Ihre Kurse konnten nicht geladen werden. Bitte laden Sie die Seite neu.'));
+        return;
+      }
       seite(
         h('p', { class: 'lead' }, `Angemeldet als ${konto.name}. Kurse legen Sie im Portal InfoLabs an und schalten dort AutomatenLab frei.`),
         h('h2', null, 'Ihre Kurse'),
