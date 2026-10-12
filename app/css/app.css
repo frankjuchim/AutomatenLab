@@ -665,6 +665,34 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .themen-level > li { padding: 0.7rem 1rem; border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); }
 .themen-level-kopf { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: center; }
 .themen-module { margin: 0.35rem 0 0; }
+.themen-hinweis { margin: 0.3rem 0 0; font-size: var(--fs-s); color: var(--ink-2); }
+
+/* ───────── Anforderungsniveaus (gA/eA, Vertrag v1.2 §9) ───────── */
+:root { --niveau-ea: #3D5A99; --niveau-plus: #8A520B; }
+.niveau-etikett { position: absolute; top: -9px; right: -12px; min-width: 1.6rem; padding: 0.05rem 0.3rem; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 800; line-height: 1.25; letter-spacing: 0.02em; text-align: center; pointer-events: none; }
+.niveau-etikett.niveau-ea { background: var(--niveau-ea); color: #fff; }
+.niveau-etikett.niveau-plus { background: var(--surface); color: var(--niveau-plus); border: 1.5px dashed var(--niveau-plus); }
+.legend-niveau { display: inline-flex; align-items: center; gap: 0.35rem; }
+.legend-niveau .niveau-etikett { position: static; }
+.niveau-pille { display: inline-block; vertical-align: 0.15em; padding: 0.05rem 0.5rem; border-radius: 999px; font-size: 0.74rem; font-weight: 700; line-height: 1.4; white-space: nowrap;
+  border: 1.5px solid currentColor; letter-spacing: 0; }
+.niveau-pille.niveau-alle { color: var(--teal-deep); background: var(--teal-mist); }
+.niveau-pille.niveau-ea { color: #fff; background: var(--niveau-ea); border-color: var(--niveau-ea); }
+.niveau-pille.niveau-plus { color: var(--niveau-plus); background: var(--surface); border-style: dashed; }
+.niveau-pille.niveau-je-level { color: var(--ink-2); background: var(--surface); }
+.tile-title .niveau-pille { font-size: 0.7rem; }
+.themen-niveaus { margin-top: 3rem; scroll-margin-top: 5rem; }
+.themen-niveaus h2:focus, .themen-niveaus h2:focus-visible { outline: none; box-shadow: none; }
+.niveau-legende { line-height: 2; }
+.tabelle-scroll { overflow-x: auto; margin: 0.6rem 0 1.4rem; }
+.niveau-tabelle { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); font-size: 0.95rem; }
+.niveau-tabelle th, .niveau-tabelle td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--grid); }
+.niveau-tabelle thead th { background: var(--teal-mist); }
+.niveau-tabelle .klein, .klein { font-size: var(--fs-s); font-weight: 400; }
+.niveau-liste { margin: 0; padding-left: 1.1rem; }
+.niveau-wege li { margin-bottom: 0.4rem; }
+@media (max-width: 600px) { .niveau-tabelle { font-size: 0.85rem; } .niveau-tabelle th, .niveau-tabelle td { padding: 0.45rem 0.5rem; } }
 
 /* ───── Kopfzeile: Portal, Anmelden, Kontomenü (Vertrag InfoLabs §5/§9) ───── */
 .konto-tools { display: contents; }

@@ -19,8 +19,9 @@ const lade = (rel) => {
 const WELT_FARBEN = { A: '#0E6455', B: '#B26A0F', C: '#3D5A99', D: '#7A3E65' };
 
 async function ladeKatalog() {
-  const [welten, manifest, d] = await Promise.all([
+  const [welten, niveaus, manifest, d] = await Promise.all([
     lade('data/worlds.js'),
+    lade('data/niveaus.js'),
     lade('modules/manifest.js'),
     Promise.all(
       ['baukasten', 'detektiv', 'minimierer', 'mealy', 'parallelwelten', 'keller', 'ueberliste', 'rallye', 'grammatik', 'turing', 'quiz'].map((n) => lade(`data/${n}.js`))
@@ -49,10 +50,12 @@ async function ladeKatalog() {
     titel: w.title,
     farbe: WELT_FARBEN[w.id] || '#0E6455',
     level: w.levels.length,
+    boss: niveaus.BOSS_NIVEAU[w.id] ? { niveau: niveaus.BOSS_NIVEAU[w.id] } : null,
     levels: w.levels.map((n) => ({
       nr: n,
       titel: welten.LEVELS[n],
       typ: welten.LEVEL_TYPE[n],
+      niveau: niveaus.LEVEL_NIVEAU[n],
       boss: welten.BOSS_LEVELS.includes(n),
       module: manifest.MODULES.filter((m) => m.load && m.levels.includes(n)).map((m) => m.route)
     }))
@@ -60,7 +63,7 @@ async function ladeKatalog() {
 
   return {
     welten: weltListe,
-    module: manifest.MODULES.filter((m) => m.load).map((m) => ({ route: m.route, titel: m.title, welt: m.world, levels: m.levels, kurz: m.blurb })),
+    module: manifest.MODULES.filter((m) => m.load).map((m) => ({ route: m.route, titel: m.title, welt: m.world, levels: m.levels, niveau: niveaus.MODUL_NIVEAU[m.route] ?? null, kurz: m.blurb })),
     umfang: {
       welten: weltListe.length,
       level: Object.keys(welten.LEVELS).length,

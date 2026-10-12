@@ -1,6 +1,6 @@
 {
   "name": "automatenlab",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "AutomatenLab – Plattform des Verbunds InfoLabs für Automaten und formale Sprachen (Informatik Sek II) mit Web-App, Server und Unterrichtsmaterial",
   "main": "src/server.js",
@@ -16,7 +16,9 @@
     "materials:package": "node materials/scripts/package_dist.js",
     "qa:routes": "node qa/qa-routes.mjs http://localhost:8080/"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "license": "UNLICENSED",
   "dependencies": {
     "better-sqlite3": "^12.11.1",

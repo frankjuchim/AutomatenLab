@@ -11,6 +11,8 @@ import { progress } from '../core/progress.js';
 import { api } from '../core/api.js';
 import { sitzung, anmeldeLink } from '../core/sitzung.js';
 import { heroAutomat } from '../components/hero-automat.js';
+import { LEVEL_NIVEAU, MODUL_NIVEAU, NIVEAUS } from '../data/niveaus.js';
+import { niveauEtikett, niveauPille } from '../components/niveau.js';
 
 let katalogCache = null;
 /** Öffentlicher Aufgabenkatalog des Servers (Titel, Stufe, Punkte – keine Lösungen); offline: leer. */
@@ -74,6 +76,7 @@ export default {
       clear(info);
       if (selected != null) {
         info.append(h('strong', null, `Level ${selected}: ${LEVELS[selected]} (${LEVEL_TYPE_LABEL[LEVEL_TYPE[selected] || 'pflicht']}). `),
+          `${NIVEAUS[LEVEL_NIVEAU[selected]].lang}. `,
           matching.length ? `${matching.length === 1 ? 'Passendes Modul' : 'Passende Module'}: ${matching.map((m) => m.title).join(', ')}.` : 'In diesem Level arbeitest du ohne App.',
           ' ', h('a', { href: ctx.link('quiz', { ds: selected }) }, `Exit-Ticket DS${String(selected).padStart(2, '0')}`),
           ' · ', h('button', { type: 'button', class: 'link-button', onclick: () => select(selected) }, 'Auswahl aufheben'));
@@ -92,9 +95,9 @@ export default {
         const btn = h('button', {
           type: 'button', class: ['level-node', boss && 'is-boss', ready ? 'is-ready' : 'is-sketch', `is-${typ}`],
           'aria-pressed': 'false',
-          'aria-label': `Level ${n}: ${LEVELS[n]} (${LEVEL_TYPE_LABEL[typ]})${boss ? ', mit Boss-Level als Extra-Training' : ''}`,
+          'aria-label': `Level ${n}: ${LEVELS[n]} (${LEVEL_TYPE_LABEL[typ]}, ${NIVEAUS[LEVEL_NIVEAU[n]].lang})${boss ? ', mit Boss-Level als Extra-Training' : ''}`,
           onclick: () => select(n),
-        }, h('span', { class: 'level-num' }, String(n)));
+        }, h('span', { class: 'level-num' }, String(n)), niveauEtikett(LEVEL_NIVEAU[n]));
         levelButtons.set(n, btn);
         chain.append(h('li', { class: ['level-step', wi === 0 && i === 0 && 'is-first', i === 0 && wi > 0 && 'is-continued'] },
           btn, h('span', { class: 'level-name', 'aria-hidden': 'true' }, LEVELS[n], typ !== 'pflicht' ? h('span', { class: `type-tag type-${typ}` }, LEVEL_TYPE_LABEL[typ]) : null, boss ? h('span', { class: 'boss-tag' }, 'Boss-Level (Extra)') : null)));
@@ -115,7 +118,7 @@ export default {
         const status = h('span', { class: 'tile-status' });
         const tile = h('li', { class: ['tile', m.load ? 'is-ready' : 'is-sketch'], 'data-welt': m.world ?? 'alle' },
           h('a', { class: 'tile-link', href: ctx.link(m.route) },
-            h('span', { class: 'tile-title' }, m.title),
+            h('span', { class: 'tile-title' }, m.title, ' ', niveauPille(MODUL_NIVEAU[m.route])),
             h('span', { class: 'tile-blurb' }, m.blurb),
             h('span', { class: 'tile-foot' },
               h('span', { class: 'tile-levels' }, m.levels.length && m.levels.length < ALL_LEVELS.length ? `Level ${m.levels.join(', ')}` : 'Alle Level'),
@@ -180,10 +183,13 @@ export default {
         h('div', { class: 'hero-top' },
           h('div', { class: 'hero-text' },
             h('h1', { class: 'hero-title' }, 'Maschinen, die ', h('span', { class: 'hero-mark' }, 'Sprache'), ' verstehen'),
-            h('p', { class: 'hero-lead' }, 'Neun Pflicht-Level, drei Vertiefungen und Bonus-Level für Neugierige – ein Ziel: Automaten und formale Sprachen so sicher beherrschen, dass dich im Abitur nichts überrascht. Tippe auf ein Level, um die passenden Module zu sehen.')),
+            h('p', { class: 'hero-lead' }, 'Für Grund- und Leistungskurs: endliche Automaten für alle, Kellerautomaten und Grammatiken für den Leistungskurs, Bonus-Level für Neugierige – ein Ziel: so sicher werden, dass dich im Abitur nichts überrascht. Tippe auf ein Level, um die passenden Module zu sehen.')),
           heroAutomat()),
         h('div', { class: 'map-panel' }, map,
-          h('p', { class: 'map-legend' }, h('span', { class: 'legend-item legend-pflicht' }, 'Pflicht'), h('span', { class: 'legend-item legend-vertiefung' }, 'Vertiefung'), h('span', { class: 'legend-item legend-bonus' }, 'Bonus')),
+          h('p', { class: 'map-legend' }, h('span', { class: 'legend-item legend-pflicht' }, 'Pflicht'), h('span', { class: 'legend-item legend-vertiefung' }, 'Vertiefung'), h('span', { class: 'legend-item legend-bonus' }, 'Bonus'),
+            h('span', { class: 'legend-niveau' }, h('span', { class: 'niveau-etikett niveau-ea' }, 'LK'), ' nur Leistungskurs (eA)'),
+            h('span', { class: 'legend-niveau' }, h('span', { class: 'niveau-etikett niveau-plus' }, '+'), ' Zusatz über das KC hinaus'),
+            h('span', { class: 'legend-niveau' }, 'ohne Etikett: Grund- und Leistungskurs · ', h('a', { href: ctx.link('themen', { teil: 'niveaus' }) }, 'Was ist für welches Niveau?'))),
           info)),
       h('section', { class: 'page-section', 'aria-labelledby': 'module-h' },
         h('h2', { id: 'module-h' }, 'Module'),
