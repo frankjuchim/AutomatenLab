@@ -44,6 +44,9 @@ jobs:
             -e SESSION_SECRET=ci-geheimnis-nur-fuer-die-pruefung -e PORTAL_PUBLIC_KEY="$(cat /tmp/qa-pub.pem)" automatenlab
           for i in $(seq 1 60); do curl -fsS http://localhost:8080/healthz >/dev/null && break; sleep 1; done
           curl -fsS http://localhost:8080/healthz | grep -q '"anmeldung":"portal"' || { docker logs automatenlab || true; exit 1; }
+          # Materialien im Image (materials/pdf): Fähigkeit im Manifest, Dateien ohne Anmeldung gesperrt
+          curl -fsS http://localhost:8080/api/plattform | grep -q 'lehrkraft-materialien' || { echo 'materials/pdf fehlt im Image'; exit 1; }
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/material/lehrkraft/DS01_Lehrkraft_Ein-Automat-hoert-zu.pdf)" = 401
       - name: Vertragsprüfung (scripts/vertrag_pruefen.js)
         run: node scripts/vertrag_pruefen.js http://localhost:8080
       - name: Alle Deep-Links angemeldet (Lehrkraft mit Kurs, Test-Token)
