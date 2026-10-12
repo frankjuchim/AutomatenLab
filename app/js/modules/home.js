@@ -8,14 +8,24 @@ const ALL_LEVELS = WORLDS.flatMap((w) => w.levels);
 import { MODULES } from './manifest.js';
 import { BADGES } from '../data/badges.js';
 import { progress } from '../core/progress.js';
+import { api } from '../core/api.js';
+import { sitzung, anmeldeLink } from '../core/sitzung.js';
+
+let katalogCache = null;
+/** Öffentlicher Aufgabenkatalog des Servers (Titel, Stufe, Punkte – keine Lösungen); offline: leer. */
+const katalog = async (modul) => {
+  katalogCache ??= api('GET', '/api/katalog').then((r) => r.aufgaben).catch(() => []);
+  return (await katalogCache).filter((a) => a.modul === modul);
+};
 
 /** Fortschrittszeile je Modul: wie viel schon gelöst ist (nur IDs zählen, die es in den Daten gibt). */
 const solvedOf = (modul, ids) => ids.filter((id) => progress.isSolved(modul, id)).length;
 const geloest = (n, total, was = 'gelöst') => `${n} von ${total} ${was}`;
 const STATUS = {
   arena: async () => { const best = Math.max(...[1, 2, 3].map((s) => progress.best(`arena:${s}`) ?? 0)); return best ? `Rekord ${best} Punkte` : ''; },
-  detektiv: async () => { const { DETEKTIV_FAELLE: F } = await import('../data/detektiv.js'); return geloest(solvedOf('detektiv', F.map((_, i) => `fall-${i + 1}`)), F.length); },
-  baukasten: async () => { const { BAUKASTEN_CHALLENGES: C } = await import('../data/baukasten.js'); return geloest(solvedOf('baukasten', C.map((c) => c.id)), C.length); },
+  // Module mit Prüfung auf dem Server: Aufgabenliste aus dem öffentlichen Katalog (ohne Lösungen)
+  detektiv: async () => { const F = await katalog('detektiv'); return geloest(solvedOf('detektiv', F.map((f) => `fall-${f.nr}`)), F.length); },
+  baukasten: async () => { const C = await katalog('baukasten'); return geloest(solvedOf('baukasten', C.map((c) => c.schluessel)), C.length); },
   minimierer: async () => { const { MINIMIERER_AUFGABEN: A } = await import('../data/minimierer.js'); return geloest(solvedOf('minimierer', A.map((x) => x.id)), A.length); },
   mealy: async () => { const { MEALY_AUFGABEN: A } = await import('../data/mealy.js'); return geloest(solvedOf('mealy', A.map((x) => x.id)), A.length, 'repariert'); },
   ueberliste: async () => {
@@ -39,9 +49,9 @@ const STATUS = {
   sortierer: async () => { const b = progress.best('sortierer:runde'); return b != null ? `Rekord ${b} richtig einsortiert` : ''; },
   turing: async () => { const { TURING_CHALLENGES: C } = await import('../data/turing.js'); return geloest(solvedOf('turing', C.map((x) => x.id)), C.length); },
   quiz: async () => {
-    const { QUIZ_WELTEN: W, QUIZ_DS: D } = await import('../data/quiz.js');
-    const done = (keys) => keys.filter((k) => progress.best(`quiz:${k}`) != null).length;
-    const w = Object.keys(W).map((k) => `welt-${k}`); const d = Object.keys(D).map((k) => `ds-${k}`);
+    const Q = await katalog('quiz');
+    const done = (keys) => keys.filter((k) => progress.best(k) != null).length;
+    const w = Q.filter((a) => a.id.startsWith('quiz:welt-')).map((a) => a.id); const d = Q.filter((a) => a.id.startsWith('quiz:ds-')).map((a) => a.id);
     return `Welten ${done(w)}/${w.length} · Exit-Tickets ${done(d)}/${d.length}`;
   },
 };
@@ -140,7 +150,17 @@ export default {
       }
     } }, 'Fortschritt zurücksetzen');
 
+    // Gastmodus: Hinweis auf Demo-Aufgaben und Anmeldung (nur wenn die Portal-Anmeldung eingerichtet ist)
+    const gastSlot = h('div');
+    sitzung().then(({ konto, anmeldung }) => {
+      if (anmeldung && !konto) clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
+        h('span', null, h('strong', null, 'Du bist nicht angemeldet. '), 'Ohne Anmeldung kannst du je Modul eine Aufgabe ausprobieren.'),
+        h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren'),
+        h('a', { class: 'btn', href: anmeldeLink('/') }, 'Anmelden über InfoLabs')));
+    });
+
     clear(el,
+      gastSlot,
       h('section', { class: 'hero' },
         h('div', { class: 'hero-text' },
           h('h1', { class: 'hero-title' }, 'Maschinen, die Sprache verstehen'),

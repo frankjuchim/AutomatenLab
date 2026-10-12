@@ -4,8 +4,7 @@
 //             #/baukasten?stufe=1|2|3 (Liste gefiltert), #/baukasten?modus=frei (Sandbox mit Export)
 
 import { h, clear, quote } from '../core/dom.js';
-import { BAUKASTEN_CHALLENGES, STUFEN } from '../data/baukasten.js';
-import { normalizeDFA, equivalent } from '../engine/dfa.js';
+import { normalizeDFA } from '../engine/dfa.js';
 import { tokenize, wordToString } from '../engine/tokenize.js';
 import { GraphView } from '../components/graph-view.js';
 import { RunPlayer } from '../components/run-player.js';
@@ -13,35 +12,52 @@ import { DfaEditor } from '../components/dfa-editor.js';
 import { toGraph, exportDot } from '../components/graph-model.js';
 import { openDialog } from '../components/dialog.js';
 
-const CHALLENGES = BAUKASTEN_CHALLENGES.map((c, i) => ({ ...c, nr: i + 1, ref: normalizeDFA(c.referenz) }));
-const PUNKTE = { 1: 20, 2: 30, 3: 40 };
+const STUFEN = {
+  1: { name: 'Basis', text: 'Ein Baustein: Präfix, Teilwort, Endung, Zählen' },
+  2: { name: 'Standard', text: 'Modulo zählen, Endungen mit Rückkanten, Komplement, Kontexte' },
+  3: { name: 'Profi', text: 'Zwei Bedingungen kombinieren, Abi-Kontexte' },
+};
 
 export default {
   title: 'Automaten-Baukasten',
   mount(el, ctx) {
+    const q = ctx.quelle; // Server (angemeldet) oder Demo (Gastmodus) – die Musterlösung kennt nur die Quelle
     const p = ctx.params;
     if (p.get('modus') === 'frei') return workbench(null);
-    const byLevel = Number(p.get('level'));
-    const ch = (byLevel >= 1 && byLevel <= CHALLENGES.length) ? CHALLENGES[byLevel - 1] : CHALLENGES.find((c) => c.id === p.get('aufgabe'));
-    if (ch) return workbench(ch);
-    showList(Number(p.get('stufe')) || null);
-    return null;
+    let aktiv = true;
+    let aufraeumen = null;
+    let CHALLENGES = [];
+    const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
+    clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    (async () => {
+      const liste = await q.liste('baukasten');
+      if (!aktiv) return;
+      CHALLENGES = liste;
+      const byLevel = Number(p.get('level'));
+      const ch = q.demo ? liste[0]
+        : (byLevel >= 1 && byLevel <= liste.length) ? liste.find((c) => c.nr === byLevel) : liste.find((c) => c.schluessel === p.get('aufgabe'));
+      if (!ch) { showList(Number(p.get('stufe')) || null); return; }
+      const d = await q.aufgabe(ch.id);
+      if (!aktiv) return;
+      aufraeumen = workbench({ ...d.aufgabe, aufgabeId: ch.id, nr: ch.nr ?? 0, zustand: d.zustand, loesung: d.loesung ?? null });
+    })().catch(fehler);
+    return () => { aktiv = false; aufraeumen?.(); };
 
     // ───────────────────────── Liste ─────────────────────────
     function showList(onlyStufe) {
       ctx.setSubtitle('Entwickle DEAs für vorgegebene Sprachen. Beim Prüfen bekommst du das kürzeste Gegenbeispiel.');
       const sections = [1, 2, 3].filter((s) => !onlyStufe || s === onlyStufe).map((s) => {
         const list = CHALLENGES.filter((c) => c.stufe === s);
-        const done = list.filter((c) => ctx.progress.isSolved('baukasten', c.id)).length;
+        const done = list.filter((c) => ctx.progress.isSolved('baukasten', c.schluessel)).length;
         return h('section', { class: 'stufe-section' },
           h('div', { class: 'stufe-head' }, h('h2', null, `Stufe ${s}: ${STUFEN[s].name}`), h('span', { class: 'muted' }, `${done} von ${list.length} gelöst`)),
           h('p', { class: 'muted' }, STUFEN[s].text),
           h('ol', { class: 'challenge-grid' }, list.map((c) => {
-            const solved = ctx.progress.isSolved('baukasten', c.id);
+            const solved = ctx.progress.isSolved('baukasten', c.schluessel);
             return h('li', null, h('a', { class: ['challenge-card', solved && 'is-solved', `stufe-${s}`], href: ctx.link('baukasten', { level: c.nr }) },
               h('span', { class: 'case-nr' }, `Challenge ${c.nr}`),
               h('span', { class: 'case-title' }, c.titel),
-              h('span', { class: 'case-state' }, solved ? 'gelöst' : `${PUNKTE[s]} Punkte`)));
+              h('span', { class: 'case-state' }, solved ? 'gelöst' : `${c.punkte} Punkte`)));
           })));
       });
       clear(el,
@@ -55,9 +71,10 @@ export default {
 
     // ───────────────────────── Werkbank ─────────────────────────
     function workbench(c) {
-      const draftKey = `baukasten:${c ? c.id : 'frei'}`;
-      ctx.setSubtitle(c ? `Challenge ${c.nr}: ${c.titel}` : 'Freier Modus');
-      let attempts = 0;
+      const draftKey = `baukasten:${c ? c.id : 'frei'}`; // c.id = Schlüssel der Challenge (bisheriges Format)
+      ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
+      let zustand = c?.zustand ?? null;
+      let loesung = c?.loesung ?? null;
       let lastWord = null;
       let saveTimer = null;
       let renderTimer = null;
@@ -70,7 +87,7 @@ export default {
       const editorPanel = h('div', { class: 'bench-editor panel' });
       let draft = null;
       try { draft = ctx.progress.getDraft(draftKey); if (draft) normalizeDFA(draft); } catch { draft = null; }
-      const alphabet = c ? c.ref.alphabet : (draft?.alphabet ?? ['a', 'b']);
+      const alphabet = c ? c.alphabet : (draft?.alphabet ?? ['a', 'b']);
 
       // Aufgabe / Alphabet
       let taskPanel = null;
@@ -78,11 +95,11 @@ export default {
         taskPanel = h('div', { class: 'bench-task panel' },
           h('p', { class: 'task-text' }, c.aufgabe),
           h('div', { class: 'task-side' },
-          h('p', { class: 'sigma' }, `Σ = {${c.ref.alphabet.join(', ')}}`),
+          h('p', { class: 'sigma' }, `Σ = {${c.alphabet.join(', ')}}`),
           c.beispiele ? h('div', { class: 'examples' },
             h('p', null, h('span', { class: 'ex-label ex-yes' }, 'gehört dazu'), ' ', c.beispiele.ja.map((w) => h('code', { class: 'word' }, w))),
             h('p', null, h('span', { class: 'ex-label ex-no' }, 'gehört nicht dazu'), ' ', c.beispiele.nein.map((w) => h('code', { class: 'word' }, w)))) : null,
-          c.tipp ? h('details', { class: 'tipp' }, h('summary', null, 'Tipp anzeigen'), h('p', null, c.tipp)) : null));
+          c.tippsAnzahl ? tippBox() : null));
       } else {
         const sigmaInput = h('input', { type: 'text', id: 'sigma-input', class: 'word-input', value: alphabet.join(', '), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
         const sigmaMsg = h('p', { class: 'field-msg', 'aria-live': 'polite' });
@@ -121,7 +138,7 @@ export default {
       const solutionSlot = h('div');
       const checkBtn = c ? h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => check() }, 'Prüfen') : null;
 
-      function check() {
+      async function check() {
         let A;
         try { A = editor.toDFA(); } catch (e) { clear(checkResult, h('p', { class: 'notice notice-error' }, e.message)); return; }
         const miss = editor.missing();
@@ -132,42 +149,71 @@ export default {
             h('p', null, 'Ergänze die Übergänge oder setze den Haken „Alle nicht eingezeichneten Übergänge führen in einen Fehlerzustand“.')));
           return;
         }
-        attempts++;
-        const res = equivalent(A, c.ref);
-        if (res.equivalent) {
-          const { first } = ctx.progress.solve('baukasten', c.id, PUNKTE[c.stufe]);
-          ctx.progress.award('baukasten-erster');
-          for (const s of [1, 2, 3]) if (CHALLENGES.filter((x) => x.stufe === s).every((x) => ctx.progress.isSolved('baukasten', x.id))) ctx.progress.award(`baukasten-stufe-${s}`);
-          if (c.stufe === 3 && attempts === 1) ctx.progress.award('baukasten-volltreffer');
-          if (first) ctx.toast(`+${PUNKTE[c.stufe]} Punkte`, { type: 'success' });
-          const next = CHALLENGES[c.nr];
+        checkBtn.disabled = true;
+        let r;
+        try { r = await q.pruefen(c.aufgabeId, { automat: editor.toJSON() }); } catch (e) {
+          clear(checkResult, h('p', { class: 'notice notice-error' }, e.message));
+          return;
+        } finally { checkBtn.disabled = false; }
+        zustand = r.zustand;
+        if (r.loesung) loesung = r.loesung;
+        const versuch = zustand.fehlversuche + 1;
+        if (r.ok) {
+          if (r.punkteErhalten) ctx.toast(`+${r.punkteErhalten} Punkte`, { type: 'success' });
+          const nextNr = !q.demo && c.nr < CHALLENGES.length ? c.nr + 1 : null;
           clear(checkResult, h('div', { class: 'notice notice-success' },
-            h('p', null, h('strong', null, 'Richtig! '), `Dein Automat erkennt genau die gesuchte Sprache${attempts === 1 ? ' – im ersten Versuch' : ''}.`),
-            h('p', null, `Er hat ${A.states.length} ${A.states.length === 1 ? 'Zustand' : 'Zustände'}${A.implicitError && miss.length ? ' plus den nicht gezeichneten Fehlerzustand' : ''}. Kannst du begründen, was sich jeder Zustand merkt?`)),
+            h('p', null, h('strong', null, 'Richtig! '), `Dein Automat erkennt genau die gesuchte Sprache${r.geloest && zustand.fehlversuche === 0 ? ' – im ersten Versuch' : ''}.`),
+            h('p', null, `Er hat ${A.states.length} ${A.states.length === 1 ? 'Zustand' : 'Zustände'}${A.implicitError && miss.length ? ' plus den nicht gezeichneten Fehlerzustand' : ''}. Kannst du begründen, was sich jeder Zustand merkt?`),
+            q.demo ? h('p', null, 'Das war die Demo. Mit Anmeldung über InfoLabs gibt es 18 Challenges und Punkte.') : null),
           h('div', { class: 'start-actions' },
-            next ? h('a', { class: 'btn btn-primary', href: ctx.link('baukasten', { level: next.nr }) }, `Weiter zu Challenge ${next.nr}`) : null,
-            h('button', { type: 'button', class: 'btn', onclick: () => showSolution() }, 'Musterlösung vergleichen'),
-            h('a', { class: 'btn btn-ghost', href: ctx.link('baukasten') }, 'Alle Challenges')));
+            nextNr ? h('a', { class: 'btn btn-primary', href: ctx.link('baukasten', { level: nextNr }) }, `Weiter zu Challenge ${nextNr}`) : null,
+            loesung ? h('button', { type: 'button', class: 'btn', onclick: () => showSolution() }, 'Musterlösung vergleichen') : null,
+            h('a', { class: 'btn btn-ghost', href: q.demo ? ctx.link('gast') : ctx.link('baukasten') }, q.demo ? 'Zu den Demo-Aufgaben' : 'Alle Challenges')));
         } else {
-          const w = res.counterexample;
+          const g = r.rueckmeldung.gegenbeispiel;
+          const w = g.symbole;
           const shown = quote(wordToString(w, A.alphabet));
           const wortText = w.length ? shown : 'das leere Wort ε';
-          const msg = res.acceptedByA
+          const msg = g.akzeptiertVonDir
             ? `Dein Automat akzeptiert ${wortText} – das gehört nicht zur Sprache.`
             : `Dein Automat lehnt ${wortText} ab – das gehört aber zur Sprache.`;
           clear(checkResult, h('div', { class: 'notice notice-error' },
             h('p', null, h('strong', null, 'Noch nicht. '), msg),
-            h('p', { class: 'muted' }, `Das ist ein kürzestes Gegenbeispiel. Versuch ${attempts}.`),
+            h('p', { class: 'muted' }, `Das ist ein kürzestes Gegenbeispiel.${zustand.status === 'offen' && !q.demo ? ` Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : ''}`),
             h('div', { class: 'start-actions' },
               h('button', { type: 'button', class: 'btn btn-small', onclick: () => { wordInput.value = wordToString(w, A.alphabet).replace(/^ε$/, ''); runWord(w); graphPanel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, 'Lauf ansehen'),
-              attempts >= 3 ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => showSolution() }, 'Musterlösung zeigen') : null)));
+              versuch > 3 || loesung ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => aufdecken() }, 'Musterlösung zeigen') : null)));
         }
       }
 
+      /** „Lösung zeigen“: danach gibt es für diese Challenge keine Punkte mehr. */
+      async function aufdecken() {
+        if (!loesung) {
+          if (!q.demo && zustand?.status === 'offen' && !window.confirm('Wenn du die Musterlösung ansiehst, bekommst du für diese Challenge keine Punkte mehr. Trotzdem anzeigen?')) return;
+          try { const r = await q.aufdecken(c.aufgabeId); zustand = r.zustand; loesung = r.loesung; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+        }
+        showSolution();
+      }
+
+      /** Tipps einzeln vom Server holen (jeder Tipp kostet Punkte, Vertrag §9). */
+      function tippBox() {
+        const box = h('div', { class: 'tipp' });
+        const zeichne = () => {
+          const gezeigt = zustand?.tipps ?? [];
+          clear(box, gezeigt.map((t) => h('p', null, h('strong', null, 'Tipp: '), t)),
+            gezeigt.length < (c.tippsAnzahl ?? 0) ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: async () => {
+              try { const r = await q.tipp(c.aufgabeId); zustand = r.zustand; zeichne(); } catch (e) { ctx.toast(e.message, { type: 'error' }); }
+            } }, q.demo || zustand?.status !== 'offen' ? 'Tipp anzeigen' : 'Tipp anzeigen (kostet Punkte)') : null);
+        };
+        zeichne();
+        return box;
+      }
+
       function showSolution() {
+        if (!loesung?.musterloesung) return;
         const body = h('div', null, h('p', null, 'Eine mögliche Lösung. Es gibt viele richtige Automaten – geprüft wird nur, ob die Sprache stimmt.'));
         openDialog({ title: `Musterlösung: ${c.titel}`, body });
-        new GraphView(body).render(c.ref);
+        new GraphView(body).render(normalizeDFA(loesung.musterloesung));
       }
 
       // Export / Import (freier Modus)
@@ -214,14 +260,14 @@ export default {
         saveTimer = setTimeout(() => ctx.progress.setDraft(draftKey, editor.toJSON()), 400);
       }
 
-      const solved = c && ctx.progress.isSolved('baukasten', c.id);
+      const solved = c && zustand && zustand.status !== 'offen';
       clear(el, taskPanel,
         h('div', { class: 'bench' },
           h('div', { class: 'bench-left' }, editorPanel,
-            c ? h('div', { class: 'check-panel panel' }, h('div', { class: 'check-row' }, checkBtn, resetBtn), solved ? h('p', { class: 'muted' }, 'Diese Challenge hast du schon gelöst.') : null, checkResult) : h('div', { class: 'check-row' }, resetBtn),
+            c ? h('div', { class: 'check-panel panel' }, h('div', { class: 'check-row' }, checkBtn, resetBtn), solved ? h('p', { class: 'muted' }, zustand.status === 'geloest' ? 'Diese Challenge hast du schon gelöst.' : 'Du hast dir die Musterlösung schon angesehen – Punkte gibt es hier nicht mehr.') : null, checkResult) : h('div', { class: 'check-row' }, resetBtn),
             exportBox),
           h('div', { class: 'bench-right' }, graphPanel, h('div', { class: 'panel' }, testForm, testBox), solutionSlot)),
-        h('nav', { class: 'case-nav', 'aria-label': 'Challenges' },
+        c && q.demo ? null : h('nav', { class: 'case-nav', 'aria-label': 'Challenges' },
           c && c.nr > 1 ? h('a', { class: 'btn btn-ghost', href: ctx.link('baukasten', { level: c.nr - 1 }) }, `‹ Challenge ${c.nr - 1}`) : h('span'),
           h('a', { class: 'btn btn-ghost', href: ctx.link('baukasten') }, 'Alle Challenges'),
           c && c.nr < CHALLENGES.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('baukasten', { level: c.nr + 1 }) }, `Challenge ${c.nr + 1} ›`) : h('span')));
