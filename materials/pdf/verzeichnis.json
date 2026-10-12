@@ -16,7 +16,10 @@
      "bytes": {
       "schueler": 396007,
       "original": 379067
-     }
+     },
+     "demo": [
+      "schueler"
+     ]
     },
     {
      "titel": "Folien",
@@ -28,7 +31,11 @@
       "schueler": 702018,
       "lehrkraft": 481925,
       "original": 755386
-     }
+     },
+     "demo": [
+      "schueler",
+      "lehrkraft"
+     ]
     },
     {
      "titel": "Merkblatt M01: DEA",
@@ -38,7 +45,10 @@
      "bytes": {
       "schueler": 167032,
       "original": 105778
-     }
+     },
+     "demo": [
+      "schueler"
+     ]
     },
     {
      "titel": "Lehrkraft-Handreichung mit Lösungen",
@@ -48,7 +58,10 @@
      "bytes": {
       "lehrkraft": 385059,
       "original": 466228
-     }
+     },
+     "demo": [
+      "lehrkraft"
+     ]
     }
    ]
   },

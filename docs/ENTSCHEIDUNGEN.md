@@ -2,6 +2,9 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-12 · Material-Demo im Gastmodus
+Ohne Anmeldung gibt es nur eine Auswahl: Level 1 mit Arbeitsblatt, Folien-Handout und Merkblatt sowie als Beispiel die Lehrkraftfassungen (Handreichung mit Lösungen, Folien mit Notizen). Alles andere bekommt man erst nach Anmeldung in seiner Rolle (Schüler mit freigeschaltetem Kurs: Schülerfassungen; Lehrkräfte: zusätzlich Lehrkraftfassungen; Admin: Originale). Franks Entscheidung; passt zu V2 („einzelne Aufgaben zum Ausprobieren“). Festgelegt in `GAST_MATERIAL` (`app/js/data/gast.js`), als `demo` in `verzeichnis.json`, geprüft im Server. Schüler ohne freigeschalteten Kurs sehen ebenfalls die Demo.
+
 ## 2026-10-12 · Zusätzliches Material als Download (wie Algo Quest)
 Arbeitsblätter, Folien, Merkblätter und Klausuren sind unter `#/material` erreichbar und zählen nicht für Punkte. Drei Stufen: **Schüler-PDF** (ohne Lösungen; Folien als Handout ohne Notizen und ohne Lösungsfolien) für Angemeldete – Schüler nur mit freigeschaltetem Kurs, wie bei den Aufgaben (Vertrag §4, Gastmodus V2: ohne Anmeldung kein Einblick); **Lehrkraft-PDF** (Handreichungen mit Lösungen, Folien mit Notizseiten, Erwartungshorizonte, Übungsklausuren, Einheitsplanung) für Lehrkräfte und Admin; **Originale** (docx/pptx, einzeln oder als ZIP je Akte) nur für den Admin. Der Server liefert nur Dateien aus `materials/pdf/verzeichnis.json` aus (Whitelist, §9 „Lehrkraft-Dateien nur mit Anmeldung und Whitelist“). Die erzeugten Dateien (~60 MB) sind eingecheckt wie in Algo Quest, weil das Image ohne LibreOffice gebaut wird. Verworfen: Schüler-PDFs öffentlich (wie Algo Quest) – passt nicht zu Franks Entscheidung V2; PDFs im Container erzeugen – zu schwer.
 

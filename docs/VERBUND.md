@@ -55,7 +55,8 @@ Neu kommen Server-Pfade (Vertrag) und Hash-Routen (Oberfläche) hinzu:
   (Sitzung 30 Tage), der QR-Code führt also direkt zur Aufgabe.
 * Schüler ohne freigeschalteten Kurs (§4, die Prüf-API antwortet 403) und ein Server ohne eingerichtete Anmeldung
   (`PORTAL_URL` leer) sehen ebenfalls nur die Demo-Aufgaben – die App fällt nie auf „alles offen“ zurück.
-* Themenseite (`/themen`), Datenschutz und Übersicht sind öffentlich – ohne Lösungen.
+* Themenseite (`/themen`), Datenschutz und Übersicht sind öffentlich – ohne Lösungen. Unter `/material` gibt es ohne
+  Anmeldung nur eine Material-Demo (Level 1, Schüler- und Lehrkraftfassung); alles Weitere nach Anmeldung je Rolle.
 
 ## 4. Konfiguration (§8)
 

@@ -22,9 +22,15 @@ export const GAST = [
   { route: 'quiz', titel: 'Level-Quiz', text: 'Ein Demo-Quiz mit drei Fragen.', params: { demo: '1' } },
 ];
 
+/** Material-Demo ohne Anmeldung (Franks Entscheidung 2026-10-12): nur die Akte Level 1 – Schülerfassungen (Arbeitsblatt,
+ *  Folien-Handout, Merkblatt) und als Beispiel die Lehrkraftfassungen (Handreichung, Folien mit Notizen); Originale nie.
+ *  materials/scripts/export_pdf.mjs schreibt das als `demo` in verzeichnis.json, der Server (src/material.js) prüft es. */
+export const GAST_MATERIAL = { akten: ['level-1'], stufen: ['schueler', 'lehrkraft'] };
+
 /** Darf ein Gast diese Route öffnen? (Startseite, Themen, Datenschutz, Gastseite sind immer frei.) */
 export function gastErlaubt(route, params) {
   if (['', 'gast', 'themen', 'datenschutz'].includes(route)) return true;
+  if (route === 'material' && [...params.keys()].length === 0) return true; // nur die Material-Demo (Server prüft)
   return GAST.some((g) => g.route === route
     && Object.entries(g.params).every(([k, v]) => params.get(k) === v)
     && [...params.keys()].every((k) => k in g.params || (g.erlaubt ?? []).includes(k)));

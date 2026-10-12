@@ -14,6 +14,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { WORLDS, LEVELS } from '../../app/js/data/worlds.js';
 import { LEVEL_NIVEAU, BOSS_NIVEAU, MERKBLAETTER } from '../../app/js/data/niveaus.js';
+import { GAST_MATERIAL } from '../../app/js/data/gast.js';
 
 const MAT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(MAT, 'out');
@@ -106,6 +107,8 @@ for (const a of akten) {
     else if (d.lehrkraft) e.lehrkraft = kopiere(path.join(TMP, 'voll', pdfName(d.quelle)), `lehrkraft/${basis}.pdf`);
     e.original = kopiere(path.join(OUT, d.quelle), `original/${path.basename(d.quelle)}`);
     e.bytes = { schueler: groesse(e.schueler), lehrkraft: groesse(e.lehrkraft), original: groesse(e.original) };
+    // Demo ohne Anmeldung (app/js/data/gast.js): nur ausgewählte Akten und Stufen, nie Originale
+    if (GAST_MATERIAL.akten.includes(a.id)) { const demo = GAST_MATERIAL.stufen.filter((s) => s !== 'original' && e[s]); if (demo.length) e.demo = demo; }
     return e;
   });
 }
