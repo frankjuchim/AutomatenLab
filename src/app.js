@@ -1,0 +1,184 @@
+'use strict';
+// AutomatenLab-Server: liefert die Web-App aus app/ unverändert aus (Cache- und Sicherheitsregeln wie bisher
+// app/nginx.conf), dazu Healthcheck und Manifest nach dem Vertrag des Plattform-Verbunds InfoLabs
+// (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1).
+
+const path = require('node:path');
+const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
+const { openDatabase } = require('./db');
+
+const APP_DIR = path.join(__dirname, '..', 'app');
+const VERSION = require('../package.json').version;
+const VERTRAG = '1.1';
+const PLATTFORM_ID_STANDARD = 'automatenlab';
+
+// Content-Security-Policy wie bisher in app/nginx.conf: nur eigene Dateien; Graphviz läuft als WASM
+// ('wasm-unsafe-eval'), die App setzt Stile per Attribut ('unsafe-inline' nur für style-src, nie für Skripte).
+const CSP = {
+  'default-src': ["'self'"],
+  'script-src': ["'self'", "'wasm-unsafe-eval'"],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'img-src': ["'self'", 'data:'],
+  'font-src': ["'self'"],
+  'connect-src': ["'self'", 'data:'],
+  'object-src': ["'none'"],
+  'base-uri': ["'self'"],
+  'form-action': ["'self'"],
+  'frame-ancestors': ["'self'"],
+  'upgrade-insecure-requests': null
+};
+
+/** Vertragspfade (§7 urls) → Hash-Routen der App. Die bisherigen Hash-Routen bleiben unverändert. */
+const WEITERLEITUNGEN = {
+  '/gast': '/#/',
+  '/themen': '/#/themen',
+  '/lehrer': '/#/lehrkraft',
+  '/datenschutz': '/#/datenschutz'
+};
+
+/**
+ * Express-App erzeugen.
+ * @param {object} opts
+ * @param {string} opts.dbFile              SQLite-Datei oder ':memory:'
+ * @param {object} opts.katalog             Ergebnis von ladeKatalog() (src/inhalte.js)
+ * @param {string} [opts.plattformId]       PLATTFORM_ID (Standard „automatenlab“)
+ * @param {string} [opts.plattformUrl]      PLATTFORM_URL (sonst aus der Anfrage)
+ * @param {string} [opts.portalUrl]         PORTAL_URL (leer = Plattform läuft allein)
+ * @param {string} [opts.authModus]         AUTH_MODUS laut Konfiguration (lokal | beides | portal)
+ * @param {string|number|boolean} [opts.trustProxy]
+ * @param {Function} [opts.log]
+ */
+function createApp(opts) {
+  const log = opts.log || (() => {});
+  const db = openDatabase(opts.dbFile, { log });
+  const plattformId = opts.plattformId || PLATTFORM_ID_STANDARD;
+  const plattformUrl = String(opts.plattformUrl || '').replace(/\/+$/, '');
+  const portalUrl = String(opts.portalUrl || '').replace(/\/+$/, '');
+  const katalog = opts.katalog;
+
+  const app = express();
+  app.disable('x-powered-by');
+  app.set('trust proxy', opts.trustProxy ?? 1);
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: { useDefaults: false, directives: CSP },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'same-origin' },
+      referrerPolicy: { policy: 'no-referrer' },
+      strictTransportSecurity: false // HTTPS und HSTS regelt CapRover
+    })
+  );
+  app.use((req, res, next) => {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    res.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
+    next();
+  });
+  // gzip wie bisher (Graphviz 1,2 MB → ca. 470 KB)
+  app.use(compression());
+
+  /* ---------- Vertrag: Healthcheck und Manifest ---------- */
+
+  app.get('/healthz', (req, res) => {
+    try {
+      db.prepare('SELECT 1').get();
+      res.set('Cache-Control', 'no-store').json({ status: 'ok', version: VERSION });
+    } catch {
+      res.status(500).json({ status: 'error' });
+    }
+  });
+
+  const basis = (req) => plattformUrl || `${req.protocol}://${req.get('host')}`;
+
+  // Auth-Modus im Manifest: Die Anmeldung über das Portal (SSO, Verbund-API) folgt in Phase 3. Bis dahin meldet
+  // die Plattform ehrlich „lokal“ ohne SSO – sonst würde das Portal Aufträge an noch fehlende Endpunkte schicken.
+  const manifest = (req) => ({
+    vertrag: VERTRAG,
+    id: plattformId,
+    name: 'AutomatenLab',
+    titel: 'AutomatenLab – Maschinen, die Sprache verstehen',
+    themenfeld: 'Automaten und formale Sprachen',
+    kurs: 'Informatik eA (LK), Niedersachsen',
+    beschreibung:
+      'Interaktive Übungsmodule zu endlichen Automaten, Mealy-Maschinen, Kellerautomaten, Grammatiken und Turingmaschinen – mit Simulatoren, Baukasten und Abitur-Tabellen.',
+    farbe: '#0E6455',
+    version: VERSION,
+    basis: basis(req),
+    icon: '/assets/favicon.svg',
+    urls: { start: '/', gast: '/gast', themen: '/themen', lehrkraft: '/lehrer', datenschutz: '/datenschutz', healthz: '/healthz' },
+    auth: { modus: 'lokal', portal: portalUrl || null, sso: false },
+    umfang: katalog.umfang,
+    welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
+    faehigkeiten: ['gast', 'themen']
+  });
+
+  app.get('/api/plattform', (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'no-cache');
+    res.json(manifest(req));
+  });
+
+  /* ---------- Öffentliche API für die App ---------- */
+
+  // Themenübersicht ohne Lösungen (Vertrag §9): Welten, Level, Module
+  app.get('/api/themen', (req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.json({ welten: katalog.welten, module: katalog.module, portal: portalUrl || null });
+  });
+
+  app.use('/api', (req, res) => res.status(404).json({ error: 'Unbekannte API-Route.' }));
+
+  /* ---------- Vertragspfade → Hash-Routen ---------- */
+
+  for (const [pfad, ziel] of Object.entries(WEITERLEITUNGEN)) {
+    app.get(pfad, (req, res) => res.redirect(302, ziel));
+  }
+
+  /* ---------- Statische App (Regeln wie app/nginx.conf) ---------- */
+
+  const statisch = (dir, cache) =>
+    express.static(path.join(APP_DIR, dir), {
+      index: false,
+      dotfiles: 'deny',
+      fallthrough: true,
+      setHeaders: (res) => res.set('Cache-Control', cache)
+    });
+  const LANG = 'public, max-age=2592000, immutable';
+  app.use('/css', statisch('css', 'public, max-age=3600, must-revalidate'));
+  app.use('/js', statisch('js', 'public, max-age=3600, must-revalidate'));
+  app.use('/vendor', statisch('vendor', 'public, max-age=2592000'));
+  app.use('/assets', statisch('assets', LANG));
+
+  // index.html nie lange cachen, damit Updates sofort ankommen; wie bisher (try_files … /index.html) liefern auch
+  // unbekannte Pfade die App aus – QR-Codes zeigen auf BASE_URL + #/route.
+  const index = (req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(path.join(APP_DIR, 'index.html'));
+  };
+  app.get('/', index);
+  app.get('/index.html', index);
+  app.get(/^\/(?!(?:css|js|vendor|assets|api|sso)\/).*/, (req, res, next) => {
+    // Dateien mit Endung, die es nicht gibt, sind echte 404 (kein HTML statt Bild/Skript)
+    if (/\.[a-z0-9]{2,5}$/i.test(req.path)) return next();
+    index(req, res);
+  });
+
+  app.use((req, res) => res.status(404).type('text').send('Nicht gefunden.'));
+
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, next) => {
+    const status = err && Number.isInteger(err.status) ? err.status : 500;
+    if (status >= 500) log(err && err.stack ? err.stack : String(err));
+    const text = status >= 500 ? 'Interner Fehler.' : err.message || 'Fehler.';
+    if (req.path.startsWith('/api/')) return res.status(status).json({ error: text });
+    res.status(status).type('text').send(text);
+  });
+
+  app.locals.db = db;
+  app.locals.manifest = manifest;
+  return app;
+}
+
+module.exports = { createApp, VERSION, VERTRAG, WEITERLEITUNGEN, PLATTFORM_ID_STANDARD };

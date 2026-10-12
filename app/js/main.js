@@ -11,6 +11,9 @@ import { toast } from './components/toast.js';
 const SPECIAL = {
   '': () => import('./modules/home.js'),
   komponenten: () => import('./modules/komponenten.js'), // Entwickler-Seite (nicht verlinkt)
+  themen: () => import('./modules/themen.js'), // auch Server-Pfad /themen (Vertrag InfoLabs)
+  datenschutz: () => import('./modules/datenschutz.js'), // auch /datenschutz
+  lehrkraft: () => import('./modules/lehrkraft.js'), // auch /lehrer
 };
 
 const app = document.getElementById('app');
@@ -43,7 +46,8 @@ const header = h('header', { class: 'site-header' },
     bigToggle));
 const main = h('main', { id: 'main', tabindex: '-1' });
 const footer = h('footer', { class: 'site-footer' },
-  h('p', null, 'AutomatenLab für den Informatik-Leistungskurs. Keine Anmeldung, keine Cookies: Dein Fortschritt bleibt nur auf diesem Gerät.'));
+  h('p', null, 'AutomatenLab für den Informatik-Leistungskurs. Keine Anmeldung, keine Cookies: Dein Fortschritt bleibt nur auf diesem Gerät.'),
+  h('p', { class: 'footer-links' }, h('a', { href: '#/themen' }, 'Themen'), ' · ', h('a', { href: '#/lehrkraft' }, 'Für Lehrkräfte'), ' · ', h('a', { href: '#/datenschutz' }, 'Datenschutz')));
 clear(app, h('a', { class: 'skip-link', href: '#main', onclick: (e) => { e.preventDefault(); main.focus(); } }, 'Zum Inhalt springen'), header, main, footer);
 
 progress.subscribe(() => {

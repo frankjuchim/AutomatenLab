@@ -9,29 +9,37 @@ on:
 
 jobs:
   tests:
-    name: App-Tests (Engine, Inhalte)
+    name: App- und Server-Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
       - run: npm test
 
-  deep-links:
-    name: Deep-Links im Container (QR-Routen)
+  container:
+    name: Container, Vertrag und Deep-Links (QR-Routen)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Image wie auf CapRover bauen und starten
         run: |
           docker build -t automatenlab .
-          docker run -d --rm -p 8080:80 --name automatenlab automatenlab
-          for i in $(seq 1 30); do curl -fsS http://localhost:8080/ >/dev/null && break; sleep 1; done
-      - run: node qa/qa-routes.mjs http://localhost:8080/
+          docker run -d --rm -p 8080:80 -e PLATTFORM_URL=http://localhost:8080 --name automatenlab automatenlab
+          for i in $(seq 1 60); do curl -fsS http://localhost:8080/healthz >/dev/null && break; sleep 1; done
+          curl -fsS http://localhost:8080/healthz
+      - name: Vertragsprüfung (scripts/vertrag_pruefen.js)
+        run: node scripts/vertrag_pruefen.js http://localhost:8080
+      - name: Alle Deep-Links aus app/README.md
+        run: node qa/qa-routes.mjs http://localhost:8080/

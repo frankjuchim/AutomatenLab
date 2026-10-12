@@ -551,3 +551,12 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .legend-vertiefung::before { border-color: var(--teal); background: var(--teal-mist); }
 .legend-bonus::before { border-style: dotted; border-color: var(--ocker); }
 .level-node.is-vertiefung.is-active, .level-node.is-bonus.is-active { background: var(--ocker-fill); color: var(--ink); }
+
+/* ───── Themenseite, Fußzeilen-Links (Vertrag InfoLabs) ───── */
+.footer-links { margin-top: 0.6rem !important; }
+.footer-links a { color: var(--ink-2); }
+.themen-welt { margin-top: 2rem; }
+.themen-level { list-style: none; padding: 0; margin: 0.8rem 0 0; display: grid; gap: 0.6rem; }
+.themen-level > li { padding: 0.7rem 1rem; border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); }
+.themen-level-kopf { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: center; }
+.themen-module { margin: 0.35rem 0 0; }

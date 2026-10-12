@@ -1,27 +1,38 @@
 {
-  "name": "automatenlab-repo",
-  "version": "1.0.0",
+  "name": "automatenlab",
+  "version": "1.1.0",
   "private": true,
-  "description": "AutomatenLab – Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Automaten und formale Sprachen, Informatik Sek II) mit Web-App und Materialien",
+  "description": "AutomatenLab – Plattform des Verbunds InfoLabs für Automaten und formale Sprachen (Informatik Sek II) mit Web-App, Server und Unterrichtsmaterial",
+  "main": "src/server.js",
   "scripts": {
-    "app:serve": "cd app && python3 -m http.server 8080",
+    "start": "node src/server.js",
+    "dev": "SESSION_SECRET=dev-geheimnis-nur-lokal-123 DATA_DIR=./data PORT=8080 PLATTFORM_URL=http://localhost:8080 node src/server.js",
+    "test": "npm run app:test && npm run server:test",
     "app:test": "cd app && npm test",
+    "server:test": "node --test test/*.test.js",
+    "app:serve": "npm run dev",
+    "vertrag": "node scripts/vertrag_pruefen.js",
     "materials:build": "bash materials/build_all.sh",
     "materials:package": "node materials/scripts/package_dist.js",
-    "qa:routes": "node qa/qa-routes.mjs http://localhost:8080/",
-    "test": "npm run app:test"
+    "qa:routes": "node qa/qa-routes.mjs http://localhost:8080/"
   },
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
+  "license": "UNLICENSED",
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "compression": "^1.8.1",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0"
+  },
+  "devDependencies": {
     "docx": "9.7.1",
     "jszip": "3.10.1",
+    "playwright": "1.56.0",
     "pptxgenjs": "4.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-icons": "5.7.0",
-    "sharp": "0.35.4"
-  },
-  "devDependencies": {
-    "playwright": "1.56.0"
+    "sharp": "0.35.4",
+    "supertest": "^7.3.1"
   }
 }
