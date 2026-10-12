@@ -1,6 +1,6 @@
 # AutomatenLab – Architektur für Modul-Autoren
 
-Statische Single-Page-App ohne Build-Schritt: `index.html` + ES-Module (Vanilla JS) + ein Stylesheet.
+Single-Page-App ohne Build-Schritt: `index.html` + ES-Module (Vanilla JS) + ein Stylesheet. Ausgeliefert vom Server in `../src` (Express, Regeln wie `nginx.conf`); der Server liest `js/data/worlds.js` und `js/modules/manifest.js` für Manifest und Themenseite mit – diese Dateien bleiben DOM-frei.
 Keine Laufzeit-Abhängigkeiten aus dem Netz (Schulnetz-Proxy, Datenschutz). Graphviz läuft lokal als WASM (`vendor/viz.js`).
 
 ```

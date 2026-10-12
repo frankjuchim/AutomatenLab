@@ -1,14 +1,45 @@
-# AutomatenLab – statische Auslieferung mit nginx.
+# AutomatenLab – Node.js 22 LTS: Web-App (app/) + Server (src/) in einem Container.
 # CapRover baut bei jedem Push auf main aus dem Wurzelordner (captain-definition → ./Dockerfile).
-# Ab Phase 2 (Login) wird daraus ein Node-Container für App + API (siehe docs/ROADMAP.md).
-FROM nginx:1.27-alpine
-# Eigene Server-Konfiguration (gzip, Cache-Header, MIME für .wasm/.mjs, Sicherheits-Header)
-COPY app/nginx.conf /etc/nginx/conf.d/default.conf
-# Nur die Web-App kopieren (Tests, Materialien, Doku werden über .dockerignore ausgeschlossen)
-COPY app/index.html /usr/share/nginx/html/
-COPY app/css /usr/share/nginx/html/css
-COPY app/js /usr/share/nginx/html/js
-COPY app/assets /usr/share/nginx/html/assets
-COPY app/vendor /usr/share/nginx/html/vendor
+# Muster: Dockerfile von Algo Quest (mehrstufig, ohne root, Port 80, Healthcheck).
+
+# Stufe 1: Abhängigkeiten installieren (Build-Werkzeuge als Fallback für better-sqlite3)
+FROM node:22-bookworm-slim AS deps
+WORKDIR /app
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 make g++ \
+ && rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force \
+ && node -e "require('express'); require('helmet'); require('compression'); new (require('better-sqlite3'))(':memory:'); console.log('Abhängigkeiten ok')"
+
+# Stufe 2: schlankes Laufzeit-Image
+FROM node:22-bookworm-slim
+ENV NODE_ENV=production \
+    PORT=80 \
+    DATA_DIR=/app/data \
+    TZ=Europe/Berlin
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json ./
+COPY src ./src
+COPY scripts ./scripts
+# Web-App ohne Tests und Doku (siehe .dockerignore)
+COPY app/package.json ./app/package.json
+COPY app/index.html ./app/index.html
+COPY app/css ./app/css
+COPY app/js ./app/js
+COPY app/assets ./app/assets
+COPY app/vendor ./app/vendor
+# Datenverzeichnis (in CapRover als Persistent Directory /app/data eingebunden)
+RUN mkdir -p /app/data && chown -R node:node /app/data
+# Port 80 ohne root-Rechte binden dürfen
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libcap2-bin \
+ && setcap 'cap_net_bind_service=+ep' "$(readlink -f "$(which node)")" \
+ && apt-get purge -y libcap2-bin && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+USER node
+VOLUME ["/app/data"]
 EXPOSE 80
-HEALTHCHECK --interval=60s --timeout=5s CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||80)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "src/server.js"]

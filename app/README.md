@@ -1,21 +1,20 @@
 # AutomatenLab
 
 Lern-Web-App zur Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Informatik-Leistungskurs, Automaten und formale Sprachen, KC Niedersachsen).
-Statische Seite, kein Login, keine Cookies, keine externen Server. Fortschritt bleibt im Browser des jeweiligen Geräts (`localStorage`).
+Plattform des Verbunds InfoLabs (Vertrag: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1). Die App läuft ohne Build-Schritt; ausgeliefert wird sie vom Server in `../src` (Node, Express). Keine externen Server, CDNs oder Tracker. Bis zur Anmeldung über das Portal (Phase 3) bleibt der Fortschritt im Browser des jeweiligen Geräts (`localStorage`).
 
 ## Deployment auf CapRover
 
-Gebaut wird aus dem **Wurzelordner des Repositorys** (`captain-definition` → `Dockerfile`, beide im Wurzelordner): Jeder Push auf `main` startet per Webhook den Live-Build. Details, Notfall-Deploy und Prüfung: `docs/DEPLOYMENT.md`.
+Gebaut wird aus dem **Wurzelordner des Repositorys** (`captain-definition` → `Dockerfile`): ein Node-Container mit Server (`src/`) und dieser App. Jeder Push auf `main` startet per Webhook den Live-Build. Details: `docs/DEPLOYMENT.md`.
 
-Das Image basiert auf `nginx:alpine` und liefert nur statische Dateien aus `app/` aus (Konfiguration `app/nginx.conf`): gzip an (Graphviz 1,2 MB → ca. 470 KB), `index.html` ohne Cache (Updates kommen sofort an), Schriften/Graphviz lange gecacht, Content-Security-Policy erlaubt nur eigene Dateien.
+Der Server liefert die Dateien dieses Ordners unverändert aus – mit denselben Regeln wie früher `nginx.conf` (gzip, `index.html` ohne Cache, JS/CSS 1 h, Schriften/Graphviz 30 Tage, Content-Security-Policy nur für eigene Dateien). `nginx.conf` bleibt als Referenz liegen; Tests (`test/server.test.js`) prüfen die Regeln.
 
-Lokal testen:
+Lokal testen (im Wurzelordner):
 ```bash
-cd app
-python3 -m http.server 8080          # dann http://localhost:8080/
-# oder mit Docker (aus dem Wurzelordner des Repositorys):
-cd .. && docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
-npm test                              # Engine- und Inhaltstests (Node ≥ 20)
+npm install
+npm run dev                           # Server + App unter http://localhost:8080/
+npm test                              # App- und Server-Tests (Node ≥ 22)
+docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 ```
 
 ## Routen für QR-Codes
@@ -62,6 +61,11 @@ npm test                              # Engine- und Inhaltstests (Node ≥ 20)
 | `#/quiz` | Level-Quiz, Übersicht |
 | `#/quiz?welt=A` … `?welt=D` | Quiz je Welt (8–10 Fragen) |
 | `#/quiz?ds=1` … `?ds=16` | Mini-Exit-Ticket je Doppelstunde (3 Fragen) |
+| `#/themen` | Themen der Einheit: Welten, Level, Module (öffentlich, ohne Lösungen) – auch `BASE_URL/themen` |
+| `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
+| `#/lehrkraft` | Bereich für Lehrkräfte (im Aufbau) – auch `BASE_URL/lehrer` |
+
+Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; `/healthz` und `/api/plattform` (Manifest) für das Portal.
 
 Baukasten-Challenges (`?level=n` / `?aufgabe=id`):
 

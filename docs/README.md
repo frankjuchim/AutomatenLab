@@ -13,6 +13,7 @@
 | `DATENSCHUTZ.md` | Arbeitsgrundlage und Text-Entwurf für die Datenschutzseite |
 | `MATERIALIEN.md` | Wie die Word-/PowerPoint-Dateien erzeugt und geprüft werden |
 | `einheit/PLAN.md` | Didaktische Planung, **verbindliche Notation**, KC-Bezug, App-Module |
+| `einheit/FALLEN.md` | Fallen P1–P10 (Entwurf zur Freigabe, Vertrag §9) |
 | `einheit/STYLEGUIDE.md` | Qualitätsregeln für Material (AB, Handreichung, Folien, Merkblatt) |
 | `../app/README.md` | Web-App: Deployment, **alle Routen für QR-Codes** |
 | `../app/ARCHITECTURE.md` | Web-App: Aufbau, Engine-API, Komponenten |

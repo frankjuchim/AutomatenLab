@@ -20,7 +20,7 @@ still gemacht, sondern als Textvorschlag für `VERTRAG.md` formuliert (§6 unten
   (unverändert aus `frankjuchim/labs`) in den Tests.
 * **Verbund-API** (§6): `POST /api/verbund/loeschen`, `GET /api/verbund/kurse/:kursId/uebersicht`,
   `POST /api/verbund/kurse/:kursId`.
-* **Bei AutomatenLab bleibt** (§3): Inhalte, Lernstand (Fortschritt aus `progress.js`, synchronisiert), Kurs-Einstellungen
+* **Bei AutomatenLab bleibt** (§3): Inhalte, Prüfung und Lernstand (auf dem Server, §6 unten), Kurs-Einstellungen
   (Freischaltung Pflicht/Vertiefung/Bonus, Aufträge), Lehrkraft-Auswertung (Lernstand-Matrix, CSV), Gastmodus,
   Themenseite, ergänzende Datenschutzhinweise.
 * **Entfällt gegenüber `docs/LOGIN_KONZEPT.md`:** eigene Konten, Einladungen, SuS-Zugänge und Zugangskarten
@@ -35,7 +35,7 @@ Neu kommen Server-Pfade (Vertrag) und Hash-Routen (Oberfläche) hinzu:
 | Pfad | Zweck | Umsetzung |
 |---|---|---|
 | `/` | Start (bisherige App) | `app/index.html` |
-| `/gast` | Gastmodus (§4, Manifest `urls.gast`) | Weiterleitung auf `/#/` (Startseite im Gastmodus, siehe §3) |
+| `/gast` | Gastmodus mit Demo-Aufgaben (§4, Manifest `urls.gast`) | Weiterleitung auf `/#/` (bis die Demo-Seite `#/gast` steht, siehe §3) |
 | `/themen` | Themenseite ohne Lösungen (`urls.themen`) | Weiterleitung auf `/#/themen` (neu: Welten, Level, Module, Arbeitsblatt-Bezug) |
 | `/lehrer` | Lehrkraft-Bereich (`urls.lehrkraft`) | Weiterleitung auf `/#/lehrkraft` (ohne Sitzung → `/sso/start?ziel=/lehrer`) |
 | `/datenschutz` | Besonderheiten der Plattform + Link auf `<PORTAL_URL>/datenschutz` (§3) | Weiterleitung auf `/#/datenschutz` |
@@ -44,14 +44,16 @@ Neu kommen Server-Pfade (Vertrag) und Hash-Routen (Oberfläche) hinzu:
 | `/api/verbund/…` | Verbund-API §6 | Server |
 | `/api/…` | Sitzung, Fortschritt, Lehrkraft-Auswertung, Aufträge | Server |
 
-## 3. Gastmodus (Entscheidung F1, 2026-10-11)
+## 3. Gastmodus (Entscheidung V2, 2026-10-11 – ersetzt F1)
 
-* Alle Routen aus `app/README.md` bleiben **ohne Anmeldung voll nutzbar** (gedruckte QR-Codes). Der Fortschritt eines
-  Gastes bleibt nur im Browser (`localStorage`) und geht nie an den Server – der Gastmodus „nutzt nie echte Daten“ (§4).
-* Die **Startseite** zeigt Gästen eine Vorschau: Welt A vollständig, die Welten B–D mit ihren Modulkacheln und dem
-  Hinweis „Mit Anmeldung über InfoLabs: Fortschritt auf allen Geräten, Aufträge deiner Lehrkraft“. Ein Deep-Link
-  in Welt B–D funktioniert trotzdem.
-* Bei der ersten Anmeldung auf einem Gerät mit Gast-Fortschritt fragt die App, ob er ins Konto übernommen werden soll.
+* Ohne Anmeldung gibt es nur **einzelne Demo-Aufgaben zum Ausprobieren** (`/gast`, Vertrag §4/§9): je Modul eine
+  eigene Demo-Aufgabe, die im Browser geprüft wird, keine Punkte bringt und nicht zum Aufgabenkatalog gehört.
+  Der Lernstand eines Gastes bleibt im Browser und erreicht nie den Server.
+* Alle übrigen Routen aus `app/README.md` bleiben **unverändert gültig** (QR-Codes), verlangen aber eine Anmeldung:
+  Ohne Sitzung zeigt die App einen kurzen Hinweis und leitet über `/sso/start?ziel=/%23/<route>` zum Portal; nach der
+  Anmeldung landet man genau auf der verlinkten Aufgabe. Im Unterricht sind die SuS über das Portal angemeldet
+  (Sitzung 30 Tage), der QR-Code führt also direkt zur Aufgabe.
+* Themenseite (`/themen`), Datenschutz und Übersicht sind öffentlich – ohne Lösungen.
 
 ## 4. Konfiguration (§8)
 
@@ -79,58 +81,55 @@ ignoriert der nginx-Container sie.
 4. Ende-zu-Ende: als Schüler im Portal „Weiter zu AutomatenLab“ → angemeldet auf der Plattform; Kurs im Portal
    umbenennen → Name im AutomatenLab-Dashboard geändert.
 
-## 6. Abweichungen vom Vertrag und Änderungsvorschläge für `VERTRAG.md`
+## 6. Prüfung auf dem Server (Entscheidung V1, 2026-10-11)
 
-AutomatenLab ist anders gebaut als Algo Quest: Die Fachlogik (Automaten-Simulation, Prüfung) läuft als Engine
-**im Browser**, damit Simulatoren interaktiv sind, die App ohne Anmeldung und offline funktioniert und gedruckte
-QR-Codes direkt auf Aufgaben zeigen. Daraus ergeben sich Abweichungen von §9 (MUSS). Sie werden hier als
-Vorschlag für eine **Vertragsversion 1.2** formuliert; bis zur Entscheidung durch Frank (und Übernahme in
-`frankjuchim/labs` durch die dortige Session) gelten sie als offen.
+AutomatenLab hält sich an §9 „Sicherheit“ und „Vergleichbarkeit“: Lösungen, Erklärungen und nicht abgerufene Tipps
+bleiben auf dem Server, geprüft wird **nur serverseitig**, Punkte vergibt nur der Server nach der Formel
+`round(punkte × max(0.25, 1 − 0.25·Fehlversuche − 0.2·Tipps))` mit Standardpunkten 10/20/30 je Stufe; „Lösung
+zeigen“ bringt 0 Punkte. Rangschwellen 0/10/30/55/80 % der Level-Punkte der freigeschalteten Welten.
 
-### Vorschlag V1 – Prüfung im Browser (§9 „Sicherheit“, „Vergleichbarkeit“, „Inhaltsformat“)
+Bisher liegen alle Inhalte samt Lösungen als JavaScript in `app/js/data` und werden im Browser geprüft. Umbau:
 
-Neuer Absatz in §9 nach „Inhaltsformat“:
+* **Engine bleibt gemeinsam.** `app/js/engine` (DEA, NEA, Mealy, Keller, Grammatik, Turing) ist ein Simulator ohne
+  Geheimnisse; Browser (Simulation, Anzeige) und Server (Prüfung) nutzen denselben Code.
+* **Inhalte werden geteilt:** öffentliche Aufgabenteile (Text, Alphabet, Startautomat, Beispiele ohne Lösung) liefert
+  der Server per API; Lösungen, Referenzautomaten, Prüffunktionen, Erklärungen und Tipps ziehen nach `inhalte/`
+  (außerhalb von `app/`, nie ausgeliefert). Ein Test stellt sicher, dass keine ausgelieferte Datei Lösungsfelder enthält.
+* **Lernstand auf dem Server** je `sub` und Aufgabe (wie Algo Quest: Status, Fehlversuche, Tipps, Punkte, Zeitpunkt).
+  `progress.js` behält seine öffentliche API; für Angemeldete liest es den Stand vom Server, Lösen geht nur über die
+  Prüf-API. Gäste nutzen weiter `localStorage` (nur Demo-Aufgaben).
+* **Aufgabenformat:** AutomatenLab beschreibt seine Interaktionen (Automat bauen, Wort testen, Kellertabelle,
+  Ableitung …) in einem eigenen `docs/AUFGABENFORMAT.md`, wie es §9 für neue Interaktionen vorsieht.
 
-> **Plattformen mit Prüfung im Browser:** Eine Plattform, deren Aufgaben von einer Simulations-Engine im Browser
-> geprüft werden (z. B. AutomatenLab), DARF Lösungen, Prüfung und Punktevergabe im Browser durchführen; der Lernstand
-> wird dann vom Browser an die Plattform gemeldet und ist nicht manipulationssicher. Sie MUSS das im README und in
-> ihren Datenschutzhinweisen angeben; ihre Kennzahlen dürfen nicht für Noten verwendet werden. Für solche Plattformen
-> gelten Punkteformel, Standardpunkte und Aufgabenformat (Algo Quest) als SOLL; `anteil` in der Kursübersicht (§6)
-> ist dann der Anteil gelöster Aufgaben der freigeschalteten Level. Das Manifest nennt in `faehigkeiten` den Wert
-> `"pruefung-im-browser"`.
+| Modul | heute im Browser | künftig auf dem Server |
+|---|---|---|
+| Level-Quiz | Antworten in `quiz.js` | Fragen ohne Lösung; Prüfung und Erklärung nach der Antwort |
+| Sprach-Detektiv | geheimer Automat + Optionen | Testwörter werden auf dem Server simuliert; gewählte Option geprüft |
+| Automaten-Baukasten | Referenz-DEA | eigener DEA an den Server: Äquivalenz und kürzestes Gegenbeispiel |
+| Minimierer | erwartete Klassen | Markierung/Zusammenfassung an den Server |
+| Mealy-Maschine | Ausgaben, Fehlerkanten | Vorhersage bzw. Reparatur an den Server |
+| Parallelwelten | Rätsel-Lösungen, Teilmengen | Antwort an den Server |
+| Keller-Labor | Tabellen aus der Engine | Tabelle bzw. Rückwärts-Eingabe an den Server |
+| Überliste den Automaten | Prädikat | Wort an den Server |
+| Ableitungs-Rallye | Zielwort, Prüfung der Schritte | Ableitung an den Server |
+| Grammatik-Tester | Prüfprädikat | Grammatik an den Server, Sprachvergleich bis `maxLen` |
+| Turing-Labor | Tabellen-Challenges | Tabelle an den Server |
+| Akzeptor-Arena, Chomsky-Sortierer | Spielrunden | als **Training** wie der Algo-Quest-Trainingsplatz: Runde vom Server erzeugt, Antworten serverseitig gezählt (1 Punkt je Aufgabe, Tageshöchstwert) |
 
-### Vorschlag V2 – Gastmodus mit vollem Inhalt (§4, §9 „Didaktik“)
+Freie Modi und Simulatoren (Baukasten frei, Grammatik frei, Turing-Programme, NEA-/Keller-Simulation ohne Aufgabe)
+bringen keine Punkte und bleiben im Browser.
 
-Ergänzung in §9 nach „Gastmodus `/gast` mit eigenen Demo-Aufgaben“:
+## 7. Weitere Vertragspunkte
 
-> … oder – wenn gedruckte Materialien per QR-Code direkt auf Aufgaben verlinken – mit dem vollständigen Inhalt; der
-> Lernstand eines Gastes bleibt dann ausschließlich im Browser und erreicht nie den Server.
-
-### Vorschlag V3 – Fallen-Liste, Bosse, Warm-up als SOLL (§9 „Didaktik“)
-
-AutomatenLab hat Welten A–D mit 16 Leveln und Boss-Leveln (6, 10, 14), aber (noch) keine Fallen-Liste P1–P10 und
-keinen Warm-up-Trainer. Vorschlag: In §9 „Fallen-Liste P1–P10 des Themas“ von MUSS auf **SOLL** stufen
-(„Plattformen ohne Fallen-Liste nennen das im README“). Alternative ohne Vertragsänderung: Frank legt eine
-Fallen-Liste für Automaten und formale Sprachen fest (Inhaltsarbeit, z. B. Fehlerzustand vergessen, Kellerbelegung
-falsch notiert, ε-Übergänge …), sie wird in Quiz und Material verankert.
-
-### Vorschlag V4 – Weltkennungen (§7, Nebenversion)
-
-AutomatenLab bezeichnet Welten mit Buchstaben A–D. Im Manifest und in der Kursübersicht steht `nr` als Zahl 1–4,
-zusätzlich das neue optionale Feld `kennung` (`"A"` … `"D"`). Neue Felder sind laut §7 erlaubt; Vorschlag für §7:
-„`welten[].kennung` (KANN): Anzeigekennung der Welt, falls sie von `nr` abweicht.“
-
-### Hinweis H1 – gemeinsamer Kern (§13.3)
-
-AutomatenLab ist die **zweite** Plattform; laut §13.3 SOLL spätestens jetzt ein gemeinsamer Kern (`lab-kern`)
-ausgelagert werden. Das Repository dafür gehört nicht in die Zuständigkeit dieser Session. Bis dahin übernimmt
-AutomatenLab `src/jwt.js` und `scripts/vertrag_pruefen.js` unverändert und `src/security.js`/`src/validate.js` aus
-Algo Quest mit Herkunftsvermerk (gleiche Pfade, gleiche Funktionsnamen, CommonJS), damit das spätere Auslagern ein
-reines Verschieben ist.
-
-### Begründete SOLL-Abweichungen (nur README, keine Vertragsänderung)
-
-* **Hausfarben (§9 Oberfläche, SOLL):** AutomatenLab behält sein eingeführtes Erscheinungsbild (Grün-Petrol,
-  Schrift Atkinson Hyperlegible, Großansicht „A A“), weil SuS und gedruckte Materialien es seit Version 1.0
-  verwenden. Plattformfarbe im Manifest: `#0E6455`. Der Link „⌂ Portal“ kommt in die Kopfzeile.
-* **Kursübersicht (§6, SOLL):** wird umgesetzt; `anteil` nach Vorschlag V1.
+* **V3 – Fallen-Liste P1–P10:** Entwurf in `docs/einheit/FALLEN.md` (zur Freigabe durch Frank),
+  danach in Aufgaben (Feld `fallen`), Quiz, Material und Fallen-Profil verankert. Keine Vertragsänderung nötig.
+* **V4 – Weltkennungen:** umgesetzt. Manifest und Kursübersicht führen `nr` 1–4 und das zusätzliche Feld
+  `kennung` (`"A"` … `"D"`); neue Felder sind nach §7 erlaubt. Vorschlag zur Klarstellung in `VERTRAG.md` §7 (für die
+  Portal-Session): „`welten[].kennung` (KANN): Anzeigekennung der Welt, falls sie von `nr` abweicht (z. B. `"A"`).“
+* **Farben (§9 Oberfläche, SOLL):** AutomatenLab führt eigene Farben (Grün-Petrol `#0E6455`, Ocker `#B26A0F`, Schrift
+  Atkinson Hyperlegible, Großansicht „A A“) – von Frank so entschieden. Plattformfarbe im Manifest `#0E6455`. Der Link
+  „⌂ Portal“ kommt mit der Anmeldung in die Kopfzeile.
+* **Gemeinsamer Kern (§13.3):** AutomatenLab ist die zweite Plattform; laut §13.3 SOLL jetzt ein Kern (`lab-kern`)
+  ausgelagert werden. Das Repository gehört nicht in die Zuständigkeit dieser Session. Bis dahin: `src/jwt.js` und
+  `scripts/vertrag_pruefen.js` unverändert kopiert, `src/security.js`/`src/validate.js` aus Algo Quest mit
+  Herkunftsvermerk (gleiche Pfade, CommonJS), damit das Auslagern ein reines Verschieben ist.

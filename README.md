@@ -11,12 +11,12 @@ Alle Materialien werden per Skript erzeugt; jeder Automat, jede Grammatik und je
 ## Schnellstart
 
 ```bash
-# Voraussetzungen: Node ≥ 20, Python ≥ 3.10, Graphviz (macOS: brew install graphviz)
+# Voraussetzungen: Node ≥ 22, Python ≥ 3.10, Graphviz (macOS: brew install graphviz)
 npm install                              # Node-Pakete für Materialien + Playwright (QA)
 python3 -m pip install -r materials/requirements.txt
 
-npm run app:serve                        # Web-App unter http://localhost:8080
-npm test                                 # Engine- und Inhaltstests der App
+npm run dev                              # Server + Web-App unter http://localhost:8080
+npm test                                 # App- und Server-Tests
 npm run materials:build                  # alle Word-/PowerPoint-Dateien → materials/dist/Automaten_LK (ca. 3–4 min)
 ```
 
@@ -26,7 +26,8 @@ Vorschaubilder (PDF/PNG) brauchen zusätzlich LibreOffice (`brew install --cask 
 
 | Ordner | Inhalt |
 |---|---|
-| `app/` | Web-App (statisch, Vanilla-JS-ES-Module, kein Build-Schritt), nginx-Konfiguration, Node-Tests. Details: `app/README.md`, `app/ARCHITECTURE.md` |
+| `app/` | Web-App (Vanilla-JS-ES-Module, kein Build-Schritt), App-Tests. Details: `app/README.md`, `app/ARCHITECTURE.md` |
+| `src/`, `test/`, `scripts/` | Server (Node 22, Express 5, SQLite) nach dem Muster von Algo Quest, Server-Tests, Vertragsprüfung des Verbunds |
 | `materials/` | Material-Pipeline: `lib/` (automata.py, docstyle.js, deckstyle.js, videostyle.js), `content/dsXX/` je Doppelstunde, `content/video/`, `build_all.sh` |
 | `qa/` | Playwright-Prüfskripte (alle Deep-Links, Konsolenfehler, Screenshots) |
 | `docs/` | Planung der Einheit, Styleguide, Architektur, **Login-Konzept**, Roadmap, Deployment, Übergabe an Claude Code |

@@ -4,39 +4,39 @@
 > Immer auf Feature-Branches arbeiten; nach `main` nur über einen geprüften Pull Request (Prüfung grün) und nicht
 > während des Unterrichts. Danach die Live-Seite prüfen.
 
-## Heute (Version 1.0): statische App auf CapRover
+## Container auf CapRover (ab Version 1.1)
 
 * CapRover-App `automatenlab`, Domain <https://automatenlab.frankjuchim.de>, Container-Port **80**.
-* Build aus dem **Wurzelordner** des Repositorys: `captain-definition` → `./Dockerfile` (nginx, liefert nur `app/` ohne
-  Tests aus, Konfiguration `app/nginx.conf`). Der Build-Kontext wird über `.dockerignore` auf `app/` beschränkt
-  (Materialien, Doku, QA kommen nicht ins Image).
-* CapRover: App → **Deployment** → „Method 3: Deploy from Github/Bitbucket/Gitlab“, Branch `main`; der Webhook ist bei
-  GitHub hinterlegt. Ein Push auf `main` baut und startet die neue Version (ca. 1 min).
-* Persistentes Verzeichnis ist in CapRover bereits angelegt: **`/app/data`** (wird erst ab Phase 2 genutzt).
+* Build aus dem **Wurzelordner**: `captain-definition` → `./Dockerfile` – Node 22 (mehrstufig wie Algo Quest,
+  läuft als Benutzer `node`), Server `src/` + Web-App `app/` (ohne Tests). `.dockerignore` hält Materialien, Doku, QA
+  und Tests aus dem Image.
+* Persistentes Verzeichnis **`/app/data`** (in CapRover angelegt): SQLite-Datei `automatenlab.db`. Instanzanzahl 1.
+* Healthcheck `GET /healthz` (liefert die Version), Manifest `GET /api/plattform` (Vertrag §7).
+* Webhook: Ein Push auf `main` baut und startet die neue Version (Node-Image: einige Minuten).
 
 Lokal wie auf CapRover bauen und prüfen:
 
 ```bash
-docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
-node qa/qa-routes.mjs http://localhost:8080/      # alle Deep-Links
+docker build -t automatenlab . && docker run --rm -p 8080:80 -v "$PWD/data:/app/data" automatenlab
+node qa/qa-routes.mjs http://localhost:8080/        # alle Deep-Links
+node scripts/vertrag_pruefen.js http://localhost:8080   # Vertragsprüfung
 ```
 
-Notfall-Deploy ohne GitHub: CapRover-CLI im Wurzelordner `npx caprover deploy` oder Tarball aus dem Wurzelordner
-(`git archive --format=tar -o AutomatenLab_CapRover.tar HEAD`) unter „Method 2: Tarball“ hochladen.
+Notfall-Deploy ohne GitHub: CapRover-CLI im Wurzelordner `npx caprover deploy` oder Tarball
+(`git archive --format=tar -o AutomatenLab_CapRover.tar HEAD`) unter „Method 2: Tarball“.
 
-Bis 2026-10 lagen `captain-definition` und `Dockerfile` in `app/`. CapRover sucht beim Webhook-Build aber im
-Wurzelordner – deshalb schlug der Build fehl und die Seite zeigte nur die CapRover-Platzhalterseite.
+Bis 2026-10 lagen `captain-definition` und ein nginx-`Dockerfile` in `app/`. CapRover sucht beim Webhook-Build im
+Wurzelordner – deshalb schlug der Build fehl. Version 1.0.x (nach dem Umzug) lieferte die App noch mit nginx aus,
+ab 1.1 übernimmt der Node-Server.
 
 ## GitHub-Prüfung
 
-`.github/workflows/pruefung.yml` läuft bei jedem Push und Pull Request: App-Tests sowie Bau des Images und Aufruf aller
-Deep-Links aus `app/README.md` (`qa/qa-routes.mjs`). Die Prüfung blockiert den Webhook-Build nicht – sie ist die
+`.github/workflows/pruefung.yml` läuft bei jedem Push und Pull Request: App- und Server-Tests sowie Bau des Images,
+Vertragsprüfung und Aufruf aller Deep-Links aus `app/README.md` (`qa/qa-routes.mjs`) gegen den Container. Die Prüfung blockiert den Webhook-Build nicht – sie ist die
 Freigabe-Voraussetzung für den Merge nach `main`.
 
-## Mit Server und Portal-Anmeldung (ab Phase 2)
+## Konfiguration und Portal-Anmeldung
 
-* Ein Container: Node-Server (API + statische App aus `app/`), wie Algo Quest. Persistentes Verzeichnis **`/app/data`**
-  (bereits eingerichtet), SQLite-Datei `automatenlab.db`. Instanzanzahl 1 (SQLite).
 * Umgebungsvariablen (CapRover → App Configs → Environmental Variables) nach Vertrag §8 – Werte und Erklärung in
   `docs/VERBUND.md` §4, Vorlage `.env.example`:
   `PLATTFORM_ID`, `PLATTFORM_URL`, `PORTAL_URL`, `PORTAL_PUBLIC_KEY`, `AUTH_MODUS=portal`, `SESSION_SECRET`.
