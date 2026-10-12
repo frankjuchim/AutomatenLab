@@ -130,7 +130,7 @@ async function eh() {
     ...D.tip('Hinweise zur Korrektur', [
       ...D.bullets([
         'Gleichwertige Lösungen (andere Zustandsnamen, andere Nichtterminale, zusätzliche Zustände mit korrektem Verhalten) werden voll gewertet; fehlender Fehlerzustand-Hinweis bei entwickelten Automaten: 1 BE Abzug je Automat.',
-        'Teil c: Anzahl 12 ohne Begründung über die Struktur (Gerät, dann zwei Aktionszeichen): höchstens 1 BE; reines Aufzählen aller zwölf Wörter ist eine vollständige Lösung.',
+        'Teil c (Zählteil, 2 BE): Anzahl 12 ohne Begründung über die Struktur (Gerät, dann zwei Aktionszeichen): höchstens 1 BE; das Aufzählen aller zwölf Wörter gilt als vollständige Lösung des Zählteils. Die Begründung „endet mit einem Aktionszeichen“ (2 BE) wird gesondert bewertet.',
         'Teil h: Ein Fehler in der Kellerbelegung, der konsequent weitergeführt wird, kostet nur 1 BE (Folgefehler).',
         'Teil i: Argumentation mit „der Automat müsste unendlich viele Klammern zählen“ ohne Schubfachprinzip: höchstens 2 BE.',
       ], { size: 19 }),
