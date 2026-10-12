@@ -65,8 +65,10 @@ function createMaterial({ dir, log = () => {} }) {
         dateien: (a.dateien || []).map((d) => {
           const e = { titel: d.titel, art: d.art, ...(d.hinweis ? { hinweis: d.hinweis } : {}) };
           for (const s of STUFEN) if (sichtbar(d[s], s)) e[s] = { url: url(d[s]), bytes: (d.bytes || {})[s] ?? null };
+          // Ohne Rechte: Schülerfassungen als „gesperrt – nach Anmeldung“ zeigen (nur Titel, keine Adresse)
+          if (nurDemo && !e.schueler && !e.lehrkraft && d.schueler && erlaubt.has(d.schueler)) e.gesperrt = 'anmeldung';
           return e;
-        }).filter((e) => STUFEN.some((s) => e[s])),
+        }).filter((e) => e.gesperrt || STUFEN.some((s) => e[s])),
         ...(st.includes('original') ? { zip: `/material/zip/${encodeURIComponent(a.id)}.zip` } : {})
       }))
       .filter((a) => a.dateien.length);

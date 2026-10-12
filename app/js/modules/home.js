@@ -193,7 +193,7 @@ export default {
           info)),
       h('section', { class: 'page-section', 'aria-labelledby': 'module-h' },
         h('div', { class: 'module-kopf' }, h('h2', { id: 'module-h' }, 'Module'),
-          h('a', { class: 'btn btn-ghost btn-small', href: ctx.link('material') }, 'Zusätzliches Material (PDF)')),
+          h('a', { class: 'btn btn-ghost btn-small', href: ctx.link('material') }, 'Arbeitsblätter, Folien & Merkblätter (PDF)')),
         catalogue),
       h('section', { class: 'page-section progress-section', 'aria-labelledby': 'fortschritt-h' },
         h('div', { class: 'progress-head' },

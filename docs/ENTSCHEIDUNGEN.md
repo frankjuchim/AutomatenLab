@@ -2,6 +2,9 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-12 · Arbeitsblätter in der Themenübersicht
+Wie in Algo Quest stehen Arbeitsblatt, Folien und Merkblatt direkt bei jedem Level der Themenseite (Boss-Level beim Boss-Level, Klausuren und Einheit am Ende); die Seite `#/material` heißt jetzt „Arbeitsblätter & Material“. Grund: Frank fand das Material unter „Material“ zu versteckt. Gäste sehen Titel gesperrter Schülerfassungen mit 🔒 („nach Anmeldung“), aber keine Adressen; Lehrkraft-Dateien erscheinen für sie gar nicht.
+
 ## 2026-10-12 · Material-Demo im Gastmodus
 Ohne Anmeldung gibt es nur eine Auswahl: Level 1 mit Arbeitsblatt, Folien-Handout und Merkblatt sowie als Beispiel die Lehrkraftfassungen (Handreichung mit Lösungen, Folien mit Notizen). Alles andere bekommt man erst nach Anmeldung in seiner Rolle (Schüler mit freigeschaltetem Kurs: Schülerfassungen; Lehrkräfte: zusätzlich Lehrkraftfassungen; Admin: Originale). Franks Entscheidung; passt zu V2 („einzelne Aufgaben zum Ausprobieren“). Festgelegt in `GAST_MATERIAL` (`app/js/data/gast.js`), als `demo` in `verzeichnis.json`, geprüft im Server. Schüler ohne freigeschalteten Kurs sehen ebenfalls die Demo.
 

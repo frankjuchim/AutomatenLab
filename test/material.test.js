@@ -83,11 +83,14 @@ test('Gast und Schüler ohne Kurs: Übersicht nur mit den Demo-Dateien (Schüler
     const g = (await r[rolle].get('/api/material')).body;
     assert.equal(g.demo, true, rolle);
     assert.deepEqual(g.stufen, []);
-    assert.deepEqual(g.akten.map((a) => a.id), ['level-2'], rolle);
-    const d = g.akten[0].dateien[0];
+    assert.deepEqual(g.akten.map((a) => a.id), ['level-1', 'level-2'], rolle);
+    // Level 1 ist keine Demo: Arbeitsblatt nur als „gesperrt“ (Titel ohne Adresse), Lehrkraft-Handreichung gar nicht
+    assert.deepEqual(g.akten[0].dateien, [{ titel: 'Arbeitsblatt', art: 'arbeitsblatt', gesperrt: 'anmeldung' }]);
+    const d = g.akten[1].dateien[0];
     assert.equal(d.schueler.url, '/material/schueler/DS02_AB.pdf');
     assert.equal(d.lehrkraft.url, '/material/lehrkraft/DS02_Lehrkraft.pdf');
-    assert.ok(!d.original && !g.akten[0].zip, 'Originale nie in der Demo');
+    assert.ok(!d.original && !g.akten[1].zip, 'Originale nie in der Demo');
+    assert.ok(!JSON.stringify(g).includes('DS01_'), 'keine Adressen gesperrter Dateien');
   }
 });
 
