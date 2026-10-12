@@ -74,6 +74,10 @@ ignoriert der nginx-Container sie.
 
 ## 5. Inbetriebnahme im Portal (nach dem Deploy von PR 2)
 
+Voraussetzung: Die Variablen aus §4 sind gesetzt; die Startmeldung im CapRover-Log lautet „Anmeldung über das Portal: an“
+und `node scripts/vertrag_pruefen.js https://automatenlab.frankjuchim.de` meldet „Anmeldung: portal“.
+
+
 1. Superadmin im Portal → *Plattformen* → Basis-URL `https://automatenlab.frankjuchim.de` eintragen; die Ampel
    (Manifest + `/healthz`) muss grün sein.
 2. Rücksprung-Adresse **`https://automatenlab.frankjuchim.de/sso/ende`** bestätigen.

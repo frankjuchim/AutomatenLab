@@ -2,6 +2,7 @@
 // Start von AutomatenLab. Konfiguration über Umgebungsvariablen nach Vertrag §8 (siehe .env.example, docs/VERBUND.md).
 
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { createApp, VERSION } = require('./app');
 const { ladeKatalog } = require('./inhalte');
 
@@ -14,6 +15,12 @@ const authModus = AUTH_MODI.includes(process.env.AUTH_MODUS) ? process.env.AUTH_
 const trustProxyEnv = process.env.TRUST_PROXY;
 const trustProxy = trustProxyEnv === undefined ? 1 : /^\d+$/.test(trustProxyEnv) ? Number(trustProxyEnv) : trustProxyEnv === 'true';
 
+let sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret || sessionSecret.length < 16) {
+  sessionSecret = crypto.randomBytes(32).toString('hex');
+  log('WARNUNG: SESSION_SECRET fehlt oder ist kürzer als 16 Zeichen – es wird ein zufälliges Geheimnis verwendet. Nach jedem Neustart müssen sich alle neu anmelden.');
+}
+
 async function start() {
   const katalog = await ladeKatalog();
   const app = createApp({
@@ -23,11 +30,13 @@ async function start() {
     plattformUrl: process.env.PLATTFORM_URL,
     portalUrl: process.env.PORTAL_URL,
     authModus,
+    portalPublicKey: process.env.PORTAL_PUBLIC_KEY,
+    sessionSecret,
     trustProxy,
     log
   });
   const server = app.listen(PORT, () =>
-    log(`AutomatenLab ${VERSION} läuft auf Port ${PORT} (Daten: ${DATA_DIR}, ${katalog.umfang.aufgaben} Aufgaben, Anmeldung über das Portal: noch nicht verfügbar (folgt in Phase 3), AUTH_MODUS ${authModus}).`)
+    log(`AutomatenLab ${VERSION} läuft auf Port ${PORT} (Daten: ${DATA_DIR}, ${katalog.umfang.aufgaben} Aufgaben, Anmeldung über das Portal: ${app.locals.sso.aktiv ? 'an' : 'aus'}, AUTH_MODUS ${authModus}).`)
   );
   const beenden = (sig) => {
     log(`${sig} empfangen, fahre herunter …`);

@@ -2,6 +2,9 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-12 · Sitzungen und Daten aus dem Portal
+Eine Sitzung je Browser (signiertes Cookie `al_s` mit `sub` und `session_gen`, zustandslos wie Algo Quest/Portal; Schüler 30 Tage, Lehrkräfte/Superadmin 8 h). Gespeichert werden nur `konten(sub, rolle, name, Zeitpunkte)`, `kurse(id, name, aktiv, einstellungen)` und `kurs_mitglieder` laut letztem Token. Ein Kurs im Token gilt als aktiv; `kurs-aendern` mit `aktiv:false` sperrt ihn (Mitglieder verlieren den Zugang, Daten bleiben). Lernstände hängen später an `sub` (ein Konto kann mehreren Kursen angehören); `loeschen {kurs}` entfernt Kurs, Einstellungen und Mitgliedschaften, `loeschen {sub}` alles des Kontos. `src/security.js` ist die Fassung des Portals (nur Cookie-Name geändert), `src/jwt.js` unverändert. Verworfen: Sessions-Tabelle (nicht nötig, Widerruf über `session_gen`).
+
 ## 2026-10-11 · Anschluss an den Verbund InfoLabs, kein eigenes Login
 AutomatenLab wird Plattform des Verbunds InfoLabs (Portal https://labs.frankjuchim.de). Verbindlich ist der Vertrag https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.1). Konten und Kurse kommen aus dem Portal (SSO mit Ed25519-JWT, §5); AutomatenLab liefert Manifest (§7) und Verbund-API (§6) und startet mit `AUTH_MODUS=portal`. Begründung: Franks Entscheidung für einen gemeinsamen Login und eine übergeordnete Verwaltung aller Plattformen. Damit entfallen eigene Konten, Zugangskarten, Einladungen und die eigene Kurs-Ablauf-Löschung (`LOGIN_KONZEPT.md` ist abgelöst). Das Repository `frankjuchim/labs` wird nur gelesen; Abweichungen werden als Vorschlag für `VERTRAG.md` formuliert (`docs/VERBUND.md` §6). Details: `docs/VERBUND.md`.
 

@@ -7,6 +7,7 @@ import { progress } from './core/progress.js';
 import { MODULES, findModule } from './modules/manifest.js';
 import { LEVELS } from './data/worlds.js';
 import { toast } from './components/toast.js';
+import { sitzung, anmeldeLink, istLehrkraft } from './core/sitzung.js';
 
 const SPECIAL = {
   '': () => import('./modules/home.js'),
@@ -43,10 +44,12 @@ const header = h('header', { class: 'site-header' },
     h('span', { class: 'brand-name' }, 'Automaten', h('span', { class: 'brand-lab' }, 'Lab'))),
   h('div', { class: 'header-tools' },
     h('a', { class: 'points-chip', href: '#/', title: 'Deine Punkte (nur auf diesem Gerät gespeichert)' }, pointsEl, h('span', { class: 'points-label' }, ' Punkte')),
+    h('span', { class: 'konto-tools' }),
     bigToggle));
 const main = h('main', { id: 'main', tabindex: '-1' });
+const footerText = h('p', null, 'AutomatenLab für den Informatik-Leistungskurs. Ohne Anmeldung bleibt dein Fortschritt nur auf diesem Gerät.');
 const footer = h('footer', { class: 'site-footer' },
-  h('p', null, 'AutomatenLab für den Informatik-Leistungskurs. Keine Anmeldung, keine Cookies: Dein Fortschritt bleibt nur auf diesem Gerät.'),
+  footerText,
   h('p', { class: 'footer-links' }, h('a', { href: '#/themen' }, 'Themen'), ' · ', h('a', { href: '#/lehrkraft' }, 'Für Lehrkräfte'), ' · ', h('a', { href: '#/datenschutz' }, 'Datenschutz')));
 clear(app, h('a', { class: 'skip-link', href: '#main', onclick: (e) => { e.preventDefault(); main.focus(); } }, 'Zum Inhalt springen'), header, main, footer);
 
@@ -57,6 +60,30 @@ progress.subscribe(() => {
 });
 progress.onBadge((b) => toast(b.text ?? '', { type: 'badge', title: `Abzeichen: ${b.titel}`, timeout: 6000 }));
 applyPrefs();
+
+// ───── Anmeldung über das Portal InfoLabs (Vertrag §5, §9: Link „⌂ Portal“) ─────
+const kontoTools = header.querySelector('.konto-tools');
+sitzung().then(({ konto, anmeldung, portal }) => {
+  const teile = [];
+  if (portal) teile.push(h('a', { class: 'btn btn-ghost header-btn', href: portal + '/', title: 'Zum Portal InfoLabs' }, h('span', { 'aria-hidden': 'true' }, '⌂'), h('span', { class: 'header-btn-text' }, ' Portal')));
+  if (konto) {
+    footerText.textContent = `AutomatenLab für den Informatik-Leistungskurs. Angemeldet über InfoLabs als ${konto.name}.`;
+    teile.push(h('details', { class: 'konto-menu' },
+      h('summary', { class: 'btn btn-ghost header-btn', title: 'Konto' }, h('span', { class: 'konto-name' }, konto.name)),
+      h('ul', { class: 'konto-liste' },
+        istLehrkraft(konto) ? h('li', null, h('a', { href: '#/lehrkraft' }, 'Lehrkraft-Bereich')) : null,
+        h('li', null, h('a', { href: '/abmelden' }, 'Abmelden')),
+        portal ? h('li', null, h('a', { href: '/abmelden/ueberall' }, 'Überall abmelden')) : null)));
+  } else if (anmeldung) {
+    const login = h('a', { class: 'btn btn-ghost header-btn header-login', href: anmeldeLink() }, 'Anmelden');
+    window.addEventListener('hashchange', () => { login.href = anmeldeLink(); });
+    teile.push(login);
+  }
+  clear(kontoTools, teile);
+});
+// Menü schließen bei Klick daneben oder Escape
+document.addEventListener('click', (e) => { for (const d of document.querySelectorAll('.konto-menu[open]')) if (!d.contains(e.target)) d.open = false; });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') for (const d of document.querySelectorAll('.konto-menu[open]')) { d.open = false; d.querySelector('summary').focus(); } });
 
 // ───── Routing ─────
 async function route() {

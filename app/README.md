@@ -1,7 +1,7 @@
 # AutomatenLab
 
 Lern-Web-App zur Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Informatik-Leistungskurs, Automaten und formale Sprachen, KC Niedersachsen).
-Plattform des Verbunds InfoLabs (Vertrag: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1). Die App läuft ohne Build-Schritt; ausgeliefert wird sie vom Server in `../src` (Node, Express). Keine externen Server, CDNs oder Tracker. Bis zur Anmeldung über das Portal (Phase 3) bleibt der Fortschritt im Browser des jeweiligen Geräts (`localStorage`).
+Plattform des Verbunds InfoLabs (Vertrag: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1). Die App läuft ohne Build-Schritt; ausgeliefert wird sie vom Server in `../src` (Node, Express). Keine externen Server, CDNs oder Tracker. Angemeldet wird nur über das Portal InfoLabs (Single Sign-on, Knopf „Anmelden“ oben rechts). Bis der Lernstand auf dem Server liegt (Phase 4), bleibt der Fortschritt im Browser des jeweiligen Geräts (`localStorage`).
 
 ## Deployment auf CapRover
 
@@ -65,7 +65,7 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
 | `#/lehrkraft` | Bereich für Lehrkräfte (im Aufbau) – auch `BASE_URL/lehrer` |
 
-Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; `/healthz` und `/api/plattform` (Manifest) für das Portal.
+Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
 
 Baukasten-Challenges (`?level=n` / `?aufgabe=id`):
 

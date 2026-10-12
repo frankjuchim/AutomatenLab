@@ -43,6 +43,9 @@ idsIn('| `#/turing?programm=<id>`').forEach((id) => add(`#/turing?programm=${id}
 range(16).forEach((n) => add(`#/quiz?ds=${n}`));
 // Bewusst gleich der Übersicht (laut README): #/turing zeigt bereits das Programm „Binärzahl + 1“
 const GLEICH_UEBERSICHT = new Set(['#/turing?programm=binaer-plus-1', '#/arena?stufe=1']); // Stufe 1 ist Standard
+// Geschützte Seiten: ohne Sitzung leiten sie still zur Portal-Anmeldung (/sso/start, Vertrag InfoLabs §5) – das ist
+// hier der erwartete Ausgang. /sso/start wird abgefangen, damit kein Aufruf ans Portal hinausgeht.
+const GESCHUETZT = new Set(['#/lehrkraft']);
 const FILTER = process.env.ROUTE_FILTER ? new RegExp(process.env.ROUTE_FILTER) : null;
 const ROUTES = [...routes].sort((a, b) => a.localeCompare(b)).filter((r) => !FILTER || FILTER.test(r));
 
@@ -52,6 +55,8 @@ const t0 = Date.now();
 for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipad' }]) {
   const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
+  const origin = new URL(BASE).origin;
+  await page.route((u) => u.origin === origin && u.pathname === '/sso/start', (rt) => rt.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Anmeldung (QA)</title><main><h1>Anmeldung (QA)</h1></main>' }));
   let errs = [];
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(`console.${m.type()}: ${m.text()}`); });
   page.on('pageerror', (e) => errs.push(`pageerror: ${e.message}`));
@@ -67,6 +72,13 @@ for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipa
     await page.goto('about:blank');
     await page.goto(`${BASE}${r}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(500);
+    if (new URL(page.url()).pathname === '/sso/start') {
+      const ziel = new URL(page.url()).searchParams.get('ziel');
+      const ok = GESCHUETZT.has(r) && !errs.length;
+      const line = `${ok ? 'OK  ' : 'FAIL'} [${vp.tag}] ${r}  ·  → Portal-Anmeldung (ziel ${ziel})${ok ? '' : `  →  ${GESCHUETZT.has(r) ? errs.join(' | ') : 'unerwartete Weiterleitung zur Anmeldung'}`}`;
+      results.push(line); if (!ok) fails.push(line);
+      continue;
+    }
     const info = await page.evaluate(() => ({
       title: document.title,
       h1: document.querySelector('main h1')?.textContent ?? '',

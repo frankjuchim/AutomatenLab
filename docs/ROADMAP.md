@@ -28,11 +28,12 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ Dockerfile → Node-Container (`USER node`, `/app/data`), CI mit Server-Tests und Vertragsprüfung
 
 ## Phase 3 – Anmeldung über das Portal (PR 2)
-- [ ] `src/jwt.js` unverändert; `/sso/start`, `/sso/ende`, Abmelden / „Überall abmelden“, eigene Sitzung (SuS ≤ 30 Tage, Lehrkräfte ≤ 8 h)
-- [ ] Konten und Kurse nach `sub`/Kurs-ID (Upsert, Mitgliedschaften abgleichen, gesperrte Kurse), Rollen §4
-- [ ] Verbund-API §6: `loeschen` (idempotent), Kursübersicht, Kursänderung
-- [ ] Alle Testfälle aus `INTEGRATION.md` §5, Rechte-Matrix je Route × Rolle
-- [ ] Kopfzeile: „Anmelden“ bzw. Name + Menü, Link „⌂ Portal“; Manifest `auth.modus: "portal"`, `sso: true`; Inbetriebnahme im Portal
+- ✅ `src/jwt.js` unverändert; `/sso/start`, `/sso/ende`, Abmelden / „Überall abmelden“, eigene Sitzung (SuS ≤ 30 Tage, Lehrkräfte ≤ 8 h)
+- ✅ Konten und Kurse nach `sub`/Kurs-ID (Upsert, Mitgliedschaften abgleichen, gesperrte Kurse), Rollen §4
+- ✅ Verbund-API §6: `loeschen` (idempotent), Kursübersicht (Kennzahlen noch 0 bis Phase 4), Kursänderung
+- ✅ Alle Testfälle aus `INTEGRATION.md` §5, Rechte-Matrix je Route × Rolle, CSRF
+- ✅ Kopfzeile: „Anmelden“ bzw. Name + Menü, Link „⌂ Portal“; Lehrkraft-Bereich mit Kursliste; Manifest `auth.modus: "portal"`, `sso: true`
+- [ ] Inbetriebnahme im Portal (`docs/VERBUND.md` §5) – nach dem Deploy durch den Superadmin
 
 ## Phase 4 – Prüfung und Lernstand auf dem Server (V1) und Gastmodus (V2)
 - [ ] PR 3 – Grundlage: Aufgabenkatalog mit stabilen IDs, `inhalte/` (Lösungen, nicht ausgeliefert), Lernstand-Tabellen, Punkteformel §9, API Aufgabe/Prüfen/Tipp/Lösung zeigen, `progress.js`-Adapter für Angemeldete; Gastmodus `#/gast` mit Demo-Aufgaben und Login-Hinweis für alle übrigen Routen; erste Module: Level-Quiz, Sprach-Detektiv, Automaten-Baukasten; `docs/AUFGABENFORMAT.md`
