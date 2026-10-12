@@ -44,6 +44,9 @@ export default {
         kurse.length
           ? h('ul', { class: 'kurs-liste' }, kurse.map((k) => h('li', null, h('strong', null, k.name), ` – ${k.schueler} ${k.schueler === 1 ? 'Schülerin/Schüler' : 'Schülerinnen und Schüler'} angemeldet`)))
           : h('p', { class: 'notice' }, 'Noch kein Kurs mit AutomatenLab. Legen Sie im Portal einen Kurs an und wählen Sie AutomatenLab als Plattform; nach der nächsten Anmeldung erscheint er hier.'),
+        h('h2', null, 'Material'),
+        h('p', null, 'Arbeitsblätter, Folien mit Notizen, Lösungen, Erwartungshorizonte und Übungsklausuren als PDF – Schülerinnen und Schüler sehen dort nur die Schülerfassungen.'),
+        h('p', null, h('a', { class: 'btn btn-primary', href: ctx.link('material') }, 'Zum Material')),
         h('p', { class: 'notice' }, 'Lernstand-Übersicht, Aufträge und Freischaltungen folgen.'),
         portal ? h('p', null, h('a', { class: 'btn', href: portal + '/' }, '⌂ Zum Portal')) : null);
     });

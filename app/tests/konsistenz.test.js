@@ -35,7 +35,7 @@ test('README: Routenliste vollständig, IDs existieren', () => {
   const mainJs = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
   const special = (r) => new RegExp(`^\\s*${r}: \\(\\) => import\\(`, 'm').test(mainJs);
   for (const r of routes) assert.ok(r === '' || MODULES.some((m) => m.route === r) || special(r), `README nennt unbekannte Route #/${r}`);
-  for (const r of ['themen', 'datenschutz', 'lehrkraft', 'gast']) assert.ok(routes.has(r) && special(r), `Sonderseite #/${r}`);
+  for (const r of ['themen', 'datenschutz', 'lehrkraft', 'gast', 'material']) assert.ok(routes.has(r) && special(r), `Sonderseite #/${r}`);
   // Deep-Link-IDs aus der README gegen die Daten prüfen
   const zeile = (prefix) => readme.split('\n').find((l) => l.startsWith(prefix)) ?? '';
   const ids = (l) => [...l.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1]);

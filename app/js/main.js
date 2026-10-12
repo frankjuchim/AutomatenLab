@@ -19,6 +19,7 @@ const SPECIAL = {
   datenschutz: () => import('./modules/datenschutz.js'), // auch /datenschutz
   lehrkraft: () => import('./modules/lehrkraft.js'), // auch /lehrer
   gast: () => import('./modules/gast.js'), // auch /gast: Demo-Aufgaben ohne Anmeldung
+  material: () => import('./modules/material.js'), // Zusatzmaterial (PDF), nur angemeldet; auch /material
 };
 
 const app = document.getElementById('app');
@@ -74,11 +75,12 @@ sitzung().then(({ konto, anmeldung, portal }) => {
   const teile = [];
   if (portal) teile.push(h('a', { class: 'btn btn-ghost header-btn', href: portal + '/', title: 'Zum Portal InfoLabs' }, h('span', { 'aria-hidden': 'true' }, '⌂'), h('span', { class: 'header-btn-text' }, ' Portal')));
   if (konto) {
-    footerText.textContent = `AutomatenLab für den Informatik-Leistungskurs. Angemeldet über InfoLabs als ${konto.name}.`;
+    footerText.textContent = `AutomatenLab für Grund- und Leistungskurs Informatik. Angemeldet über InfoLabs als ${konto.name}.`;
     teile.push(h('details', { class: 'konto-menu' },
       h('summary', { class: 'btn btn-ghost header-btn', title: 'Konto' }, h('span', { class: 'konto-name' }, konto.name)),
       h('ul', { class: 'konto-liste' },
         istLehrkraft(konto) ? h('li', null, h('a', { href: '#/lehrkraft' }, 'Lehrkraft-Bereich')) : null,
+        h('li', null, h('a', { href: '#/material' }, 'Material (PDF)')),
         h('li', null, h('a', { href: '/abmelden' }, 'Abmelden')),
         portal ? h('li', null, h('a', { href: '/abmelden/ueberall' }, 'Überall abmelden')) : null)));
   } else if (anmeldung) {

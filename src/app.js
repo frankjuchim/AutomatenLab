@@ -16,8 +16,11 @@ const { createLernen } = require('./lernen');
 const { ssoRoutes } = require('./routes/sso');
 const { verbundRoutes } = require('./routes/verbund');
 const { apiRoutes } = require('./routes/api');
+const { materialRoutes } = require('./routes/material');
+const { createMaterial } = require('./material');
 
 const APP_DIR = path.join(__dirname, '..', 'app');
+const MATERIAL_DIR = process.env.MATERIAL_DIR || path.join(__dirname, '..', 'materials', 'pdf');
 const VERSION = require('../package.json').version;
 const VERTRAG = '1.2';
 const PLATTFORM_ID_STANDARD = 'automatenlab';
@@ -59,7 +62,8 @@ const WEITERLEITUNGEN = {
   '/lehrer': '/#/lehrkraft',
   '/datenschutz': '/#/datenschutz',
   // Niveau-Übersicht (Vertrag v1.2 §7 urls.niveaus): ein Fragment wie /themen#niveaus ginge bei der Weiterleitung verloren
-  '/niveaus': '/#/themen?teil=niveaus'
+  '/niveaus': '/#/themen?teil=niveaus',
+  '/material': '/#/material'
 };
 
 /**
@@ -77,6 +81,7 @@ const WEITERLEITUNGEN = {
  * @param {string|number|boolean} [opts.trustProxy]
  * @param {Function} [opts.log]
  * @param {Function} [opts.now]             Uhr (ms) – für Tests
+ * @param {string|null} [opts.materialDir]  Ordner mit verzeichnis.json der Materialien (Standard materials/pdf; null = keine)
  */
 function createApp(opts) {
   const log = opts.log || (() => {});
@@ -190,7 +195,7 @@ function createApp(opts) {
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
     umfang: katalog.umfang,
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
-    faehigkeiten: ['gast', 'themen']
+    faehigkeiten: ['gast', 'themen', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
 
   app.get('/api/plattform', (req, res) => {
@@ -207,8 +212,11 @@ function createApp(opts) {
     res.json({ welten: katalog.welten, module: katalog.module, portal: portalUrl || null });
   });
 
-  const h = { svc, secret, sso, now, log, katalog };
+  // Zusätzliche Materialien (PDF/Originale): materials/pdf, in Tests über opts.materialDir (null = keine)
+  const material = createMaterial({ dir: opts.materialDir !== undefined ? opts.materialDir : MATERIAL_DIR, log });
+  const h = { svc, secret, sso, now, log, katalog, material };
   verbundRoutes(app, h);
+  materialRoutes(app, h);
   apiRoutes(app, h);
   ssoRoutes(app, h);
   app.use('/api', (req, res) => res.status(404).json({ error: 'Unbekannte API-Route.' }));

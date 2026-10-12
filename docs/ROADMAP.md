@@ -52,7 +52,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 ## Phase 6 – Materialien ↔ Plattform
 - [ ] Erklärvideos verlinken: „Erklärvideo“-Knopf in den Modulen, Video-QR-Codes auf Merkblättern (Links nach Upload)
 - [ ] Release-Workflow baut das Materialpaket bei jedem Tag `v*` automatisch
-- [ ] Optional: Materialien (PDF) für angemeldete Lehrkräfte direkt im Dashboard herunterladbar
+- ✅ Materialien als Download (`#/material`): Schüler-PDF ohne Lösungen, Lehrkraft-PDF mit Lösungen/Notizen/Klausuren, Originale (docx/pptx, ZIP je Akte) nur für den Admin
 
 ## Ideen (später)
 - IServ-SSO (Sache des Portals)
