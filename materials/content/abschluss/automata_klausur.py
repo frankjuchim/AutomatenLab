@@ -34,7 +34,15 @@ print("Äquivalente Paare in A:", eq, "– Runden:", [sorted(tuple(sorted(p)) fo
 assert set(eq) == {("S1", "S2"), ("S3", "S4")}
 render(A, IMG + "klausur_A", chain=["S0", "S1", "S3"], nodesep=0.5, ranksep=1.1)
 
-# Minimaler Automat (Lösung c)
+# Lösung c): Jede akzeptierte Befehlskette endet mit einem Aktionszeichen (alle Kanten in Endzustände tragen + oder -),
+# und genau 12 Befehlsketten der Länge 3 werden akzeptiert (Gerät + zwei Aktionszeichen: 3 · 2 · 2).
+assert all(a in ACT for (p, a), q in A.delta.items() if q in A.finals)
+len3 = ["".join(w) for w in words(SIG1, 3) if len(w) == 3 and A.accepts("".join(w))]
+assert len(len3) == 12 and all(w[0] in DEV and w[1] in ACT and w[2] in ACT for w in len3), len3
+print("c) Länge 3:", len(len3), len3[:4])
+
+# Automat mit drei Zuständen (Grundlage für die Grammatik in Lösung j)
+# (früher Lösung c) 
 Amin = DFA(SIG1, "S0", {"S2"}, {("S0", "L"): "S1", ("S0", "H"): "S1", ("S0", "R"): "S1",
                                  ("S1", "+"): "S2", ("S1", "-"): "S2",
                                  ("S2", "+"): "S2", ("S2", "-"): "S2", ("S2", "L"): "S1", ("S2", "H"): "S1", ("S2", "R"): "S1"})
