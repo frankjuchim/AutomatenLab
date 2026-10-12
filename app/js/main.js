@@ -52,7 +52,7 @@ const header = h('header', { class: 'site-header' },
     h('span', { class: 'konto-tools' }),
     bigToggle));
 const main = h('main', { id: 'main', tabindex: '-1' });
-const footerText = h('p', null, 'AutomatenLab für den Informatik-Leistungskurs. Ohne Anmeldung bleibt dein Fortschritt nur auf diesem Gerät.');
+const footerText = h('p', null, 'AutomatenLab für Grund- und Leistungskurs Informatik. Ohne Anmeldung bleibt dein Fortschritt nur auf diesem Gerät.');
 const footer = h('footer', { class: 'site-footer' },
   footerText,
   h('p', { class: 'footer-links' }, h('a', { href: '#/themen' }, 'Themen'), ' · ', h('a', { href: '#/lehrkraft' }, 'Für Lehrkräfte'), ' · ', h('a', { href: '#/datenschutz' }, 'Datenschutz')));
