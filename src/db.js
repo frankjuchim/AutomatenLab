@@ -37,8 +37,13 @@ function openDatabase(file, { log = () => {} } = {}) {
   db.pragma('foreign_keys = ON');
   db.pragma('busy_timeout = 5000');
   const hatMeta = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'meta'").get();
+  // Nur eine neue bzw. leere Datei wird angelegt – eine fremde Datenbank (z. B. falsches DATA_DIR) bleibt unangetastet
+  const tabellen = db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get().n;
+  if ((!hatMeta && tabellen > 0) || (hatMeta && getMeta(db, 'app') !== APP_KENNUNG)) {
+    db.close();
+    throw new Error('Die Datenbank gehört nicht zu AutomatenLab.');
+  }
   let version = hatMeta ? Number(getMeta(db, 'schema_version') || 0) : 0;
-  if (hatMeta && getMeta(db, 'app') && getMeta(db, 'app') !== APP_KENNUNG) throw new Error('Die Datenbank gehört nicht zu AutomatenLab.');
   if (version > SCHEMA_VERSION) throw new Error(`Datenbank-Schema ${version} ist neuer als diese Version (${SCHEMA_VERSION}).`);
   while (version < SCHEMA_VERSION) {
     const sql = MIGRATIONEN[version];

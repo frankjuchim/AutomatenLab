@@ -80,4 +80,14 @@ test('Datenbank: Migrationen beim ersten Start, Daten bleiben beim Neustart erha
   f.prepare("UPDATE meta SET value = 'infolabs-portal' WHERE key = 'app'").run();
   f.close();
   assert.throws(() => openDatabase(fremd), /nicht zu AutomatenLab/);
+  // fremde Datenbank ohne meta-Tabelle wird weder migriert noch gestempelt
+  const Database = require('better-sqlite3');
+  const ohneMeta = path.join(dir, 'ohne-meta.db');
+  const o = new Database(ohneMeta);
+  o.exec('CREATE TABLE notizen (id INTEGER PRIMARY KEY)');
+  o.close();
+  assert.throws(() => openDatabase(ohneMeta), /nicht zu AutomatenLab/);
+  const pruef = new Database(ohneMeta);
+  assert.deepEqual(pruef.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((r) => r.name), ['notizen']);
+  pruef.close();
 });

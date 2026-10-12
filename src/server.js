@@ -27,7 +27,7 @@ async function start() {
     log
   });
   const server = app.listen(PORT, () =>
-    log(`AutomatenLab ${VERSION} läuft auf Port ${PORT} (Daten: ${DATA_DIR}, ${katalog.umfang.aufgaben} Aufgaben, Auth-Modus laut Konfiguration: ${authModus}).`)
+    log(`AutomatenLab ${VERSION} läuft auf Port ${PORT} (Daten: ${DATA_DIR}, ${katalog.umfang.aufgaben} Aufgaben, Anmeldung über das Portal: noch nicht verfügbar (folgt in Phase 3), AUTH_MODUS ${authModus}).`)
   );
   const beenden = (sig) => {
     log(`${sig} empfangen, fahre herunter …`);

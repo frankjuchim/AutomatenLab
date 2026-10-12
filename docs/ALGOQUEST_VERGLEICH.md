@@ -4,8 +4,8 @@
 > https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1). Alles zu eigenen Konten, Passwörtern,
 > SuS-Zugängen, Einladungen, Rate-Limits beim Login und gemeinsamem Login (§2.1–2.3, §3, F2–F6) ist damit erledigt;
 > maßgeblich ist jetzt `docs/VERBUND.md`. Weiterhin gültig: Server-Technik nach Algo Quest, Fortschritt als JSON-Stand
-> mit abgeleiteten Ereignissen (§2.4/2.5), Oberfläche und Dashboard (§2.7), Tests/CI (§2.8). Entschieden: F1 wie
-> empfohlen. Revidiert: F9 – der Server wird **CommonJS in `src/`** (wie Algo Quest und Portal), weil `src/jwt.js` und
+> mit abgeleiteten Ereignissen (§2.4/2.5), Oberfläche und Dashboard (§2.7), Tests/CI (§2.8). Gastmodus: F1 ist
+> durch V2 ersetzt (nur Demo-Aufgaben, `docs/VERBUND.md` §3). Revidiert: F9 – der Server wird **CommonJS in `src/`** (wie Algo Quest und Portal), weil `src/jwt.js` und
 > `scripts/vertrag_pruefen.js` unverändert kopiert werden müssen; Node 22 bleibt.
 
 Stand: 2026-10-11 · Grundlage: `frankjuchim/AlgoQuest` (Commit `2d45fc2`, v2.3.0, README Teil A–G, `src/`, `test/`,
