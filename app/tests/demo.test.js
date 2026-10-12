@@ -39,3 +39,13 @@ test('Demo-Quiz: Bewertung wie auf dem Server', () => {
   assert.equal(pruefeQuizFrage(wf, { wahr: false, begruendung: 'o0' }, id).wert, 0.5);
   assert.equal(pruefeQuizFrage(zu, { zuordnung: zu.paare.map((p) => p[1]) }, id).wert, 1);
 });
+
+test('Gastmodus: Material-Demo ohne Parameter offen, sonst nur Demo-Routen', async () => {
+  const { gastErlaubt, GAST_MATERIAL } = await import('../js/data/gast.js');
+  const p = (q = '') => new URLSearchParams(q);
+  assert.equal(gastErlaubt('material', p()), true);
+  assert.equal(gastErlaubt('material', p('x=1')), false);
+  assert.equal(gastErlaubt('lehrkraft', p()), false);
+  assert.deepEqual(GAST_MATERIAL.akten, ['level-1']);
+  assert.ok(!GAST_MATERIAL.stufen.includes('original'), 'Originale nie im Gastmodus');
+});

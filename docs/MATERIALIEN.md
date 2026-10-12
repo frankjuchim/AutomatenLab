@@ -52,6 +52,8 @@ Server unter `#/material` anbietet – sie zählen nicht für Punkte:
   (`src/material.js`) liefert nur dort verzeichnete Dateien aus: Schüler-PDF für Angemeldete (Schüler nur mit
   freigeschaltetem Kurs), Lehrkraft-PDF für Lehrkräfte und Admin, Originale (einzeln oder als ZIP je Akte) nur für den
   Admin. Test: `test/material.test.js`.
+* **Demo im Gastmodus:** Die Akten aus `GAST_MATERIAL` (`app/js/data/gast.js`, derzeit nur Level 1) bekommen in
+  `verzeichnis.json` das Feld `demo` (Schüler- und Lehrkraftfassung); diese PDFs sind ohne Anmeldung offen, Originale nie.
 * `materials/pdf/` ist eingecheckt und kommt ins Image; nach Material-Änderungen neu erzeugen und committen.
 
 ## Typische Änderungen

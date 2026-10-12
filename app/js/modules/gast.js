@@ -13,7 +13,8 @@ export default {
       h('p', { class: 'lead' }, 'Hier kannst du jedes Modul an einer Aufgabe testen. Punkte, Fortschritt auf allen Geräten und alle Aufgaben gibt es mit der Anmeldung über InfoLabs – die Zugangsdaten bekommst du von deiner Lehrkraft.'),
       login,
       h('ul', { class: 'gast-liste' }, GAST.map((g) => h('li', null,
-        h('a', { class: 'gast-karte', href: gastLink(g, ctx.link) }, h('strong', null, g.titel), h('span', null, g.text)))))));
+        h('a', { class: 'gast-karte', href: gastLink(g, ctx.link) }, h('strong', null, g.titel), h('span', null, g.text)))),
+        h('li', null, h('a', { class: 'gast-karte', href: ctx.link('material') }, h('strong', null, 'Material (PDF)'), h('span', null, 'Level 1 als Beispiel: Arbeitsblatt, Folien, Merkblatt und die Lehrkraftfassung.'))))));
     sitzung().then(({ konto, anmeldung }) => {
       if (konto) clear(login, h('span', { class: 'notice' }, `Du bist angemeldet als ${konto.name} – alle Aufgaben stehen dir offen.`), h('a', { class: 'btn', href: '#/' }, 'Zur Übersicht'));
       else if (anmeldung) clear(login, h('a', { class: 'btn btn-primary', href: anmeldeLink('/') }, 'Anmelden über InfoLabs'));

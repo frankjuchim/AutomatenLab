@@ -5,6 +5,7 @@
 //   Schüler-PDF   angemeldet; Schüler nur mit freigeschaltetem Kurs (§4) – ohne Lösungen
 //   Lehrkraft-PDF Lehrkräfte und Admin – mit Lösungen, Notizseiten, Erwartungshorizonten, Klausuren
 //   Original      docx/pptx nur für den Admin (Rolle superadmin), einzeln oder als ZIP je Akte
+//   Demo          einzelne Dateien mit `demo` (app/js/data/gast.js) auch ohne Anmeldung – Gastmodus, nie Originale
 const fs = require('node:fs');
 const path = require('node:path');
 const { zip } = require('./zip');
@@ -36,14 +37,17 @@ function createMaterial({ dir, log = () => {} }) {
   }
   // Whitelist: „stufe/dateiname“ → absolute Datei (nur existierende, nur ohne Pfadtricks)
   const erlaubt = new Map();
+  const demo = new Set(); // „stufe/dateiname“, die ohne Anmeldung offen sind
   for (const a of akten) {
     for (const d of a.dateien || []) {
       for (const s of STUFEN) {
         const rel = d[s];
         if (typeof rel !== 'string' || !rel.startsWith(s + '/') || rel.includes('..') || rel.split('/').length !== 2) continue;
         const abs = path.join(dir, rel);
-        if (fs.existsSync(abs)) erlaubt.set(rel, abs);
-        else d[s] = null;
+        if (fs.existsSync(abs)) {
+          erlaubt.set(rel, abs);
+          if (s !== 'original' && Array.isArray(d.demo) && d.demo.includes(s)) demo.add(rel);
+        } else d[s] = null;
       }
     }
   }
@@ -52,24 +56,28 @@ function createMaterial({ dir, log = () => {} }) {
   /** Übersicht für ein Konto: nur Dateien der erlaubten Stufen, Akten ohne sichtbare Datei entfallen. */
   function uebersicht(konto, kurse) {
     const st = stufenFuer(konto, kurse);
+    // Ohne Rechte (Gast, Schüler ohne Kurs): nur die Demo-Dateien
+    const nurDemo = !st.length;
+    const sichtbar = (rel, s) => !!rel && erlaubt.has(rel) && (nurDemo ? demo.has(rel) : st.includes(s));
     const liste = akten
       .map((a) => ({
         id: a.id, titel: a.titel, welt: a.welt ?? null, level: a.level ?? null, niveau: a.niveau || 'alle',
         dateien: (a.dateien || []).map((d) => {
           const e = { titel: d.titel, art: d.art, ...(d.hinweis ? { hinweis: d.hinweis } : {}) };
-          for (const s of st) if (d[s] && erlaubt.has(d[s])) e[s] = { url: url(d[s]), bytes: (d.bytes || {})[s] ?? null };
+          for (const s of STUFEN) if (sichtbar(d[s], s)) e[s] = { url: url(d[s]), bytes: (d.bytes || {})[s] ?? null };
           return e;
-        }).filter((e) => st.some((s) => e[s])),
+        }).filter((e) => STUFEN.some((s) => e[s])),
         ...(st.includes('original') ? { zip: `/material/zip/${encodeURIComponent(a.id)}.zip` } : {})
       }))
       .filter((a) => a.dateien.length);
-    return { stufen: st, akten: liste };
+    return { stufen: nurDemo ? [] : st, demo: nurDemo, akten: liste };
   }
 
   /** Datei zu „stufe/name“, wenn das Konto sie sehen darf; sonst { status } (401/403/404). */
   function dateiFuer(rel, konto, kurse) {
     const abs = erlaubt.get(rel);
     if (!abs) return { status: 404 };
+    if (demo.has(rel)) return { abs };
     if (!konto) return { status: 401 };
     return stufenFuer(konto, kurse).includes(rel.split('/')[0]) ? { abs } : { status: 403 };
   }

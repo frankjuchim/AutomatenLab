@@ -5,7 +5,7 @@
 
 import { h, clear } from '../core/dom.js';
 import { api } from '../core/api.js';
-import { anmeldeLink } from '../core/sitzung.js';
+import { anmeldeLink, sitzung } from '../core/sitzung.js';
 import { WORLDS } from '../data/worlds.js';
 import { niveauPille } from '../components/niveau.js';
 
@@ -21,9 +21,10 @@ export default {
       h('h1', null, 'Zusätzliches Material'), ...inhalt));
     seite(h('p', { class: 'muted' }, 'Lade …'));
 
-    api('GET', '/api/material').then((m) => {
+    Promise.all([api('GET', '/api/material'), sitzung()]).then(([m, sess]) => {
       if (!aktiv) return;
-      const lk = m.stufen.includes('lehrkraft');
+      // Demo (Gast oder Schüler ohne freigeschalteten Kurs): Auswahl aus Level 1, Schüler- und Lehrkraftfassung
+      const lk = m.stufen.includes('lehrkraft') || m.demo;
       const admin = m.stufen.includes('original');
       const knopf = (d, stufe, text, cls) => (d[stufe]
         ? h('a', { class: ['btn', 'btn-small', cls], href: d[stufe].url, ...(stufe === 'original' ? { download: '' } : { target: '_blank', rel: 'noopener' }),
@@ -40,6 +41,18 @@ export default {
             knopf(d, 'original', 'Original', 'btn-ghost'))))));
       const gruppen = [...WORLDS.map((w) => ({ titel: `Welt ${w.id}: ${w.title}`, akten: m.akten.filter((a) => a.welt === w.id) })),
         { titel: lk ? 'Klausuren und ganze Einheit' : 'Zur ganzen Einheit', akten: m.akten.filter((a) => !a.welt) }].filter((g) => g.akten.length);
+      if (m.demo) {
+        seite(
+          h('p', { class: 'lead' }, 'Eine Auswahl zum Ansehen: Level 1 mit Arbeitsblatt, Folien und Merkblatt – und als Beispiel die Fassungen für Lehrkräfte mit Lösungen und Sprechernotizen.'),
+          h('p', { class: 'notice gast-hinweis' }, h('span', null, h('strong', null, 'Demo. '),
+            sess.konto ? 'Alles Weitere gibt es, sobald deine Lehrkraft AutomatenLab für euren Kurs freischaltet.'
+              : 'Alle Level gibt es nach der Anmeldung über InfoLabs – Schülerinnen und Schüler sehen dann die Schülerfassungen, Lehrkräfte zusätzlich Lösungen, Folien mit Notizen und Übungsklausuren. Das Material zählt nicht für Punkte.'),
+            !sess.konto && sess.anmeldung ? h('a', { class: 'btn btn-primary', href: anmeldeLink('/#/material') }, 'Anmelden über InfoLabs') : null),
+          m.akten.length ? null : h('p', { class: 'muted' }, 'Auf diesem Server sind noch keine Materialien hinterlegt.'),
+          gruppen.map((g) => h('section', { class: 'material-gruppe' }, h('h2', null, g.titel), h('ul', { class: 'material-liste' }, g.akten.map(akte)))),
+          h('p', null, h('a', { href: ctx.link('gast') }, 'Weitere Demo-Aufgaben ausprobieren')));
+        return;
+      }
       seite(
         h('p', { class: 'lead' }, lk
           ? 'Arbeitsblätter, Folien und Merkblätter für den Unterricht – zusätzlich Lösungen, Folien mit Sprechernotizen, Erwartungshorizonte und Übungsklausuren.'

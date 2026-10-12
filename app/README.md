@@ -64,7 +64,7 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/gast` | Ausprobieren ohne Anmeldung: je Modul eine Aufgabe (Gastmodus) – auch `BASE_URL/gast` |
 | `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
 | `#/themen` | Themen der Einheit: Welten, Level, Module (öffentlich, ohne Lösungen) – auch `BASE_URL/themen` |
-| `#/material` | Zusätzliches Material als PDF (Arbeitsblätter, Folien, Merkblätter; Lehrkräfte zusätzlich Lösungen und Klausuren, Admin die Originale) – nur angemeldet, zählt nicht für Punkte – auch `BASE_URL/material` |
+| `#/material` | Zusätzliches Material als PDF (Arbeitsblätter, Folien, Merkblätter; Lehrkräfte zusätzlich Lösungen und Klausuren, Admin die Originale) – ohne Anmeldung nur die Demo (Level 1: Schüler- und Lehrkraftfassung), zählt nicht für Punkte – auch `BASE_URL/material` |
 | `#/themen?teil=niveaus` | Niveau-Übersicht: was ist für Grundkurs (gA), Leistungskurs (eA) und Zusatz (öffentlich) – auch `BASE_URL/niveaus` |
 | `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
 | `#/lehrkraft` | Bereich für Lehrkräfte (im Aufbau) – auch `BASE_URL/lehrer` |
