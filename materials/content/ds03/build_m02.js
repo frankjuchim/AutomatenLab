@@ -51,6 +51,6 @@ const baustein = (name, merkt, file, bsp, w = 6.6) => [
       '**ε nicht bedacht:** S0 ist Endzustand ⇔ ε wird akzeptiert.',
     ], { size: 20 })]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'DEA entwickeln – Bausteine & Vorgehen', subtitle: 'Merkblatt M02 · Level 3–4 · Konstruktion, Testen, Abi-Check', metaText: 'M02  ·  Welt A', code: 'M02 · Merkblatt DEA entwickeln', body }), OUT + 'M02_Merkblatt_DEA-entwickeln.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'alle', title: 'DEA entwickeln – Bausteine & Vorgehen', subtitle: 'Merkblatt M02 · Level 3–4 · Konstruktion, Testen, Abi-Check', metaText: 'M02  ·  Welt A', code: 'M02 · Merkblatt DEA entwickeln', body }), OUT + 'M02_Merkblatt_DEA-entwickeln.docx');
   console.log(f);
 })();

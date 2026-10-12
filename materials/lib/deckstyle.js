@@ -23,6 +23,7 @@ const __MAT = require('path').resolve(__dirname, '..'); // Wurzel: materials/
 const pptxgen = require('pptxgenjs');
 const fs = require('fs');
 const path = require('path');
+const NIV = require('./niveau.js');
 const { execFileSync } = require('child_process');
 const { applyTheme, soffice } = require('./pptx-theme.js');
 
@@ -88,14 +89,15 @@ function fit(file, maxW, maxH) {
 }
 
 // ------------------------------------------------------------------------- Deck
-function deck({ ds, title }) {
+function deck({ ds, title, niveau }) {
   const pres = new pptxgen();
   pres.layout = 'LAYOUT_WIDE';
   pres.theme = { headFontFace: 'Cambria', bodyFontFace: 'Calibri' };
   pres.author = 'Frank Juchim'; pres.company = 'Max-Planck-Gymnasium Delmenhorst'; pres.title = title;
   const C = pres.SchemeColor;
   const welt = ds ? WELT(ds) : null;
-  const footerText = ds ? `Level ${ds} · Welt ${welt} · ${WELT_NAME[welt]}` : 'Informatik LK · Automaten & formale Sprachen';
+  const niv = NIV.niveauVon({ ds, niveau });
+  const footerText = ds ? `Level ${ds} · Welt ${welt} · ${WELT_NAME[welt]} · ${NIV.NIVEAU_TEXT[niv]}` : `${NIV.NIVEAU_KURS[niv]} · Automaten & formale Sprachen`;
 
   // Layouts
   pres.defineSlideMaster({ title: 'TITEL', background: { color: H.teal }, objects: [
@@ -125,7 +127,7 @@ function deck({ ds, title }) {
     pres, icon, H,
     title({ title: t, subtitle, kernfrage, notes: n }) {
       const s = add('TITEL', 'Start');
-      tb(s, `Informatik LK  ·  Level ${ds}  ·  Welt ${welt}: ${WELT_NAME[welt]}`, { x: M + 0.1, y: 1.35, w: 10, h: 0.4, fontSize: 16, color: 'F3D9B5', bold: true });
+      tb(s, `${NIV.NIVEAU_KURS[niv]}  ·  Level ${ds}  ·  Welt ${welt}: ${WELT_NAME[welt]}`, { x: M + 0.1, y: 1.35, w: 10, h: 0.4, fontSize: 16, color: 'F3D9B5', bold: true });
       s.addText(t, { placeholder: 'title' });
       if (subtitle) tb(s, subtitle, { x: M + 0.1, y: 4.15, w: 9.6, h: 0.6, fontSize: 22, color: 'D7EAE6' });
       if (kernfrage) {

@@ -47,6 +47,6 @@ const OUT = (__MAT + '/out/');
     ], { size: 20 }),
     ...D.tip('Satzbausteine', [D.p('„Nach dem Lesen von … sind die Zustände {…} aktiv.“  ·  „Da nach dem letzten Zeichen mit S3 ein Endzustand aktiv ist, gibt es einen akzeptierenden Weg; die Eingabe wird akzeptiert.“  ·  „Der ε-Übergang ermöglicht, dass das Vorzeichen fehlen darf.“', { size: 20 })]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'NEA – Nichtdeterminismus', subtitle: 'Merkblatt M06 · Level 8 · Raten erlaubt', metaText: 'M06  ·  Welt B', code: 'M06 · Merkblatt NEA', body }), OUT + 'M06_Merkblatt_NEA.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'plus', title: 'NEA – Nichtdeterminismus', subtitle: 'Merkblatt M06 · Level 8 · Raten erlaubt', metaText: 'M06  ·  Welt B', code: 'M06 · Merkblatt NEA', body }), OUT + 'M06_Merkblatt_NEA.docx');
   console.log(f);
 })();

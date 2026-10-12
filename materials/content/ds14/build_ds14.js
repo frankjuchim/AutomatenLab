@@ -274,7 +274,7 @@ async function boss() {
     W.side(W.gram(B1, { widthCm: 8.4, caption: 'Abbildung 1: Grammatik G1 der Sprache LiSa' }), W.gram(B2, { widthCm: 8.4, caption: 'Abbildung 2: Grammatik G2 der Sprache LiSa2' }), 8.7),
     D.small('Hinweis: Die Nichtterminale von G2 stehen für S – Skript, K – Szene oder Effekt-Block, F – Farbe, H – Folge von Helligkeitsänderungen.'),
   ];
-  return D.save(D.doc({ kind: 'Boss-Level', title: 'Boss-Level C: Die Lichtregie', subtitle: 'Abi-artige Aufgabe · Formale Sprachen · 25 BE', metaText: 'Boss-Level C  ·  Welt C · Formale Sprachen', code: 'Boss-Level C · Formale Sprachen', body }), OUT + 'BossLevel_C_Formale-Sprachen.docx');
+  return D.save(D.doc({ kind: 'Boss-Level', niveau: 'eA', title: 'Boss-Level C: Die Lichtregie', subtitle: 'Abi-artige Aufgabe · Formale Sprachen · 25 BE', metaText: 'Boss-Level C  ·  Welt C · Formale Sprachen', code: 'Boss-Level C · Formale Sprachen', body }), OUT + 'BossLevel_C_Formale-Sprachen.docx');
 }
 
 async function eh() {
@@ -310,7 +310,7 @@ async function eh() {
     ], { size: 18, allCenter: true, header: false, firstColBold: true, firstColFill: true }),
     D.small('Grundlage: 95 % → 15 Punkte, 90 % → 14, 85 % → 13, 80 % → 12, 75 % → 11, 70 % → 10, 65 % → 9, 60 % → 8, 55 % → 7, 50 % → 6, 45 % → 5, 40 % → 4, 33 % → 3, 27 % → 2, 20 % → 1 (aufgerundet auf ganze BE).'),
   ];
-  return D.save(D.doc({ kind: 'Erwartungshorizont', title: 'Boss-Level C: Erwartungshorizont', subtitle: 'Die Lichtregie · Formale Sprachen · 25 BE', metaText: 'Boss-Level C  ·  Welt C · Formale Sprachen', code: 'Boss-Level C · Erwartungshorizont', body }), OUT + 'BossLevel_C_Erwartungshorizont.docx');
+  return D.save(D.doc({ kind: 'Erwartungshorizont', niveau: 'eA', title: 'Boss-Level C: Erwartungshorizont', subtitle: 'Die Lichtregie · Formale Sprachen · 25 BE', metaText: 'Boss-Level C  ·  Welt C · Formale Sprachen', code: 'Boss-Level C · Erwartungshorizont', body }), OUT + 'BossLevel_C_Erwartungshorizont.docx');
 }
 
 (async () => {

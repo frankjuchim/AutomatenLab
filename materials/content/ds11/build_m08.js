@@ -62,6 +62,6 @@ const J = W.load(11);
       ], { size: 20 }),
     ]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Grammatiken & Ableitungen', subtitle: 'Merkblatt M08 · Level 11 · Begriffe, Notation, Ableitung', metaText: 'M08  ·  Welt C', code: 'M08 · Merkblatt Grammatiken', body }), OUT + 'M08_Merkblatt_Grammatiken.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'eA', title: 'Grammatiken & Ableitungen', subtitle: 'Merkblatt M08 · Level 11 · Begriffe, Notation, Ableitung', metaText: 'M08  ·  Welt C', code: 'M08 · Merkblatt Grammatiken', body }), OUT + 'M08_Merkblatt_Grammatiken.docx');
   console.log(f);
 })();

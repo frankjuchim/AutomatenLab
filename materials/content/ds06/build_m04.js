@@ -61,6 +61,6 @@ const K = DATA.kart;
     ], { widthsCm: [6.2, 11.2], size: 19, firstColBold: true }),
     ...D.warn('Typische Fehler', [D.p('Endzustände (Doppelkreise) einzeichnen · fehlende Übergänge (nicht vollständig) · „N“ oder „–“ statt **ε** für keine Ausgabe · Ausgabe an den Zustand statt an die Kante schreiben.', { size: 20 })]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Mealy-Automaten', subtitle: 'Merkblatt M04 · Level 6 · Notation, Vergleich mit DEA, Entwickeln', metaText: 'M04  ·  Welt A', code: 'M04 · Merkblatt Mealy-Automaten', body }), OUT + 'M04_Merkblatt_Mealy-Automaten.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'alle', title: 'Mealy-Automaten', subtitle: 'Merkblatt M04 · Level 6 · Notation, Vergleich mit DEA, Entwickeln', metaText: 'M04  ·  Welt A', code: 'M04 · Merkblatt Mealy-Automaten', body }), OUT + 'M04_Merkblatt_Mealy-Automaten.docx');
   console.log(f);
 })();

@@ -66,6 +66,6 @@ const J = W.load(13);
       ['Erläutern Sie, wie ein Kellerautomat … nutzt.', 'Was wird bei welchem Zeichen abgelegt/entfernt, was bedeutet der Kellerinhalt im Sachzusammenhang, wann wird akzeptiert?'],
     ], { widthsCm: [6.0, 11.4], size: 19, firstColBold: true }),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Kontextfreie Grammatiken & Chomsky-Hierarchie', titleSize: 30, subtitle: 'Merkblatt M10 · Level 13–14 · Muster, Mehrdeutigkeit, Kellerautomat, Sprachklassen', metaText: 'M10  ·  Welt C', code: 'M10 · Merkblatt Kontextfreie Grammatiken', body }), OUT + 'M10_Merkblatt_Kontextfreie-Grammatiken.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'eA', title: 'Kontextfreie Grammatiken & Chomsky-Hierarchie', titleSize: 30, subtitle: 'Merkblatt M10 · Level 13–14 · Muster, Mehrdeutigkeit, Kellerautomat, Sprachklassen', metaText: 'M10  ·  Welt C', code: 'M10 · Merkblatt Kontextfreie Grammatiken', body }), OUT + 'M10_Merkblatt_Kontextfreie-Grammatiken.docx');
   console.log(f);
 })();
