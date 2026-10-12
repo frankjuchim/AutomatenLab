@@ -14,6 +14,7 @@
     "vertrag": "node scripts/vertrag_pruefen.js",
     "materials:build": "bash materials/build_all.sh",
     "materials:package": "node materials/scripts/package_dist.js",
+    "materials:pdf": "node materials/scripts/export_pdf.mjs",
     "qa:routes": "node qa/qa-routes.mjs http://localhost:8080/"
   },
   "engines": {

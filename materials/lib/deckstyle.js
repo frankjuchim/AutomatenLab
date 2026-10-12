@@ -116,9 +116,20 @@ function deck({ ds, title, niveau }) {
   ], slideNumber: { x: W - M - 0.6, y: HT - 0.42, w: 0.6, h: 0.3, fontSize: 11, color: H.muted, align: 'right' } });
 
   let section = null;
+  // Folien nur für Lehrkräfte (Lösungen): fehlen im Schüler-Handout (scripts/export_pdf.py). Erkannt am Titel
+  // („Auflösung …“, „Lösung …“, „Ergebnis: …“, „Ein mögliches …“) oder am Vermerk [NUR LEHRKRAFT] in den Notizen.
+  let anzahl = 0;
+  const nurLehrkraft = new Set();
+  const LK_TITEL = /^(Auflösung|Lösung|Musterlösung|Ergebnis:|Ein mögliches)/;
   const add = (master, sec) => {
     if (sec && sec !== section) { pres.addSection({ title: sec }); section = sec; }
-    return pres.addSlide({ masterName: master, sectionTitle: section || undefined });
+    const s = pres.addSlide({ masterName: master, sectionTitle: section || undefined });
+    const nr = ++anzahl;
+    const addText = s.addText.bind(s);
+    s.addText = (c, o) => { if (o && o.placeholder === 'title' && typeof c === 'string' && LK_TITEL.test(c)) nurLehrkraft.add(nr); return addText(c, o); };
+    const addNotes = s.addNotes.bind(s);
+    s.addNotes = (n) => { if (typeof n === 'string' && n.includes('[NUR LEHRKRAFT]')) nurLehrkraft.add(nr); return addNotes(n); };
+    return s;
   };
   const notes = (s, n) => { if (n) s.addNotes(n); };
   const tb = (s, content, o) => s.addText(content, { isTextBox: true, fontFace: 'Calibri', color: H.ink, valign: 'top', margin: 0, ...o });
@@ -277,6 +288,8 @@ function deck({ ds, title, niveau }) {
       await pres.writeFile({ fileName: file });
       await fixParagraphProps(file);
       await applyTheme(file, THEME);
+      // Begleitdatei für den PDF-Export: Foliennummern, die im Schüler-Handout fehlen
+      fs.writeFileSync(file.replace(/\.pptx$/, '.folien.json'), JSON.stringify({ folien: anzahl, nurLehrkraft: [...nurLehrkraft].sort((a, b) => a - b) }) + '\n');
       return file;
     },
   };

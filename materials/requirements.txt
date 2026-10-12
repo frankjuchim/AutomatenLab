@@ -2,3 +2,4 @@
 segno==1.6.6
 pillow>=10
 matplotlib>=3.8
+pypdf>=4
