@@ -54,6 +54,8 @@ Server unter `#/material` anbietet – sie zählen nicht für Punkte:
   Admin. Test: `test/material.test.js`.
 * **Demo im Gastmodus:** Die Akten aus `GAST_MATERIAL` (`app/js/data/gast.js`, derzeit nur Level 1) bekommen in
   `verzeichnis.json` das Feld `demo` (Schüler- und Lehrkraftfassung); diese PDFs sind ohne Anmeldung offen, Originale nie.
+* **Wo man sie findet:** auf `#/material` (alles), auf der Themenseite bei jedem Level und auf der Startseite
+  aufklappbar je Welt unter den Modulen – überall dieselben Daten aus `GET /api/material`.
 * `materials/pdf/` ist eingecheckt und kommt ins Image; nach Material-Änderungen neu erzeugen und committen.
 
 ## Typische Änderungen

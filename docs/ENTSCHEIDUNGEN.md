@@ -2,6 +2,10 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-12 · Arbeitsblätter je Welt auf der Startseite, Welten mit Thema vorn
+Unter den Modulen jeder Welt klappt „Arbeitsblätter, Folien & Merkblätter zu Welt X (PDF)“ auf: alle Level der Welt und das Boss-Level, darunter die Klausuren bei „Für alle Welten“. Es sind dieselben Daten und Rechte wie auf der Themenseite (`GET /api/material`, `materialLinks`): Schüler sehen Schülerfassungen, Lehrkräfte zusätzlich ihre Fassungen, Gäste die Demo und 🔒. Aufklappbar, damit die Modul-Kacheln vorn bleiben.
+Die Welt-Buchstaben A–D bleiben als Kurzname. Sie stehen im Manifest (`welten[].kennung`, Entscheidung V4), in den Boss-Leveln A–C, in den Kopfzeilen der gedruckten Materialien und im Quiz („Welt A“). Auf der Level-Karte steht aber das Thema groß („Endliche Automaten“) und „Welt A · Level 1–6“ klein darunter. Alternativen: Nummern 1–4, verworfen, weil sie sich mit den Level-Nummern verwechseln lassen; nur Themennamen, verworfen, weil die gedruckten Blätter und die Boss-Level die Buchstaben nutzen.
+
 ## 2026-10-12 · Arbeitsblätter in der Themenübersicht
 Wie in Algo Quest stehen Arbeitsblatt, Folien und Merkblatt direkt bei jedem Level der Themenseite (Boss-Level beim Boss-Level, Klausuren und Einheit am Ende); die Seite `#/material` heißt jetzt „Arbeitsblätter & Material“. Grund: Frank fand das Material unter „Material“ zu versteckt. Gäste sehen Titel gesperrter Schülerfassungen mit 🔒 („nach Anmeldung“), aber keine Adressen; Lehrkraft-Dateien erscheinen für sie gar nicht.
 

@@ -197,8 +197,8 @@ label { font-weight: 700; }
 .level-map { display: grid; gap: 0.9rem; }
 .world-row { display: grid; grid-template-columns: 11rem 1fr; align-items: start; gap: 0.5rem 1rem; padding: 0 var(--gap); }
 .world-label { margin: 0; padding-top: 0.55rem; display: grid; gap: 0.1rem; font-size: var(--fs-m); }
-.world-letter { font-weight: 800; color: var(--teal); font-size: var(--fs-l); }
-.world-title { font-weight: 400; color: var(--ink-2); font-size: var(--fs-s); }
+.world-title { font-weight: 800; color: var(--teal); font-size: var(--fs-m); line-height: 1.25; }
+.world-letter { font-weight: 600; color: var(--ink-2); font-size: var(--fs-s); }
 .chain-scroller { overflow-x: auto; scrollbar-width: thin; padding: 0.4rem 0.2rem 0.5rem; margin: -0.4rem 0 0; }
 .level-chain { list-style: none; margin: 0; padding: 0; display: flex; align-items: flex-start; }
 .level-step { position: relative; display: grid; justify-items: center; gap: 0.35rem; width: 8.2rem; flex: 0 0 auto; text-align: center; }
@@ -516,7 +516,8 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
   .case-layout { grid-template-columns: 1fr; }
   .case-question { position: static; }
   .world-row { grid-template-columns: 1fr; }
-  .world-label { display: flex; align-items: baseline; gap: 0.6rem; padding-top: 0; }
+  .world-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.6rem; padding-top: 0; }
+  .world-letter { white-space: nowrap; }
 }
 @media (max-width: 560px) {
   .brand-name { font-size: 1.1rem; }
@@ -540,7 +541,7 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 [data-welt="C"] { --welt: var(--welt-c); }
 [data-welt="D"] { --welt: var(--welt-d); }
 [data-welt="alle"] { --welt: var(--welt-alle); }
-.world-row .world-letter { color: var(--welt, var(--teal)); }
+.world-row .world-title { color: var(--welt, var(--teal)); }
 .world-row { border-left: 4px solid transparent; transition: border-color var(--t); }
 .world-row:has(.level-node.is-active) { border-left-color: var(--welt, var(--teal)); }
 .tile .tile-link { border-top-color: var(--welt, var(--teal)); position: relative; }
@@ -753,3 +754,10 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .gast-karte:hover, .gast-karte:focus-visible { border-color: var(--teal); background: var(--teal-mist); }
 .gast-karte span { color: var(--ink-2); font-size: var(--fs-s); }
 .gast-hinweis { margin: 0 0 1.2rem; display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }
+
+/* Arbeitsblätter je Welt auf der Startseite (aufklappbar unter den Modulen) */
+.welt-material { margin-top: 0.8rem; border: 1px solid var(--line); border-left: 4px solid var(--welt, var(--teal)); border-radius: var(--r-m); background: var(--surface); }
+.welt-material > summary { cursor: pointer; padding: 0.6rem 0.9rem; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.welt-material-akten { list-style: none; margin: 0; padding: 0 0.9rem 0.6rem; display: grid; gap: 0.6rem; }
+.welt-material-kopf { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
+.welt-material > p { padding: 0 0.9rem 0.6rem; margin: 0; }
