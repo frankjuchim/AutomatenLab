@@ -40,6 +40,11 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - [ ] PR 4 – Welt A: Minimierer, Mealy-Maschine, Akzeptor-Arena (Training)
 - [ ] PR 5 – Welten B–D: Parallelwelten, Keller-Labor, Überliste, Ableitungs-Rallye, Grammatik-Tester, Turing-Labor, Chomsky-Sortierer (Training); Test „keine Lösung in ausgelieferten Dateien“; Abzeichen serverseitig
 
+## Grund- und Leistungskurs (Vertrag v1.2)
+- ✅ Niveaus nach KC 2017 (gA + eA / nur eA / Zusatz) für Level, Boss-Level, Module, Merkblätter; Niveau-Übersicht `/niveaus` (= `#/themen?teil=niveaus`), Manifest v1.2 (`kurs`, `niveaus`, `urls.niveaus`), Etiketten in der App, Niveau im Kopf aller Materialien, Abschnitt in der Einheitsplanung
+- [ ] Kurs-Einstellung „Kursart“ (Grundkurs/Leistungskurs) wie Algo Quest: eA-Level im Grundkurs als „freiwillig“, Kursübersicht für das Portal nur über die Level des Kurses (mit PR 7)
+- ✅ Übungsklausur für den Grundkurs „Fahrradverleih“ (90 min, 30 BE, DEA/Mealy/Grenzen, alle Automaten geprüft)
+
 ## Phase 5 – Lehrkraft-Bereich
 - [ ] PR 6: Lernstand-Matrix Level 1–16 × Schüler wie Algo Quest, Aufgabenstatistik, Fallen-Profil (nach V3), CSV, Aufgaben-Vorschau mit Lösungen; Kursübersicht für das Portal mit echten Kennzahlen
 - [ ] PR 7: Kurs-Einstellungen (Freischaltung Pflicht/Vertiefung/Bonus, Aufträge auf der Startseite), Datenschutzhinweise der Plattform, Löschung über die Verbund-API vollständig getestet, Doku, Abnahme

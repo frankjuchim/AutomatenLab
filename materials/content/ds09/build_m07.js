@@ -58,6 +58,6 @@ const OUT = (__MAT + '/out/');
       'Das gelesene Kellerzeichen vergessen zu entfernen: (A, a) : A lässt den Keller **unverändert**.',
     ], { size: 20 })]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Kellerautomaten', subtitle: 'Merkblatt M07 · Level 9–10 · Notation, Tabelle, Akzeptanz', metaText: 'M07  ·  Welt B', code: 'M07 · Merkblatt Kellerautomaten', body }), OUT + 'M07_Merkblatt_Kellerautomaten.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'eA', title: 'Kellerautomaten', subtitle: 'Merkblatt M07 · Level 9–10 · Notation, Tabelle, Akzeptanz', metaText: 'M07  ·  Welt B', code: 'M07 · Merkblatt Kellerautomaten', body }), OUT + 'M07_Merkblatt_Kellerautomaten.docx');
   console.log(f);
 })();

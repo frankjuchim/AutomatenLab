@@ -1,6 +1,9 @@
 const __MAT = require('path').resolve(__dirname, '../..'); // Wurzel: materials/
 // 00_Einheitsplanung (Lehrkraft) und 00_Lernlandkarte (SuS)
 const D = require((__MAT + '/lib/docstyle.js'));
+const NIV = require((__MAT + '/lib/niveau.js'));
+const NIV_KURZ = { alle: 'gA + eA', eA: 'nur eA', plus: 'Zusatz' };
+const nivLevel = (n) => Object.keys(NIV.LEVEL_NIVEAU).map(Number).filter((l) => NIV.LEVEL_NIVEAU[l] === n);
 const OUT = (__MAT + '/out/');
 
 const LEVELS = [
@@ -88,10 +91,10 @@ async function planung() {
     D.p('Diese Einheit ist vollständig ausgearbeitet und kann **ohne eigene Vorarbeit** übernommen werden. Der **Pflichtweg umfasst 9 Doppelstunden** (3 Wochen à 3 Doppelstunden) und deckt alle Kompetenzen des KC für das erhöhte Niveau ab. Bei 4 Wochen kommen **3 Vertiefungsstunden** dazu. Alles Weitere ist **Bonus- und Extra-Material** für Interessierte, zum Üben oder zur Differenzierung. Für jede Doppelstunde (à 90 min) gibt es ein Arbeitsblatt, einen Foliensatz und eine Lehrkraft-Handreichung mit Verlaufsplan und allen Lösungen.'),
     D.table([
       ['Frage', 'Antwort'],
-      ['Für wen?', 'Informatik-Kurse auf erhöhtem Anforderungsniveau (eA) in der Qualifikationsphase, KC Niedersachsen. Für Kurse auf grundlegendem Niveau: siehe „Kürzen und anpassen“ beim Wochenplan.'],
+      ['Für wen?', 'Informatik-Kurse der Qualifikationsphase auf erhöhtem (eA, Leistungskurs) und grundlegendem Anforderungsniveau (gA, Grundkurs), KC Niedersachsen. Was für welchen Kurs gedacht ist: Abschnitt „Grund- und Leistungskurs“.'],
       ['Wie lange?', '3 Wochen à 3 Doppelstunden (Pflichtweg) oder 4 Wochen à 3 Doppelstunden (mit Vertiefung), zuzüglich Klausur. Siehe Wochenplan.'],
       ['Was brauche ich?', 'Beamer mit PowerPoint (oder Keynote/LibreOffice), Kopierer, Endgeräte für die SuS (iPad, Laptop oder Handy – eines pro 1–2 SuS) mit Internetzugang. Optional: flaci.com zum Zeichnen von Automaten.'],
-      ['Muss ich etwas installieren?', 'Nein. Die Web-App „AutomatenLab“ läuft im Browser, ohne Anmeldung und ohne Datenerhebung. Die QR-Codes auf den Arbeitsblättern führen direkt zur passenden Übung.'],
+      ['Muss ich etwas installieren?', 'Nein. Die Web-App „AutomatenLab“ läuft im Browser. Die SuS melden sich über das Portal InfoLabs an (Kurscode und persönlicher Code, keine E-Mail); ohne Anmeldung gibt es je Modul eine Demo-Aufgabe. Die QR-Codes auf den Arbeitsblättern führen direkt zur passenden Übung.'],
       ['Welche Vorkenntnisse brauchen die SuS?', 'Keine zum Thema. Hilfreich: Datenstruktur Stapel (wird in Level 9 kurz wiederholt).'],
       ['Ist das abiturtauglich?', 'Ja. Alle Aufgaben nutzen die Operatoren und die Notation der Ergänzenden Hinweise (Neufassung 2025, verbindlich ab Abitur 2027). Alle Automaten, Grammatiken und Lösungen sind per Programm nachgerechnet.'],
     ], { widthsCm: [4.0, 13.4], size: 19, firstColBold: true }),
@@ -109,6 +112,19 @@ async function planung() {
       'Lernlandkarte (00_Lernlandkarte) für alle kopieren und in Level 1 austeilen – die SuS haken nach jedem Level ab.',
       'Entscheiden: 3-Wochen-Variante (nur Pflicht) oder 4-Wochen-Variante (mit Vertiefung). Ordner 3_Bonus_und_Extra-Uebungen den SuS digital bereitstellen.',
       'Abschnitt „Notation 2025“ lesen: Einige Konventionen weichen von älteren Schulbüchern ab (z. B. Akzeptanz beim Kellerautomaten).',
+    ]),
+    D.h2('Grund- und Leistungskurs (KC 2017)'),
+    D.p('Maßstab ist das Kerncurriculum Informatik (2017), Lernfeld „Automaten und Sprachen“: Der Kern gilt für **beide Kurse**, die Spalte **„Erweiterung eA“** (Kellerautomat, formale Sprachen und Grammatiken) ist im Abitur **nur im Leistungskurs** gefordert. Was das KC nur als Ergänzung nennt (Turingmaschine, Chomsky-Hierarchie) oder gar nicht (Minimierung, NEA), ist **Zusatz**. Jedes Arbeitsblatt, jede Handreichung, jedes Merkblatt und jeder Foliensatz nennt das Niveau im Kopf; in der App tragen eA-Level das Etikett „LK“ und Zusatz-Level ein „+“.'),
+    D.table([
+      ['Niveau', 'Level', 'Inhalte'],
+      ['gA + eA (beide Kurse)', nivLevel('alle').join(', ') + ' · Boss-Level A', 'DEA beschreiben, analysieren und entwickeln; Mealy-Automaten; Grenzen endlicher Automaten; Übungsklausur „Fahrradverleih“ (gA)'],
+      ['nur eA (Leistungskurs)', nivLevel('eA').join(', ') + ' · Boss-Level B, C · Übungsklausur „Smart-Home-Befehle“', 'Kellerautomaten (Abi-Tabelle), formale vs. natürliche Sprachen, reguläre und kontextfreie Grammatiken, Zusammenhang Grammatik ↔ Automat, Sprachdesign-Projekt'],
+      ['Zusatz', nivLevel('plus').join(', '), 'Minimierung (Markierungsverfahren), NEA (im Leistungskurs eine gute Hinleitung zum Kellerautomaten), Turingmaschine; in Level 14 die Chomsky-Hierarchie'],
+    ], { widthsCm: [4.0, 4.6, 8.8], size: 19, firstColBold: true }),
+    ...D.bullets([
+      '**Grundkurs:** Pflicht L1, L2, L3, L6, L7 (5 Doppelstunden), Vertiefung L4, Boss-Level A als Übung, Übungsklausur „Fahrradverleih“ (90 min, 30 BE). L5 (Minimierung) ist Zusatz; Welt C und die Keller-Level sind im Grundkurs freiwillig.',
+      '**Leistungskurs:** Wochenplan unten (Pflichtweg 9 Doppelstunden, mit Vertiefung 12).',
+      'Die Niveau-Übersicht steht auch öffentlich in der App: https://automatenlab.frankjuchim.de/niveaus',
     ]),
     D.h2('Wochenplan'),
     D.table([
@@ -148,8 +164,8 @@ async function planung() {
     ]),
     D.h2('2  Sequenzplan'),
     D.table([
-      ['Level', 'Typ', 'Titel', 'Schwerpunkt', 'Spielerisches Element', 'App-Modul', 'Merk-blatt'],
-      ...LEVELS.map((l) => [String(l[0]), TYP_NAME[TYP[l[0]]], l[1], l[2], l[3], l[4], l[5]]),
+      ['Level', 'Typ / Niveau', 'Titel', 'Schwerpunkt', 'Spielerisches Element', 'App-Modul', 'Merk-blatt'],
+      ...LEVELS.map((l) => [String(l[0]), `${TYP_NAME[TYP[l[0]]]}\n${NIV_KURZ[NIV.LEVEL_NIVEAU[l[0]]]}`, l[1], l[2], l[3], l[4], l[5]]),
     ], { widthsCm: [1.1, 1.9, 2.8, 4.6, 3.3, 2.5, 1.2], size: 16, center: [0, 6] }),
     D.small('Pflicht = 9 Doppelstunden, deckt alle KC-Kompetenzen (eA) ab. Vertiefung = 4. Woche. Bonus = Extra-Material, z. B. für Projektphasen, Differenzierung oder interessierte SuS.'),
     D.pageBreak(),
@@ -257,7 +273,7 @@ async function planung() {
       ['AutomatenLab_WebApp, Quelltexte', 'App-Paket für Docker/CapRover mit README; Erzeugungsskripte der Materialien (optional)'],
     ], { widthsCm: [5.4, 12.0], size: 18, firstColBold: true, noSpacer: true }),
   ];
-  return D.save(D.doc({ kind: 'PL', title: 'Maschinen, die Sprache verstehen', subtitle: 'Einheitsplanung und Ablaufplan · Automaten und formale Sprachen · Informatik eA, Q-Phase · 9 + 3 Doppelstunden', metaText: 'Gesamtplanung der Einheit', code: '00 · Einheitsplanung', body }), OUT + '00_Einheitsplanung.docx');
+  return D.save(D.doc({ kind: 'PL', title: 'Maschinen, die Sprache verstehen', subtitle: 'Einheitsplanung und Ablaufplan · Automaten und formale Sprachen · Informatik eA und gA, Q-Phase · 9 + 3 Doppelstunden (gA: 5 + 1)', metaText: 'Gesamtplanung der Einheit', code: '00 · Einheitsplanung', body }), OUT + '00_Einheitsplanung.docx');
 }
 
 async function lernlandkarte() {
@@ -268,6 +284,7 @@ async function lernlandkarte() {
   const body = [
     D.p('Diese Karte begleitet dich durch die Einheit. Kreuze nach jedem Level an, wie sicher du dich fühlst. Wo du „noch nicht“ ankreuzt, helfen dir das Merkblatt (M…) und das passende Modul im **AutomatenLab**.'),
     D.small('Level ohne Zusatz gehören zum Pflichtweg. **V** = Vertiefung (bei vier Wochen im Unterricht), **B** = Bonus (freiwillig, zum Üben und Weiterdenken).'),
+    D.small('**Grundkurs (gA):** Welt A (ohne Level 5) und Level 7 sind dein Abiturstoff. Level 9 bis 15 (Kellerautomaten, Grammatiken) sind nur im Leistungskurs (eA) Abiturthema – im Grundkurs freiwillig. Level 5, 8 und 16 sind für alle Zusatz.'),
     D.h2('Welt A – Endliche Automaten'),
     rows([
       ['den Aufbau eines DEA beschreiben (Σ, Zustände, Start-/Endzustände, Übergänge)', '1', 'M01, Arena'],

@@ -1,5 +1,5 @@
 'use strict';
-// Vertrag des Plattform-Verbunds InfoLabs (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, v1.1):
+// Vertrag des Plattform-Verbunds InfoLabs (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, v1.2):
 // Manifest §7, Healthcheck §6, Pflicht-URLs. scripts/vertrag_pruefen.js ist eine unveränderte Kopie aus frankjuchim/labs.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,7 +14,11 @@ test('Manifest erfüllt den Vertrag (pruefeManifest ohne Fehler), öffentlich mi
   assert.equal(r.headers['access-control-allow-origin'], '*');
   assert.deepEqual(pruefeManifest(r.body), []);
   assert.equal(r.body.id, 'automatenlab');
-  assert.equal(r.body.vertrag, '1.1');
+  assert.equal(r.body.vertrag, '1.2');
+  // v1.2 (§7, §9): für eA und gA, Niveau-Übersicht ohne Anmeldung
+  assert.equal(r.body.kurs, 'Informatik eA und gA, Niedersachsen, Abitur ab 2027');
+  assert.deepEqual(r.body.niveaus, ['eA', 'gA']);
+  assert.equal(r.body.urls.niveaus, '/niveaus');
   assert.equal(r.body.basis, 'https://automatenlab.example');
   assert.equal(r.body.auth.portal, 'https://labs.example');
   assert.ok(r.body.faehigkeiten.includes('gast'));
@@ -79,4 +83,18 @@ test('vertrag_pruefen.js ist eine unveränderte Kopie (Kennzeichen der maßgebli
   const text = fs.readFileSync(require.resolve('../scripts/vertrag_pruefen.js'), 'utf8');
   assert.match(text, /Maßgebliche Fassung: frankjuchim\/labs\/scripts\/vertrag_pruefen\.js/);
   assert.match(text, /Diese Datei wird unverändert in jede Plattform des Verbunds kopiert\./);
+});
+
+test('Niveau-Übersicht: /niveaus führt ohne Anmeldung auf die Themenseite (Abschnitt Niveaus); /api/themen nennt Niveaus', async () => {
+  const app = await H.makeApp();
+  const r = await request(app).get('/niveaus');
+  assert.equal(r.status, 302);
+  assert.equal(r.headers.location, '/#/themen?teil=niveaus');
+  const t = (await request(app).get('/api/themen')).body;
+  const levels = t.welten.flatMap((w) => w.levels);
+  assert.deepEqual([...new Set(levels.map((l) => l.niveau))].sort(), ['alle', 'eA', 'plus']);
+  assert.equal(levels.find((l) => l.nr === 9).niveau, 'eA', 'Kellerautomat: nur eA');
+  assert.equal(levels.find((l) => l.nr === 1).niveau, 'alle');
+  assert.deepEqual(t.welten.map((w) => w.boss && w.boss.niveau), ['alle', 'eA', 'eA', null]);
+  assert.equal(t.module.find((m) => m.route === 'turing').niveau, 'plus');
 });

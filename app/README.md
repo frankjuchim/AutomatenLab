@@ -1,7 +1,7 @@
 # AutomatenLab
 
-Lern-Web-App zur Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Informatik-Leistungskurs, Automaten und formale Sprachen, KC Niedersachsen).
-Plattform des Verbunds InfoLabs (Vertrag: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1). Die App läuft ohne Build-Schritt; ausgeliefert wird sie vom Server in `../src` (Node, Express). Keine externen Server, CDNs oder Tracker. Angemeldet wird nur über das Portal InfoLabs (Single Sign-on, Knopf „Anmelden“ oben rechts). Bis der Lernstand auf dem Server liegt (Phase 4), bleibt der Fortschritt im Browser des jeweiligen Geräts (`localStorage`).
+Lern-Web-App zur Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Informatik, Grund- und Leistungskurs, Automaten und formale Sprachen, KC Niedersachsen; was für welches Niveau ist: `#/themen?teil=niveaus`).
+Plattform des Verbunds InfoLabs (Vertrag: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.2). Die App läuft ohne Build-Schritt; ausgeliefert wird sie vom Server in `../src` (Node, Express). Keine externen Server, CDNs oder Tracker. Angemeldet wird nur über das Portal InfoLabs (Single Sign-on, Knopf „Anmelden“ oben rechts). Bis der Lernstand auf dem Server liegt (Phase 4), bleibt der Fortschritt im Browser des jeweiligen Geräts (`localStorage`).
 
 ## Deployment auf CapRover
 
@@ -64,12 +64,13 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/gast` | Ausprobieren ohne Anmeldung: je Modul eine Aufgabe (Gastmodus) – auch `BASE_URL/gast` |
 | `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
 | `#/themen` | Themen der Einheit: Welten, Level, Module (öffentlich, ohne Lösungen) – auch `BASE_URL/themen` |
+| `#/themen?teil=niveaus` | Niveau-Übersicht: was ist für Grundkurs (gA), Leistungskurs (eA) und Zusatz (öffentlich) – auch `BASE_URL/niveaus` |
 | `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
 | `#/lehrkraft` | Bereich für Lehrkräfte (im Aufbau) – auch `BASE_URL/lehrer` |
 
 **Anmeldung:** Ohne Sitzung sind nur die Übersicht, `#/gast` mit den Demo-Aufgaben (Liste in `js/data/gast.js`), `#/themen` und `#/datenschutz` offen. Jede andere Route leitet still zur Anmeldung beim Portal InfoLabs und danach genau auf diese Route zurück – die QR-Codes bleiben gültig. Level-Quiz, Sprach-Detektiv und Automaten-Baukasten werden auf dem Server geprüft (Lösungen in `../inhalte/`, nie ausgeliefert).
 
-Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
+Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/niveaus` (Niveau-Übersicht), `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
 
 Baukasten-Challenges (`?level=n` / `?aufgabe=id`):
 

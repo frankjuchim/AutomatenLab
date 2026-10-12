@@ -1,7 +1,7 @@
 'use strict';
 // AutomatenLab-Server: liefert die Web-App aus app/ unverändert aus (Cache- und Sicherheitsregeln wie bisher
 // app/nginx.conf), dazu Healthcheck und Manifest nach dem Vertrag des Plattform-Verbunds InfoLabs
-// (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.1).
+// (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.2).
 
 const path = require('node:path');
 const express = require('express');
@@ -19,7 +19,7 @@ const { apiRoutes } = require('./routes/api');
 
 const APP_DIR = path.join(__dirname, '..', 'app');
 const VERSION = require('../package.json').version;
-const VERTRAG = '1.1';
+const VERTRAG = '1.2';
 const PLATTFORM_ID_STANDARD = 'automatenlab';
 
 // Content-Security-Policy wie bisher in app/nginx.conf: nur eigene Dateien; Graphviz läuft als WASM
@@ -57,7 +57,9 @@ const WEITERLEITUNGEN = {
   '/gast': '/#/gast',
   '/themen': '/#/themen',
   '/lehrer': '/#/lehrkraft',
-  '/datenschutz': '/#/datenschutz'
+  '/datenschutz': '/#/datenschutz',
+  // Niveau-Übersicht (Vertrag v1.2 §7 urls.niveaus): ein Fragment wie /themen#niveaus ginge bei der Weiterleitung verloren
+  '/niveaus': '/#/themen?teil=niveaus'
 };
 
 /**
@@ -167,7 +169,8 @@ function createApp(opts) {
     name: 'AutomatenLab',
     titel: 'AutomatenLab – Maschinen, die Sprache verstehen',
     themenfeld: 'Automaten und formale Sprachen',
-    kurs: 'Informatik eA (LK), Niedersachsen',
+    kurs: 'Informatik eA und gA, Niedersachsen, Abitur ab 2027',
+    niveaus: ['eA', 'gA'],
     beschreibung:
       'Interaktive Übungsmodule zu endlichen Automaten, Mealy-Maschinen, Kellerautomaten, Grammatiken und Turingmaschinen – mit Simulatoren, Baukasten und Abitur-Tabellen.',
     farbe: '#0E6455',
@@ -181,6 +184,7 @@ function createApp(opts) {
       lehrkraft: '/lehrer',
       datenschutz: '/datenschutz',
       healthz: '/healthz',
+      niveaus: '/niveaus',
       ...(sso.aktiv ? { ssoStart: '/sso/start', ssoEnde: '/sso/ende' } : {})
     },
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },

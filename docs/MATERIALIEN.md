@@ -26,6 +26,13 @@ AUTOMATENLAB_URL=https://… ./materials/build_all.sh   # QR-Codes auf andere Ad
 | `fonts/` | Caladea/Carlito für Overlays und Thumbnails |
 | `templates/` | `LIESMICH.txt` des Pakets |
 
+## Niveau im Kopf (Grund- und Leistungskurs)
+
+Jedes Dokument und jeder Foliensatz nennt das Anforderungsniveau (KC 2017): „gA und eA“, „nur eA (Leistungskurs)“ oder
+„Zusatz“. Es ergibt sich aus dem Level (`ds`) über `lib/niveau.js`; Dokumente ohne Level geben `niveau` an
+(Merkblätter, Boss-Level A und C, Übungsklausur), sonst steht „gA und eA (Teile nur eA)“. Die Zuordnung ist dieselbe wie
+in der App (`app/js/data/niveaus.js`, Test `app/tests/niveaus.test.js`).
+
 ## Typische Änderungen
 
 * **Aufgabe auf einem AB ändern:** `content/dsXX/build_dsXX.js`; betrifft sie einen Automaten, zuerst `automata_dsXX.py` anpassen und `check()` laufen lassen; Lösung in der Handreichung aus den erzeugten Daten übernehmen (nicht von Hand schreiben).
@@ -35,4 +42,4 @@ AUTOMATENLAB_URL=https://… ./materials/build_all.sh   # QR-Codes auf andere Ad
 
 ## Abhängigkeiten
 
-Node ≥ 20 (`npm install` im Wurzelordner: docx, pptxgenjs, jszip, react, react-dom, react-icons, sharp), Python ≥ 3.10 (`segno`, `pillow`), Graphviz (`dot`), optional LibreOffice für Vorschauen.
+Node ≥ 20 (`npm install` im Wurzelordner: docx, pptxgenjs, jszip, react, react-dom, react-icons, sharp), Python ≥ 3.10 (`segno`, `pillow`, `matplotlib`), Graphviz (`dot`), optional LibreOffice für Vorschauen.

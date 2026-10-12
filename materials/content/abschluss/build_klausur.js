@@ -79,7 +79,7 @@ async function klausur() {
     ], { widthsCm: [4.4, 8.0], widthCm: 12.4, header: false, firstColBold: true, firstColFill: true, size: 21, align: 'center' }),
     D.p('Abbildung 5: Grammatik G', { size: 18, color: D.C.muted, italics: true, align: 'center' }),
   ];
-  return D.save(D.doc({ kind: 'KL', title: TITLE, subtitle: SUB, metaText: 'Abi-Training  ·  Welt A–C', code: 'Übungsklausur · Smart-Home-Befehle', titleSize: 34, body }), OUT + 'Uebungsklausur_Automaten-und-Sprachen.docx');
+  return D.save(D.doc({ kind: 'KL', niveau: 'eA', title: TITLE, subtitle: SUB, metaText: 'Abi-Training  ·  Welt A–C', code: 'Übungsklausur · Smart-Home-Befehle', titleSize: 34, body }), OUT + 'Uebungsklausur_Automaten-und-Sprachen.docx');
 }
 
 // =====================================================================================  Erwartungshorizont
@@ -136,7 +136,7 @@ async function eh() {
       ], { size: 19 }),
     ]),
   ];
-  return D.save(D.doc({ kind: 'LK', title: 'Erwartungshorizont „Smart-Home-Befehle“', subtitle: SUB, metaText: 'Abi-Training  ·  Welt A–C', code: 'Übungsklausur · Erwartungshorizont', titleSize: 34, body }), OUT + 'Uebungsklausur_Erwartungshorizont.docx');
+  return D.save(D.doc({ kind: 'LK', niveau: 'eA', title: 'Erwartungshorizont „Smart-Home-Befehle“', subtitle: SUB, metaText: 'Abi-Training  ·  Welt A–C', code: 'Übungsklausur · Erwartungshorizont', titleSize: 34, body }), OUT + 'Uebungsklausur_Erwartungshorizont.docx');
 }
 
 (async () => {

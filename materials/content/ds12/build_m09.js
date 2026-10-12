@@ -63,6 +63,6 @@ const FEHLER = 'Alle nicht eingezeichneten Übergänge führen in einen Fehlerzu
       ], { size: 20 }),
     ]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Reguläre Grammatik und Automat', subtitle: 'Merkblatt M09 · Level 12 · Übersetzungsrezept in beide Richtungen', metaText: 'M09  ·  Welt C', code: 'M09 · Merkblatt Reguläre Grammatik', body }), OUT + 'M09_Merkblatt_Regulaere-Grammatik.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'eA', title: 'Reguläre Grammatik und Automat', subtitle: 'Merkblatt M09 · Level 12 · Übersetzungsrezept in beide Richtungen', metaText: 'M09  ·  Welt C', code: 'M09 · Merkblatt Reguläre Grammatik', body }), OUT + 'M09_Merkblatt_Regulaere-Grammatik.docx');
   console.log(f);
 })();

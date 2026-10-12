@@ -47,6 +47,6 @@ const TR = JSON.parse(fs.readFileSync(IMG + 'traces.json', 'utf8'));
       ['Verarbeitung darstellen', 'Bei Automaten: Zustandsfolge bzw. Kellertabelle; bei der Turingmaschine (nur im Unterricht): Konfigurationsfolge mit Band und Kopfposition.'],
     ], { widthsCm: [5.4, 12.0], size: 18, firstColBold: true }),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Turingmaschine (Ausblick)', subtitle: 'Merkblatt M11 · Level 16 · Band, Kopf, Übergänge, Grenzen der Berechenbarkeit', metaText: 'M11  ·  Welt D', code: 'M11 · Merkblatt Turingmaschine', body }), OUT + 'M11_Merkblatt_Turingmaschine.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'plus', title: 'Turingmaschine (Ausblick)', subtitle: 'Merkblatt M11 · Level 16 · Band, Kopf, Übergänge, Grenzen der Berechenbarkeit', metaText: 'M11  ·  Welt D', code: 'M11 · Merkblatt Turingmaschine', body }), OUT + 'M11_Merkblatt_Turingmaschine.docx');
   console.log(f);
 })();

@@ -55,6 +55,6 @@ const OUT = (__MAT + '/out/');
     ], { widthsCm: [5.4, 12.0], size: 19, firstColBold: true }),
     ...D.tip('Satzbausteine', [D.p('„Der Automat befindet sich genau dann in Si, wenn …“  ·  „Der Zustand Si steht dafür, dass bisher …“  ·  „Da Si kein Endzustand ist, wird die Eingabe abgelehnt.“', { size: 20 })]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Deterministische endliche Automaten', subtitle: 'Merkblatt M01 · Level 1–2 · Aufbau, Darstellung, Analyse', metaText: 'M01  ·  Welt A', code: 'M01 · Merkblatt DEA', body }), OUT + 'M01_Merkblatt_DEA.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'alle', title: 'Deterministische endliche Automaten', subtitle: 'Merkblatt M01 · Level 1–2 · Aufbau, Darstellung, Analyse', metaText: 'M01  ·  Welt A', code: 'M01 · Merkblatt DEA', body }), OUT + 'M01_Merkblatt_DEA.docx');
   console.log(f);
 })();

@@ -13,6 +13,7 @@ const __MAT = require('path').resolve(__dirname, '..'); // Wurzel: materials/
  * kind: 'AB' (Arbeitsblatt), 'LK' (Lehrkraft-Handreichung), 'MB' (Merkblatt), 'KL' (Klausur/Übung), 'PL' (Planung)
  */
 const fs = require('fs');
+const NIV = require('./niveau.js');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const {
@@ -270,7 +271,8 @@ function titleBlock(o) {
   const meta = [];
   if (o.ds) meta.push(`Level ${o.ds}`);
   if (welt) meta.push(`Welt ${welt} · ${WELT_NAME[welt]}`);
-  const metaText = o.metaText || meta.join('  ·  ');
+  const niv = NIV.niveauVon(o);
+  const metaText = [o.metaText || meta.join('  ·  '), `Niveau: ${NIV.NIVEAU_TEXT[niv]}`].filter(Boolean).join('  ·  ');
   const rows = [new TableRow({ children: [
     new TableCell({ width: { size: leftW, type: WidthType.DXA }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [
       new Paragraph({ children: [new TextRun({ text: kind, font: FONT_BODY, bold: true, size: 18, color: C.ocker }), new TextRun({ text: metaText ? '   ' + metaText : '', font: FONT_BODY, size: 18, color: C.muted })], spacing: { after: 40 } }),
@@ -281,7 +283,7 @@ function titleBlock(o) {
       o.kind === 'AB' || o.kind === 'KL' || o.kind === 'LL' ? [
         new Paragraph({ children: [new TextRun({ text: 'Name', font: FONT_BODY, size: 16, color: C.muted })], spacing: { after: 0 }, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: C.line, space: 14 } } }),
         new Paragraph({ children: [new TextRun({ text: 'Datum', font: FONT_BODY, size: 16, color: C.muted })], spacing: { before: 120, after: 0 }, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: C.line, space: 14 } } }),
-      ] : [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: o.rightNote || 'Informatik LK (eA)', font: FONT_BODY, size: 18, color: C.muted })] })] }),
+      ] : [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: o.rightNote || NIV.NIVEAU_KURS[niv], font: FONT_BODY, size: 18, color: C.muted })] })] }),
   ] })];
   return [new Table({ width: { size: CONTENT_W, type: WidthType.DXA }, columnWidths: [leftW, rightW], layout: TableLayoutType.FIXED, borders: noBorders, rows }),
     new Paragraph({ children: [], border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: C.teal, space: 1 } }, spacing: { before: 60, after: 200 } })];
@@ -291,7 +293,7 @@ function header(o) {
   return new Header({ children: [new Paragraph({
     tabStops: [{ type: TabStopType.RIGHT, position: CONTENT_W }],
     children: [new TextRun({ text: 'Maschinen, die Sprache verstehen', font: FONT_BODY, size: 16, color: C.muted }),
-      new TextRun({ text: '\tInformatik LK · Automaten & formale Sprachen', font: FONT_BODY, size: 16, color: C.muted })],
+      new TextRun({ text: `\t${NIV.NIVEAU_KURS[NIV.niveauVon(o)]} · Automaten & formale Sprachen`, font: FONT_BODY, size: 16, color: C.muted })],
   })] });
 }
 function footer(o) {
@@ -308,7 +310,7 @@ function footer(o) {
 function doc(o) {
   const children = [...titleBlock(o), ...(o.kernfrage ? kernfrage(o.kernfrage) : []), ...o.body.flat(Infinity)];
   return new Document({
-    creator: 'Frank Juchim', title: o.title, description: 'Informatik LK – Automaten und formale Sprachen',
+    creator: 'Frank Juchim', title: o.title, description: 'Informatik gA/eA – Automaten und formale Sprachen',
     styles: { default: { document: { run: { font: FONT_BODY, size: 22, color: C.ink } } } },
     numbering: { config: [
       { reference: 'bullets', levels: [

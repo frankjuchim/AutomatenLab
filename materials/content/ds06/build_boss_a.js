@@ -49,7 +49,7 @@ async function aufgabe() {
     D.p('Σ = {u, v, A},  Ω = {d, s, a, W}', { size: 21 }),
     D.img(IMG + 'boss_M.png', { widthCm: 11.5, caption: 'Abbildung 3: Mealy-Automat M (Controller-Treiber)' }),
   ];
-  return D.save(D.doc({ kind: 'Boss-Level', title: TITLE, subtitle: SUB, metaText: 'Welt A · Endliche Automaten', rightNote: `ca. 75 min · ${SUM} BE`, code: 'Boss-Level A · Aufgabe', body }), OUT + 'BossLevel_A_Endliche-Automaten.docx');
+  return D.save(D.doc({ kind: 'Boss-Level', niveau: 'alle', title: TITLE, subtitle: SUB, metaText: 'Welt A · Endliche Automaten', rightNote: `ca. 75 min · ${SUM} BE`, code: 'Boss-Level A · Aufgabe', body }), OUT + 'BossLevel_A_Endliche-Automaten.docx');
 }
 
 // =====================================================================================  Erwartungshorizont
@@ -117,7 +117,7 @@ async function eh() {
       ['0–13', 'Der Boss war diesmal stärker.', 'Fehler mit dem Erwartungshorizont analysieren, App-Module Minimierer und Mealy-Maschine wiederholen, Fragen in Level 7 stellen.'],
     ], { widthsCm: [2.6, 6.0, 8.8], size: 19 }),
   ];
-  return D.save(D.doc({ kind: 'Erwartungshorizont', title: TITLE, subtitle: 'Erwartungshorizont mit BE und Anforderungsbereichen – zur Selbstkontrolle', metaText: 'Welt A · Endliche Automaten', rightNote: `${SUM} BE`, code: 'Boss-Level A · Erwartungshorizont', body }), OUT + 'BossLevel_A_Erwartungshorizont.docx');
+  return D.save(D.doc({ kind: 'Erwartungshorizont', niveau: 'alle', title: TITLE, subtitle: 'Erwartungshorizont mit BE und Anforderungsbereichen – zur Selbstkontrolle', metaText: 'Welt A · Endliche Automaten', rightNote: `${SUM} BE`, code: 'Boss-Level A · Erwartungshorizont', body }), OUT + 'BossLevel_A_Erwartungshorizont.docx');
 }
 
 (async () => {

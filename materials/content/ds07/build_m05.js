@@ -51,6 +51,6 @@ const OUT = (__MAT + '/out/');
       D.p('„Mein DEA erkennt aaabbb nicht, also geht es nicht.“ – Ein **Beispiel** zeigt nur, dass **ein** Automat falsch ist. Die Begründung muss für **jeden** DEA gelten (beliebiges k). Und: Die Fortsetzung muss an **beide** Präfixe dieselbe sein.', { size: 20 }),
     ]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', title: 'Grenzen endlicher Automaten', subtitle: 'Merkblatt M05 · Level 7 · So begründest du', metaText: 'M05  ·  Welt B', code: 'M05 · Merkblatt Grenzen endlicher Automaten', body }), OUT + 'M05_Merkblatt_Grenzen-endlicher-Automaten.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'alle', title: 'Grenzen endlicher Automaten', subtitle: 'Merkblatt M05 · Level 7 · So begründest du', metaText: 'M05  ·  Welt B', code: 'M05 · Merkblatt Grenzen endlicher Automaten', body }), OUT + 'M05_Merkblatt_Grenzen-endlicher-Automaten.docx');
   console.log(f);
 })();
