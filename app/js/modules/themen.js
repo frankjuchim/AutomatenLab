@@ -63,7 +63,7 @@ function niveauUebersicht(ctx, bereit) {
   const nach = (niveau) => Object.keys(LEVEL_NIVEAU).map(Number).filter((n) => LEVEL_NIVEAU[n] === niveau);
 
   const material = WORLDS.flatMap((w) => w.levels.map((n) => {
-    const mb = MERKBLAETTER.filter((m) => m.level === n).map((m) => `Merkblatt ${m.id} ${m.titel}`);
+    const mb = MERKBLAETTER.filter((m) => m.level === n || (m.auch ?? []).includes(n)).map((m) => `Merkblatt ${m.id} ${m.titel}`);
     return h('tr', null, h('td', null, `${ds(n)} · ${LEVELS[n]}`), h('td', null, niveauPille(LEVEL_NIVEAU[n])),
       h('td', null, ['Arbeitsblatt, Lehrkraft-Handreichung, Folien', ...mb].join(' · ')));
   }));

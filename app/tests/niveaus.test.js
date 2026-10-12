@@ -34,7 +34,7 @@ test('KC-Kompetenzen: Kern K1–K5 für beide Kurse, K6 und F1–F4 nur eA, Leve
   for (const k of KC_KOMPETENZEN.filter((x) => x.niveau !== 'plus')) {
     assert.ok(k.level.some((l) => LEVEL_NIVEAU[l] === k.niveau), `${k.id}: kein Level mit Niveau ${k.niveau}`);
   }
-  for (const m of MERKBLAETTER) assert.ok(LEVELS[m.level], m.id);
+  for (const m of MERKBLAETTER) for (const l of [m.level, ...(m.auch ?? [])]) assert.ok(LEVELS[l], m.id);
 });
 
 test('Materialien nutzen dieselbe Zuordnung wie die App', () => {

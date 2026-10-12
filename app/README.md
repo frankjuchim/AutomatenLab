@@ -1,6 +1,6 @@
 # AutomatenLab
 
-Lern-Web-App zur Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Informatik-Leistungskurs, Automaten und formale Sprachen, KC Niedersachsen).
+Lern-Web-App zur Unterrichtseinheit „Maschinen, die Sprache verstehen“ (Informatik, Grund- und Leistungskurs, Automaten und formale Sprachen, KC Niedersachsen; was für welches Niveau ist: `#/themen?teil=niveaus`).
 Plattform des Verbunds InfoLabs (Vertrag: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.2). Die App läuft ohne Build-Schritt; ausgeliefert wird sie vom Server in `../src` (Node, Express). Keine externen Server, CDNs oder Tracker. Angemeldet wird nur über das Portal InfoLabs (Single Sign-on, Knopf „Anmelden“ oben rechts). Bis der Lernstand auf dem Server liegt (Phase 4), bleibt der Fortschritt im Browser des jeweiligen Geräts (`localStorage`).
 
 ## Deployment auf CapRover

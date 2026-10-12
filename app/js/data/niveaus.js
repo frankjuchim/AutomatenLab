@@ -58,13 +58,13 @@ export const KC_KOMPETENZEN = [
 /** Welt-Niveau für Übersichten: Niveaus aller Level der Welt (ohne Doppelte, in der Reihenfolge alle, eA, plus). */
 export const niveausVon = (levels) => NIVEAU_IDS.filter((n) => levels.some((l) => LEVEL_NIVEAU[l] === n));
 
-/** Merkblätter (je Level) und Abschluss-Materialien mit Niveau – für die Übersicht und die Kopfzeilen der Materialien. */
+/** Merkblätter (Level, in dem sie eingeführt werden; `auch`: weitere Level, die sie nutzen) und Abschluss-Materialien mit Niveau – für die Übersicht und die Kopfzeilen der Materialien. */
 export const MERKBLAETTER = [
   { id: 'M01', titel: 'DEA', level: 1 }, { id: 'M02', titel: 'DEA entwickeln', level: 3 },
   { id: 'M03', titel: 'Minimierung', level: 5 }, { id: 'M04', titel: 'Mealy-Automaten', level: 6 },
   { id: 'M05', titel: 'Grenzen endlicher Automaten', level: 7 }, { id: 'M06', titel: 'NEA', level: 8 },
   { id: 'M07', titel: 'Kellerautomaten', level: 9 }, { id: 'M08', titel: 'Grammatiken', level: 11 },
-  { id: 'M09', titel: 'Reguläre Grammatik', level: 12 }, { id: 'M10', titel: 'Kontextfreie Grammatiken', level: 13 },
+  { id: 'M09', titel: 'Reguläre Grammatik', level: 12 }, { id: 'M10', titel: 'Kontextfreie Grammatiken', level: 13, auch: [14] },
   { id: 'M11', titel: 'Turingmaschine', level: 16 },
 ];
 export const ABSCHLUSS_MATERIAL = [

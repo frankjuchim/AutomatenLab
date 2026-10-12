@@ -1,9 +1,10 @@
 # AutomatenLab – Maschinen, die Sprache verstehen
 
-Unterrichtseinheit **Automaten und formale Sprachen** (Informatik Sek II, KC Niedersachsen, Notation nach den Ergänzenden Hinweisen 2025) mit
+Unterrichtseinheit **Automaten und formale Sprachen** (Informatik Sek II, **Grund- und Leistungskurs**, KC Niedersachsen, Notation nach den Ergänzenden Hinweisen 2025) mit
 
 * **Web-App „AutomatenLab“** – 13 interaktive Übungsmodule (Akzeptor-Arena, Baukasten, Keller-Labor, Ableitungs-Rallye, Turing-Labor …), live unter <https://automatenlab.frankjuchim.de>
 * **Unterrichtsmaterial** – 16 Doppelstunden (Pflicht/Vertiefung/Bonus) mit Arbeitsblatt, Lehrkraft-Handreichung und Folien, 12 Merkblätter, Boss-Level, Übungsklausur
+* **Niveaus:** Kern für beide Kurse (Welt A, Level 7), Kellerautomaten und Grammatiken nur eA, NEA und Turingmaschine als Zusatz – Übersicht unter <https://automatenlab.frankjuchim.de/niveaus>
 * **Erklärvideo-Reihe** – 9 Videos + 2 Extras: Folien, Ablaufpläne, OBS-Overlays, Thumbnails
 
 Alle Materialien werden per Skript erzeugt; jeder Automat, jede Grammatik und jede Lösung wird dabei automatisch geprüft.
