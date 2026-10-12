@@ -8,6 +8,9 @@ import { MODULES, findModule } from './modules/manifest.js';
 import { LEVELS } from './data/worlds.js';
 import { toast } from './components/toast.js';
 import { sitzung, anmeldeLink, istLehrkraft } from './core/sitzung.js';
+import { serverQuelle, demoQuelle } from './core/aufgaben.js';
+import { api } from './core/api.js';
+import { gastErlaubt } from './data/gast.js';
 
 const SPECIAL = {
   '': () => import('./modules/home.js'),
@@ -15,6 +18,7 @@ const SPECIAL = {
   themen: () => import('./modules/themen.js'), // auch Server-Pfad /themen (Vertrag InfoLabs)
   datenschutz: () => import('./modules/datenschutz.js'), // auch /datenschutz
   lehrkraft: () => import('./modules/lehrkraft.js'), // auch /lehrer
+  gast: () => import('./modules/gast.js'), // auch /gast: Demo-Aufgaben ohne Anmeldung
 };
 
 const app = document.getElementById('app');
@@ -63,6 +67,9 @@ applyPrefs();
 
 // ───── Anmeldung über das Portal InfoLabs (Vertrag §5, §9: Link „⌂ Portal“) ─────
 const kontoTools = header.querySelector('.konto-tools');
+// Angemeldet: Lernstand der Module mit Prüfung auf dem Server laden (Punkte, gelöst, Abzeichen) – die erste Seite
+// wartet darauf, damit sie nicht kurz einen veralteten Stand aus dem Browser zeigt.
+const lernstandBereit = sitzung().then(({ konto }) => (konto ? api('GET', '/api/lernstand').then((ls) => progress._server(ls)).catch(() => {}) : null));
 sitzung().then(({ konto, anmeldung, portal }) => {
   const teile = [];
   if (portal) teile.push(h('a', { class: 'btn btn-ghost header-btn', href: portal + '/', title: 'Zum Portal InfoLabs' }, h('span', { 'aria-hidden': 'true' }, '⌂'), h('span', { class: 'header-btn-text' }, ' Portal')));
@@ -91,6 +98,12 @@ async function route() {
   const { route: r, params } = parseHash();
   if (cleanup) { try { cleanup(); } catch (e) { console.error(e); } cleanup = null; }
   clear(main);
+  // Gastmodus (Vertrag §4, Entscheidung V2): ohne Sitzung nur Demo-Aufgaben – sonst still zur Portal-Anmeldung,
+  // danach zurück genau auf diese Route (QR-Codes bleiben gültig). Ohne eingerichtete Anmeldung bleibt alles offen.
+  const sess = await sitzung();
+  await lernstandBereit;
+  if (seq !== navSeq) return;
+  if (sess.anmeldung && !sess.konto && !gastErlaubt(r, params)) { location.replace(anmeldeLink(location.pathname + location.hash)); return; }
   const meta = findModule(r);
   let loader = SPECIAL[r] ?? meta?.load;
   let mod;
@@ -112,6 +125,8 @@ async function route() {
   const ctx = {
     route: r, params, meta,
     navigate, link, toast, progress,
+    /** Aufgaben und Prüfung: Server (angemeldet) oder Demo-Aufgaben im Browser (?demo=1, Gastmodus). */
+    quelle: params.get('demo') === '1' ? demoQuelle() : serverQuelle(),
     /** Untertitel unter der Modulüberschrift setzen (z. B. Challenge-Name). */
     setSubtitle: (t) => { const s = main.querySelector('.module-subtitle'); if (s) s.textContent = t ?? ''; },
   };

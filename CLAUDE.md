@@ -18,6 +18,8 @@ npm test                       # App-Tests + Server-Tests (node --test)
 npm run dev                    # Server mit App unter http://localhost:8080 (Daten in ./data)
 npm run vertrag -- http://localhost:8080   # Vertragsprüfung (Manifest, Pflicht-URLs, /healthz)
 node qa/qa-routes.mjs http://localhost:8080/   # alle Deep-Links im Browser prüfen (Playwright)
+QA_PORTAL_KEY=<privater Testschlüssel> node qa/qa-routes.mjs <url>   # angemeldet (Server mit PORTAL_URL=http://portal.test + passendem PORTAL_PUBLIC_KEY)
+QA_GAST=1 node qa/qa-routes.mjs <url>          # als Gast: nur Demo-Routen offen, alles andere → Anmeldung
 npm run materials:build        # alle Materialien → materials/dist/Automaten_LK
 ./materials/build_all.sh ds05  # einzelne Ordner
 ```
@@ -31,7 +33,7 @@ npm run materials:build        # alle Materialien → materials/dist/Automaten_L
 6. **Barrierefreiheit:** Tastaturbedienung, Kontraste, Großansicht „A A“ erhalten; neue Oberflächen genauso.
 7. Keine Secrets committen (`.env` ist ignoriert; Beispiel in `.env.example`). Tokens nie loggen.
 8. **Kein eigenes Login**: keine Passwörter, persönlichen Codes oder Klarnamen auf der Plattform – nur `sub`, Anzeigename, Kurs-IDs und Lernstand (Vertrag §3, §9). `src/jwt.js` und `scripts/vertrag_pruefen.js` sind unveränderte Kopien aus `frankjuchim/labs`, `src/security.js` die Fassung des Portals (nur Cookie-Name `al_s` geändert) – nicht umbauen, sondern bei Änderungen im Portal nachziehen.
-9. **Lösungen nur auf dem Server** (Vertrag §9): Lösungen, Referenzautomaten, Prüffunktionen, Tipps und Erklärungen nie in `app/` – sie liegen in `inhalte/`; Prüfung und Punkte nur serverseitig. Die Engine `app/js/engine` ist gemeinsamer Code für Browser und Server.
+9. **Lösungen nur auf dem Server** (Vertrag §9): Lösungen, Referenzautomaten, Prüffunktionen, Tipps und Erklärungen nie in `app/` – sie liegen in `inhalte/`; Prüfung und Punkte nur serverseitig (`src/aufgaben`, `src/lernen.js`). Reine Prüflogik ohne Daten in `app/js/engine/pruefer.js` (gemeinsam für Server und Demo-Aufgaben). `test/loesungen.test.js` wacht darüber. Format und Ablauf zum Umstellen weiterer Module: `docs/AUFGABENFORMAT.md`.
 
 ## Arbeitsweise
 - Vor größeren Änderungen kurz planen (Plan-Modus), bei offenen Produktentscheidungen Frank fragen – sonst sinnvoll entscheiden und in `docs/ENTSCHEIDUNGEN.md` festhalten.

@@ -2,6 +2,9 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-12 · Prüfung auf dem Server: Aufbau und Punkte (PR 3)
+Lösungsdaten in `inhalte/` (ES-Module, nur vom Server geladen), reine Prüflogik in `app/js/engine/pruefer.js` (gemeinsam für Server und Demo-Aufgaben), Lernstand in `fortschritt`/`abzeichen` je `sub`. Antwortoptionen tragen HMAC-Kennungen statt Positionen. Punkte nach §9 (10/20/30, Formel); dadurch ändern sich die bisherigen Werte: Baukasten 20/30/40 → 10/20/30, Detektiv nach Fallnummer gestuft (1–4/5–8/9–12) statt 30/20/10 nach Versuchen, Quiz = Anteil im ersten Durchgang statt Bestwert. Begründung: Vergleichbarkeit im Portal und Schutz vor Manipulation (Entscheidung V1). Gast-Fortschritt im Browser wird nicht übernommen (Gäste sehen nur Demo-Aufgaben). Übergang: Module, die noch im Browser prüfen, speichern bis PR 4/5 weiter lokal; angemeldet zählen in der Kopfzeile nur die Server-Punkte.
+
 ## 2026-10-12 · Sitzungen und Daten aus dem Portal
 Eine Sitzung je Browser (signiertes Cookie `al_s` mit `sub` und `session_gen`, zustandslos wie Algo Quest/Portal; Schüler 30 Tage, Lehrkräfte/Superadmin 8 h). Gespeichert werden nur `konten(sub, rolle, name, Zeitpunkte)`, `kurse(id, name, aktiv, einstellungen)` und `kurs_mitglieder` laut letztem Token. Ein Kurs im Token gilt als aktiv; `kurs-aendern` mit `aktiv:false` sperrt ihn (Mitglieder verlieren den Zugang, Daten bleiben). Lernstände hängen später an `sub` (ein Konto kann mehreren Kursen angehören); `loeschen {kurs}` entfernt Kurs, Einstellungen und Mitgliedschaften, `loeschen {sub}` alles des Kontos. `src/security.js` ist die Fassung des Portals (nur Cookie-Name geändert), `src/jwt.js` unverändert. Verworfen: Sessions-Tabelle (nicht nötig, Widerruf über `session_gen`).
 

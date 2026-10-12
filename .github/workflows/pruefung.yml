@@ -33,13 +33,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Image wie auf CapRover bauen und starten
+      - name: Testschlüssel für die Portal-Anmeldung erzeugen (nur für diese Prüfung)
+        run: |
+          node -e "const c=require('crypto');const p=c.generateKeyPairSync('ed25519');const fs=require('fs');fs.writeFileSync('/tmp/qa-priv.pem',p.privateKey.export({type:'pkcs8',format:'pem'}));fs.writeFileSync('/tmp/qa-pub.pem',p.publicKey.export({type:'spki',format:'pem'}))"
+      - name: Image wie auf CapRover bauen und mit Test-Portal starten
         run: |
           docker build -t automatenlab .
-          docker run -d --rm -p 8080:80 -e PLATTFORM_URL=http://localhost:8080 --name automatenlab automatenlab
+          docker run -d --rm -p 8080:80 --name automatenlab \
+            -e PLATTFORM_URL=http://localhost:8080 -e PORTAL_URL=http://portal.test -e AUTH_MODUS=portal \
+            -e SESSION_SECRET=ci-geheimnis-nur-fuer-die-pruefung -e PORTAL_PUBLIC_KEY="$(cat /tmp/qa-pub.pem)" automatenlab
           for i in $(seq 1 60); do curl -fsS http://localhost:8080/healthz >/dev/null && break; sleep 1; done
-          curl -fsS http://localhost:8080/healthz
+          curl -fsS http://localhost:8080/healthz | grep -q '"anmeldung":"portal"'
       - name: Vertragsprüfung (scripts/vertrag_pruefen.js)
         run: node scripts/vertrag_pruefen.js http://localhost:8080
-      - name: Alle Deep-Links aus app/README.md
-        run: node qa/qa-routes.mjs http://localhost:8080/
+      - name: Alle Deep-Links angemeldet (Lehrkraft mit Kurs, Test-Token)
+        run: QA_PORTAL_KEY=/tmp/qa-priv.pem node qa/qa-routes.mjs http://localhost:8080/
+      - name: Alle Deep-Links als Gast (nur Demo-Routen offen, sonst Anmeldung mit ziel = Route)
+        run: QA_GAST=1 node qa/qa-routes.mjs http://localhost:8080/

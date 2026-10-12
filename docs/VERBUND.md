@@ -35,7 +35,7 @@ Neu kommen Server-Pfade (Vertrag) und Hash-Routen (Oberfläche) hinzu:
 | Pfad | Zweck | Umsetzung |
 |---|---|---|
 | `/` | Start (bisherige App) | `app/index.html` |
-| `/gast` | Gastmodus mit Demo-Aufgaben (§4, Manifest `urls.gast`) | Weiterleitung auf `/#/` (bis die Demo-Seite `#/gast` steht, siehe §3) |
+| `/gast` | Gastmodus mit Demo-Aufgaben (§4, Manifest `urls.gast`) | Weiterleitung auf `/#/gast` |
 | `/themen` | Themenseite ohne Lösungen (`urls.themen`) | Weiterleitung auf `/#/themen` (neu: Welten, Level, Module, Arbeitsblatt-Bezug) |
 | `/lehrer` | Lehrkraft-Bereich (`urls.lehrkraft`) | Weiterleitung auf `/#/lehrkraft` (ohne Sitzung → `/sso/start?ziel=/lehrer`) |
 | `/datenschutz` | Besonderheiten der Plattform + Link auf `<PORTAL_URL>/datenschutz` (§3) | Weiterleitung auf `/#/datenschutz` |
@@ -122,6 +122,9 @@ Bisher liegen alle Inhalte samt Lösungen als JavaScript in `app/js/data` und we
 
 Freie Modi und Simulatoren (Baukasten frei, Grammatik frei, Turing-Programme, NEA-/Keller-Simulation ohne Aufgabe)
 bringen keine Punkte und bleiben im Browser.
+
+**Stand:** Level-Quiz, Sprach-Detektiv und Automaten-Baukasten prüfen auf dem Server (PR 3); Format, IDs, Punkte und
+API: `docs/AUFGABENFORMAT.md`. Die übrigen Module folgen in PR 4/5.
 
 ## 7. Weitere Vertragspunkte
 

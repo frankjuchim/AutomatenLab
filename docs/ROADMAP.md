@@ -33,10 +33,10 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ Verbund-API §6: `loeschen` (idempotent), Kursübersicht (Kennzahlen noch 0 bis Phase 4), Kursänderung
 - ✅ Alle Testfälle aus `INTEGRATION.md` §5, Rechte-Matrix je Route × Rolle, CSRF
 - ✅ Kopfzeile: „Anmelden“ bzw. Name + Menü, Link „⌂ Portal“; Lehrkraft-Bereich mit Kursliste; Manifest `auth.modus: "portal"`, `sso: true`
-- [ ] Inbetriebnahme im Portal (`docs/VERBUND.md` §5) – nach dem Deploy durch den Superadmin
+- [ ] Inbetriebnahme im Portal (`docs/VERBUND.md` §5) – nach dem Deploy durch den Superadmin (Hotfix 1.2.1: Schlüssel tolerant einlesen, Grund in `/healthz`)
 
 ## Phase 4 – Prüfung und Lernstand auf dem Server (V1) und Gastmodus (V2)
-- [ ] PR 3 – Grundlage: Aufgabenkatalog mit stabilen IDs, `inhalte/` (Lösungen, nicht ausgeliefert), Lernstand-Tabellen, Punkteformel §9, API Aufgabe/Prüfen/Tipp/Lösung zeigen, `progress.js`-Adapter für Angemeldete; Gastmodus `#/gast` mit Demo-Aufgaben und Login-Hinweis für alle übrigen Routen; erste Module: Level-Quiz, Sprach-Detektiv, Automaten-Baukasten; `docs/AUFGABENFORMAT.md`
+- ✅ PR 3 – Grundlage: Aufgabenkatalog mit stabilen IDs, `inhalte/` (Lösungen, nicht ausgeliefert), Lernstand-Tabellen, Punkteformel §9, API Aufgabe/Prüfen/Tipp/Lösung zeigen, `progress.js`-Adapter für Angemeldete; Gastmodus `#/gast` mit Demo-Aufgaben und Login-Hinweis für alle übrigen Routen; erste Module: Level-Quiz, Sprach-Detektiv, Automaten-Baukasten; `docs/AUFGABENFORMAT.md`; QA angemeldet und als Gast
 - [ ] PR 4 – Welt A: Minimierer, Mealy-Maschine, Akzeptor-Arena (Training)
 - [ ] PR 5 – Welten B–D: Parallelwelten, Keller-Labor, Überliste, Ableitungs-Rallye, Grammatik-Tester, Turing-Labor, Chomsky-Sortierer (Training); Test „keine Lösung in ausgelieferten Dateien“; Abzeichen serverseitig
 

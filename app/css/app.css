@@ -587,3 +587,10 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
   .site-header .header-tools { gap: 0.25rem; }
   .konto-name { max-width: 4.5rem; }
 }
+
+/* ───── Gastmodus ───── */
+.gast-liste { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.gast-karte { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.9rem 1rem; min-height: var(--touch); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); color: var(--ink); text-decoration: none; }
+.gast-karte:hover, .gast-karte:focus-visible { border-color: var(--teal); background: var(--teal-mist); }
+.gast-karte span { color: var(--ink-2); font-size: var(--fs-s); }
+.gast-hinweis { margin: 0 0 1.2rem; display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }
