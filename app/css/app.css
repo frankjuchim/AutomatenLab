@@ -681,6 +681,16 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .material-hinweis { font-weight: 400; font-size: var(--fs-s); color: var(--ink-2); }
 .material-knoepfe { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .material-knoepfe .btn { min-height: var(--touch); }
+.themen-material { display: flex; align-items: baseline; gap: 0.6rem; margin-top: 0.35rem; }
+.themen-material-titel { flex: 0 0 auto; }
+.themen-material .material-links { flex: 1 1 auto; }
+.themen-material-titel { font-weight: 700; font-size: var(--fs-s); color: var(--ink-2); }
+.material-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; }
+.material-links li::before { content: '📄 '; font-size: 0.9em; }
+.material-links li.material-gesperrt::before { content: none; }
+.material-link { font-weight: 700; display: inline-block; min-height: 32px; padding: 0.15rem 0; }
+.material-link-lk { font-weight: 400; font-size: var(--fs-s); }
+.material-gesperrt { color: var(--ink-2); }
 .material-groesse { font-weight: 400; font-size: 0.78rem; opacity: 0.85; }
 
 /* ───────── Anforderungsniveaus (gA/eA, Vertrag v1.2 §9) ───────── */

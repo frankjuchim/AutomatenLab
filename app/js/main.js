@@ -80,7 +80,7 @@ sitzung().then(({ konto, anmeldung, portal }) => {
       h('summary', { class: 'btn btn-ghost header-btn', title: 'Konto' }, h('span', { class: 'konto-name' }, konto.name)),
       h('ul', { class: 'konto-liste' },
         istLehrkraft(konto) ? h('li', null, h('a', { href: '#/lehrkraft' }, 'Lehrkraft-Bereich')) : null,
-        h('li', null, h('a', { href: '#/material' }, 'Material (PDF)')),
+        h('li', null, h('a', { href: '#/material' }, 'Arbeitsblätter & Material')),
         h('li', null, h('a', { href: '/abmelden' }, 'Abmelden')),
         portal ? h('li', null, h('a', { href: '/abmelden/ueberall' }, 'Überall abmelden')) : null)));
   } else if (anmeldung) {

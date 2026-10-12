@@ -13,12 +13,12 @@ const groesse = (b) => (b == null ? '' : b >= 1e6 ? ` · ${(b / 1e6).toFixed(1).
 const endung = (url) => (url.match(/\.([a-z]+)$/i)?.[1] || '').toUpperCase();
 
 export default {
-  title: 'Material',
+  title: 'Arbeitsblätter & Material',
   mount(el, ctx) {
     let aktiv = true;
     const seite = (...inhalt) => clear(el, h('section', { class: 'page narrow material' },
       h('a', { class: 'back-link', href: '#/' }, h('span', { 'aria-hidden': 'true' }, '‹ '), 'Übersicht'),
-      h('h1', null, 'Zusätzliches Material'), ...inhalt));
+      h('h1', null, 'Arbeitsblätter & Material'), ...inhalt));
     seite(h('p', { class: 'muted' }, 'Lade …'));
 
     Promise.all([api('GET', '/api/material'), sitzung()]).then(([m, sess]) => {
@@ -36,6 +36,7 @@ export default {
         h('ul', { class: 'material-dateien' }, a.dateien.map((d) => h('li', null,
           h('span', { class: 'material-titel' }, d.titel, d.hinweis && lk ? h('span', { class: 'material-hinweis' }, ` (${d.hinweis})`) : null),
           h('span', { class: 'material-knoepfe' },
+            d.gesperrt ? h('span', { class: 'material-gesperrt' }, h('span', { 'aria-hidden': 'true' }, '🔒 '), 'nach Anmeldung') : null,
             knopf(d, 'schueler', lk ? 'Schülerfassung' : 'PDF', 'btn-primary'),
             knopf(d, 'lehrkraft', d.art === 'folien' ? 'mit Notizen' : 'Lehrkraftfassung', ''),
             knopf(d, 'original', 'Original', 'btn-ghost'))))));

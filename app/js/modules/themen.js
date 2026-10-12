@@ -7,6 +7,8 @@ import { WORLDS, LEVELS, BOSS_LEVELS, LEVEL_TYPE, LEVEL_TYPE_LABEL } from '../da
 import { LEVEL_NIVEAU, LEVEL_NIVEAU_HINWEIS, BOSS_NIVEAU, MODUL_NIVEAU, KC_KOMPETENZEN, MERKBLAETTER, ABSCHLUSS_MATERIAL, NIVEAU_IDS, NIVEAUS } from '../data/niveaus.js';
 import { niveauPille } from '../components/niveau.js';
 import { MODULES } from './manifest.js';
+import { api } from '../core/api.js';
+import { materialLinks } from '../components/material-links.js';
 
 const ds = (n) => `DS${String(n).padStart(2, '0')}`;
 const levelListe = (ns) => ns.map((n) => `${n}`).join(', ');
@@ -15,6 +17,9 @@ export default {
   title: 'Themen',
   mount(el, ctx) {
     const bereit = MODULES.filter((m) => m.load);
+    // Arbeitsblätter, Folien, Merkblätter je Level (wie in Algo Quest) – nachgeladen, Rechte entscheidet der Server
+    const materialSlots = new Map();
+    const slot = (id) => { const e = h('div', { class: 'themen-material' }); materialSlots.set(id, e); return e; };
     const welt = (w) => h('section', { class: 'themen-welt', 'aria-labelledby': `themen-welt-${w.id}` },
       h('h2', { id: `themen-welt-${w.id}` }, `Welt ${w.id}: ${w.title}`),
       h('ol', { class: 'themen-level' }, w.levels.map((n) => {
@@ -29,19 +34,36 @@ export default {
           module.length
             ? h('p', { class: 'themen-module' }, 'Üben mit: ',
               module.flatMap((m, i) => [i ? ', ' : null, h('a', { href: ctx.link(m.route) }, m.title)]))
-            : null);
+            : null,
+          slot(`level-${n}`),
+          BOSS_LEVELS.includes(n) ? slot(`boss-${w.id.toLowerCase()}`) : null);
       })));
 
     const niveaus = niveauUebersicht(ctx, bereit);
+    const einheit = h('section', { class: 'themen-welt themen-einheit' });
     clear(el, h('section', { class: 'page narrow themen' },
       h('a', { class: 'back-link', href: '#/' }, h('span', { 'aria-hidden': 'true' }, '‹ '), 'Übersicht'),
       h('h1', null, 'Themen der Einheit'),
-      h('p', { class: 'lead' }, '„Maschinen, die Sprache verstehen“: 16 Level (eine Doppelstunde je Level) in vier Welten – von endlichen Automaten bis zur Turingmaschine.'),
+      h('p', { class: 'lead' }, '„Maschinen, die Sprache verstehen“: 16 Level (eine Doppelstunde je Level) in vier Welten – von endlichen Automaten bis zur Turingmaschine. Zu jedem Level gibt es Arbeitsblatt, Folien und Merkblatt als PDF.'),
       h('p', { class: 'notice niveau-hinweis' }, h('strong', null, 'Grundkurs (gA) oder Leistungskurs (eA)? '),
         'Endliche Automaten (Welt A ohne Level 5 und Level 7) sind für beide Kurse. Kellerautomaten und formale Sprachen sind nur im Leistungskurs Abiturthema. ',
         h('a', { href: ctx.link('themen', { teil: 'niveaus' }) }, 'Zur Niveau-Übersicht')),
       WORLDS.map(welt),
+      einheit,
       niveaus));
+    api('GET', '/api/material').then((m) => {
+      let gesperrt = false;
+      for (const a of m.akten) {
+        const ziel = materialSlots.get(a.id);
+        if (!ziel) continue;
+        gesperrt ||= a.dateien.some((d) => d.gesperrt);
+        clear(ziel, h('span', { class: 'themen-material-titel' }, a.id.startsWith('boss-') ? `${a.titel}:` : 'Material:'), materialLinks(a.dateien));
+      }
+      const rest = m.akten.filter((a) => !materialSlots.has(a.id));
+      clear(einheit, rest.length ? [h('h2', null, 'Zur ganzen Einheit'), h('ul', { class: 'themen-level' }, rest.map((a) => h('li', null, h('div', { class: 'themen-level-kopf' }, h('strong', null, a.titel), niveauPille(a.niveau)), materialLinks(a.dateien))))] : null,
+        h('p', null, h('a', { class: 'btn btn-ghost', href: ctx.link('material') }, 'Alle Arbeitsblätter und Materialien'),
+          gesperrt ? h('span', { class: 'muted' }, ' – mit 🔒 markiertes Material gibt es nach der Anmeldung über InfoLabs.') : null));
+    }).catch(() => { /* ohne Server: Themen ohne Material */ });
     if (ctx.params.get('teil') === 'niveaus') {
       requestAnimationFrame(() => { niveaus.scrollIntoView({ block: 'start' }); niveaus.querySelector('h2').focus({ preventScroll: true }); });
     }
