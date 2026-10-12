@@ -13,6 +13,7 @@ import { sitzung, anmeldeLink } from '../core/sitzung.js';
 import { heroAutomat } from '../components/hero-automat.js';
 import { LEVEL_NIVEAU, MODUL_NIVEAU, NIVEAUS } from '../data/niveaus.js';
 import { niveauEtikett, niveauPille } from '../components/niveau.js';
+import { materialLinks } from '../components/material-links.js';
 
 let katalogCache = null;
 /** Öffentlicher Aufgabenkatalog des Servers (Titel, Stufe, Punkte – keine Lösungen); offline: leer. */
@@ -103,12 +104,15 @@ export default {
           btn, h('span', { class: 'level-name', 'aria-hidden': 'true' }, LEVELS[n], typ !== 'pflicht' ? h('span', { class: `type-tag type-${typ}` }, LEVEL_TYPE_LABEL[typ]) : null, boss ? h('span', { class: 'boss-tag' }, 'Boss-Level (Extra)') : null)));
       });
       map.append(h('section', { class: 'world-row', 'data-welt': w.id, role: 'listitem', 'aria-labelledby': `welt-${w.id}` },
-        h('h3', { class: 'world-label', id: `welt-${w.id}` }, h('span', { class: 'world-letter' }, `Welt ${w.id}`), h('span', { class: 'world-title' }, w.title)),
+        // Thema vorn, Buchstabe als Kurzname (Manifest welten[].kennung, Boss-Level A–C, Kopfzeilen der Materialien)
+        h('h3', { class: 'world-label', id: `welt-${w.id}` }, h('span', { class: 'world-title' }, w.title), h('span', { class: 'world-letter' }, `Welt ${w.id} · Level ${w.levels[0]}–${w.levels.at(-1)}`)),
         h('div', { class: 'chain-scroller' }, chain)));
     });
 
     // ───── Module nach Welten ─────
     const catalogue = h('div', { class: 'catalogue' });
+    // Arbeitsblätter je Welt (aufklappbar, nachgeladen aus GET /api/material – der Server entscheidet je Rolle)
+    const materialSlots = new Map();
     const groups = [...WORLDS.map((w) => ({ id: w.id, title: `Welt ${w.id}: ${w.title}` })), { id: null, title: 'Für alle Welten' }];
     for (const g of groups) {
       const mods = MODULES.filter((m) => m.world === g.id);
@@ -127,8 +131,23 @@ export default {
         grid.append(tile);
         if (m.load && STATUS[m.route]) STATUS[m.route]().then((text) => { status.textContent = text; }).catch(() => {});
       }
-      catalogue.append(h('section', { class: 'catalogue-group', 'data-welt': g.id ?? 'alle' }, h('h3', null, g.title), grid));
+      const slot = h('div', { class: 'welt-material-slot' });
+      materialSlots.set(g.id, slot);
+      catalogue.append(h('section', { class: 'catalogue-group', 'data-welt': g.id ?? 'alle' }, h('h3', null, g.title), grid, slot));
     }
+
+    api('GET', '/api/material').then((m) => {
+      for (const [id, slot] of materialSlots) {
+        const akten = m.akten.filter((a) => (a.welt ?? null) === id);
+        if (!akten.length) continue;
+        const gesperrt = akten.some((a) => a.dateien.some((d) => d.gesperrt));
+        clear(slot, h('details', { class: 'welt-material' },
+          h('summary', null, id ? `Arbeitsblätter, Folien & Merkblätter zu Welt ${id} (PDF)` : 'Klausuren und Material zur ganzen Einheit (PDF)'),
+          h('ul', { class: 'welt-material-akten' }, akten.map((a) => h('li', null,
+            h('div', { class: 'welt-material-kopf' }, h('strong', null, a.titel), niveauPille(a.niveau)), materialLinks(a.dateien)))),
+          gesperrt ? h('p', { class: 'muted klein' }, 'Mit 🔒 markiertes Material gibt es nach der Anmeldung über InfoLabs.') : null));
+      }
+    }).catch(() => { /* ohne Server: keine Materialien */ });
 
     // ───── Fortschritt ─────
     const badgeList = h('ul', { class: 'badge-list' });
