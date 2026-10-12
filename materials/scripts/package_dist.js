@@ -16,7 +16,7 @@ function level(nr, ordner) {
   const ab = files.find((f) => f.startsWith(dd + '_AB_'));
   if (!ab) { missing.push(dd); return; }
   const slug = ab.slice(dd.length + 4).replace(/\.docx$/, '');
-  for (const f of files.filter((x) => x.startsWith(dd + '_'))) cp(path.join(OUT, f), path.join(DIST, ordner, `${dd}_${slug}`, f));
+  for (const f of files.filter((x) => x.startsWith(dd + '_') && !x.endsWith('.json'))) cp(path.join(OUT, f), path.join(DIST, ordner, `${dd}_${slug}`, f));
 }
 PFLICHT.forEach((n) => level(n, '1_Pflicht'));
 VERTIEFUNG.forEach((n) => level(n, '2_Vertiefung'));

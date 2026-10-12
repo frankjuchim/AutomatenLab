@@ -148,6 +148,9 @@ API: `docs/AUFGABENFORMAT.md`. Die übrigen Module folgen in PR 4/5.
   Aufgabe“. Vorschlag zur Klarstellung in `VERTRAG.md` §9 (für die Portal-Session, Nebenversion): „Lösungen,
   Erklärungen und nicht abgerufene Tipps nur serverseitig und erst nach dem Lösen **oder Aufgeben („Lösung zeigen“,
   danach 0 Punkte für diese Aufgabe)**.“
+* **Lehrkraft-Dateien (§9 Sicherheit):** `#/material` – Lehrkraft-PDFs und Originale nur nach Anmeldung und nur aus der
+  Whitelist `materials/pdf/verzeichnis.json` (`src/material.js`, `test/material.test.js`); Manifest-Fähigkeit
+  `lehrkraft-materialien` wie in Algo Quest.
 * **Farben (§9 Oberfläche, SOLL):** AutomatenLab führt eigene Farben (Grün-Petrol `#0E6455`, Ocker `#B26A0F`, Schrift
   Atkinson Hyperlegible, Großansicht „A A“) – von Frank so entschieden. Plattformfarbe im Manifest `#0E6455`. Der Link
   „⌂ Portal“ kommt mit der Anmeldung in die Kopfzeile.

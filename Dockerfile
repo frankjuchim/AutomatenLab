@@ -25,6 +25,8 @@ COPY src ./src
 COPY scripts ./scripts
 # Aufgaben mit Lösungen – nur für den Server (Vertrag §9), werden nie ausgeliefert
 COPY inhalte ./inhalte
+# Zusatzmaterial zum Herunterladen (PDF und Originale, Rechte im Server: src/material.js)
+COPY materials/pdf ./materials/pdf
 # Web-App ohne Tests und Doku (siehe .dockerignore)
 COPY app/package.json ./app/package.json
 COPY app/index.html ./app/index.html

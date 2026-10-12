@@ -21,6 +21,7 @@ node qa/qa-routes.mjs http://localhost:8080/   # alle Deep-Links im Browser prü
 QA_PORTAL_KEY=<privater Testschlüssel> node qa/qa-routes.mjs <url>   # angemeldet (Server mit PORTAL_URL=http://portal.test + passendem PORTAL_PUBLIC_KEY)
 QA_GAST=1 node qa/qa-routes.mjs <url>          # als Gast: nur Demo-Routen offen, alles andere → Anmeldung
 npm run materials:build        # alle Materialien → materials/dist/Automaten_LK
+npm run materials:pdf          # Downloads für die Plattform → materials/pdf (Schüler-/Lehrkraft-PDF, Originale; braucht LibreOffice) – nach jeder Material-Änderung committen
 ./materials/build_all.sh ds05  # einzelne Ordner
 ```
 

@@ -64,13 +64,14 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/gast` | Ausprobieren ohne Anmeldung: je Modul eine Aufgabe (Gastmodus) – auch `BASE_URL/gast` |
 | `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
 | `#/themen` | Themen der Einheit: Welten, Level, Module (öffentlich, ohne Lösungen) – auch `BASE_URL/themen` |
+| `#/material` | Zusätzliches Material als PDF (Arbeitsblätter, Folien, Merkblätter; Lehrkräfte zusätzlich Lösungen und Klausuren, Admin die Originale) – nur angemeldet, zählt nicht für Punkte – auch `BASE_URL/material` |
 | `#/themen?teil=niveaus` | Niveau-Übersicht: was ist für Grundkurs (gA), Leistungskurs (eA) und Zusatz (öffentlich) – auch `BASE_URL/niveaus` |
 | `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
 | `#/lehrkraft` | Bereich für Lehrkräfte (im Aufbau) – auch `BASE_URL/lehrer` |
 
 **Anmeldung:** Ohne Sitzung sind nur die Übersicht, `#/gast` mit den Demo-Aufgaben (Liste in `js/data/gast.js`), `#/themen` und `#/datenschutz` offen. Jede andere Route leitet still zur Anmeldung beim Portal InfoLabs und danach genau auf diese Route zurück – die QR-Codes bleiben gültig. Level-Quiz, Sprach-Detektiv und Automaten-Baukasten werden auf dem Server geprüft (Lösungen in `../inhalte/`, nie ausgeliefert).
 
-Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/niveaus` (Niveau-Übersicht), `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
+Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/niveaus` (Niveau-Übersicht), `/material`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; Material-Dateien unter `/material/<schueler|lehrkraft|original>/<datei>` und `/material/zip/<akte>.zip` (Rechte nach Rolle); `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
 
 Baukasten-Challenges (`?level=n` / `?aufgabe=id`):
 

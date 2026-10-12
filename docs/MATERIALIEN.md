@@ -33,6 +33,27 @@ Jedes Dokument und jeder Foliensatz nennt das Anforderungsniveau (KC 2017): „g
 (Merkblätter, Boss-Level A und C, Übungsklausur), sonst steht „gA und eA (Teile nur eA)“. Die Zuordnung ist dieselbe wie
 in der App (`app/js/data/niveaus.js`, Test `app/tests/niveaus.test.js`).
 
+## Downloads auf der Plattform (`materials/pdf`, `#/material`)
+
+`npm run materials:pdf` (nach `build_all.sh`, braucht LibreOffice und `pypdf`) erzeugt aus `out/` die Fassungen, die der
+Server unter `#/material` anbietet – sie zählen nicht für Punkte:
+
+| Material | Schüler (PDF) | Lehrkräfte (PDF, nach Anmeldung) | Admin (Original) |
+|---|---|---|---|
+| Arbeitsblätter, Merkblätter, Lernlandkarte | Aufgabenfassung | dieselbe + Lehrkraft-Handreichung mit Lösungen | docx |
+| Folien | Handout ohne Sprechernotizen und ohne Lösungsfolien | mit Notizseiten | pptx |
+| Boss-Level | Aufgabe | zusätzlich Erwartungshorizont | docx |
+| Einheitsplanung, Übungsklausuren mit Erwartungshorizont, Videoplanung | – | ✔ | docx |
+
+* **Lösungsfolien:** `lib/deckstyle.js` merkt Folien mit Titel „Auflösung …“, „Lösung …“, „Ergebnis: …“, „Ein mögliches …“
+  oder dem Vermerk `[NUR LEHRKRAFT]` in den Notizen und schreibt ihre Nummern in `out/*.folien.json`; das Handout lässt
+  sie weg.
+* **Whitelist:** `materials/pdf/verzeichnis.json` (Akten je Level, Boss-Level, Klausuren, Einheit). Der Server
+  (`src/material.js`) liefert nur dort verzeichnete Dateien aus: Schüler-PDF für Angemeldete (Schüler nur mit
+  freigeschaltetem Kurs), Lehrkraft-PDF für Lehrkräfte und Admin, Originale (einzeln oder als ZIP je Akte) nur für den
+  Admin. Test: `test/material.test.js`.
+* `materials/pdf/` ist eingecheckt und kommt ins Image; nach Material-Änderungen neu erzeugen und committen.
+
 ## Typische Änderungen
 
 * **Aufgabe auf einem AB ändern:** `content/dsXX/build_dsXX.js`; betrifft sie einen Automaten, zuerst `automata_dsXX.py` anpassen und `check()` laufen lassen; Lösung in der Handreichung aus den erzeugten Daten übernehmen (nicht von Hand schreiben).
