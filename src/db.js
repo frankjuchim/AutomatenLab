@@ -47,6 +47,29 @@ const MIGRATIONEN = [
     PRIMARY KEY (kurs_id, sub)
   );
   CREATE INDEX idx_mitglieder_sub ON kurs_mitglieder(sub);
+  `,
+  `
+  -- Lernstand je Konto und Aufgabe (wie Algo Quest): nur der Server prüft und vergibt Punkte (Vertrag §9)
+  CREATE TABLE fortschritt (
+    sub          TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    aufgabe_id   TEXT NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'offen' CHECK (status IN ('offen', 'geloest', 'angesehen')),
+    nachgeloest  INTEGER NOT NULL DEFAULT 0,   -- nach „Lösung zeigen“ selbst gelöst (0 Punkte)
+    fehlversuche INTEGER NOT NULL DEFAULT 0,
+    tipps        INTEGER NOT NULL DEFAULT 0,
+    punkte       INTEGER NOT NULL DEFAULT 0,
+    daten        TEXT NOT NULL DEFAULT '{}',  -- Zwischenstand der Aufgabe (z. B. beantwortete Quizfragen)
+    geloest_at   TEXT,
+    updated_at   TEXT NOT NULL,
+    PRIMARY KEY (sub, aufgabe_id)
+  );
+
+  CREATE TABLE abzeichen (
+    sub        TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    schluessel TEXT NOT NULL,
+    at         TEXT NOT NULL,
+    PRIMARY KEY (sub, schluessel)
+  );
   `
 ];
 

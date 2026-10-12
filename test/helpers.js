@@ -3,18 +3,23 @@
 
 const { createApp } = require('../src/app');
 const { ladeKatalog } = require('../src/inhalte');
+const { ladeAufgaben } = require('../src/aufgaben');
 
 const HOST = 'automatenlab.test';
+const SECRET = 'test-geheimnis-0123456789abcdef';
 let katalog = null;
+let aufgaben = null;
 
 async function makeApp(extra = {}) {
   katalog = katalog || (await ladeKatalog());
+  aufgaben = aufgaben || (await ladeAufgaben(SECRET));
   return createApp({
     dbFile: ':memory:',
     katalog,
+    aufgaben,
     plattformUrl: 'https://automatenlab.example',
     portalUrl: 'https://labs.example',
-    sessionSecret: 'test-geheimnis-0123456789abcdef',
+    sessionSecret: SECRET,
     trustProxy: false,
     ...extra
   });

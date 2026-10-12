@@ -109,6 +109,8 @@ function createKonten(ctx) {
     letzte.delete(sub); // auch die Aktivitätsmarke im Arbeitsspeicher (vollständige Löschung, §10)
     return db.transaction(() => {
       let n = db.prepare('DELETE FROM kurs_mitglieder WHERE sub = ?').run(sub).changes;
+      n += db.prepare('DELETE FROM fortschritt WHERE sub = ?').run(sub).changes;
+      n += db.prepare('DELETE FROM abzeichen WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM konten WHERE sub = ?').run(sub).changes;
       return n;
     })();

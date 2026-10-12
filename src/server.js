@@ -5,6 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { createApp, VERSION } = require('./app');
 const { ladeKatalog } = require('./inhalte');
+const { ladeAufgaben } = require('./aufgaben');
 
 const log = (m) => console.log(`[${new Date().toISOString()}] ${m}`);
 
@@ -22,8 +23,9 @@ if (!sessionSecret || sessionSecret.length < 16) {
 }
 
 async function start() {
-  const katalog = await ladeKatalog();
+  const [katalog, aufgaben] = await Promise.all([ladeKatalog(), ladeAufgaben(sessionSecret)]);
   const app = createApp({
+    aufgaben,
     dbFile: path.join(DATA_DIR, 'automatenlab.db'),
     katalog,
     plattformId: process.env.PLATTFORM_ID,

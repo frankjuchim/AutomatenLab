@@ -2,7 +2,7 @@ node_modules/
 .DS_Store
 *.log
 .env
-data/
+/data/
 # erzeugte Dateien
 materials/build/
 materials/out/

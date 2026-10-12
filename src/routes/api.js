@@ -45,6 +45,33 @@ function apiRoutes(app, h) {
     res.json(kurse.map((k) => ({ id: k.id, name: k.name, schueler: svc.konten.mitglieder(k.id).length })));
   });
 
+  /* ---------- Aufgaben mit Prüfung auf dem Server (Vertrag §9) ---------- */
+
+  // Schüler dürfen nur üben, wenn mindestens einer ihrer Kurse AutomatenLab freigeschaltet hat (§4);
+  // Lehrkräfte und Superadmin dürfen alle Aufgaben ausprobieren.
+  const darfUeben = (req, res, next) => {
+    if (!req.konto) return res.status(401).json({ error: 'Bitte melde dich an.' });
+    if (req.konto.rolle === 'schueler' && svc.konten.kurseVon(req.konto.sub).length === 0) {
+      return res.status(403).json({ error: 'Deine Lehrkraft hat AutomatenLab für deinen Kurs (noch) nicht freigeschaltet.' });
+    }
+    next();
+  };
+  const limitPruefen = new S.Limiter({ max: 120, windowMs: 60 * 1000 });
+  const begrenzt = (req, res, next) => {
+    const key = 'k:' + req.konto.sub;
+    if (!limitPruefen.take(key)) return res.status(429).json({ error: 'Zu viele Versuche. Bitte warte einen Moment.' });
+    next();
+  };
+
+  // Öffentliche Aufgabenliste (Titel, Stufe, Punkte – keine Lösungen), z. B. für Übersichten
+  api.get('/katalog', (req, res) => res.json({ aufgaben: svc.lernen.katalog(req.query.modul ? String(req.query.modul) : null) }));
+
+  api.get('/lernstand', darfUeben, (req, res) => res.json(svc.lernen.lernstand(req.konto.sub)));
+  api.get('/aufgaben/:id', darfUeben, (req, res) => res.json(svc.lernen.abrufen(req.konto.sub, req.params.id)));
+  api.post('/aufgaben/:id/pruefen', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.pruefen(req.konto.sub, req.params.id, (req.body || {}).antwort)));
+  api.post('/aufgaben/:id/tipp', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.tipp(req.konto.sub, req.params.id)));
+  api.post('/aufgaben/:id/aufdecken', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.aufdecken(req.konto.sub, req.params.id)));
+
   app.use('/api', api);
 }
 
