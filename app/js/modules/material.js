@@ -48,6 +48,7 @@ export default {
             sess.konto ? 'Alles Weitere gibt es, sobald deine Lehrkraft AutomatenLab für euren Kurs freischaltet.'
               : 'Alle Level gibt es nach der Anmeldung über InfoLabs – Schülerinnen und Schüler sehen dann die Schülerfassungen, Lehrkräfte zusätzlich Lösungen, Folien mit Notizen und Übungsklausuren. Das Material zählt nicht für Punkte.'),
             !sess.konto && sess.anmeldung ? h('a', { class: 'btn btn-primary', href: anmeldeLink('/#/material') }, 'Anmelden über InfoLabs') : null),
+          m.akten.length ? null : h('p', { class: 'muted' }, 'Auf diesem Server sind noch keine Materialien hinterlegt.'),
           gruppen.map((g) => h('section', { class: 'material-gruppe' }, h('h2', null, g.titel), h('ul', { class: 'material-liste' }, g.akten.map(akte)))),
           h('p', null, h('a', { href: ctx.link('gast') }, 'Weitere Demo-Aufgaben ausprobieren')));
         return;
