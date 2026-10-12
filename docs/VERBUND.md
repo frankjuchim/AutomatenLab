@@ -1,7 +1,7 @@
 # AutomatenLab im Plattform-Verbund InfoLabs
 
 **Verbindlich ist der Vertrag des Plattform-Verbunds:
-https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.1).**
+https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.2).**
 Anschlussanleitung mit allen Testfällen: https://github.com/frankjuchim/labs/blob/main/docs/INTEGRATION.md.
 Das Repository `frankjuchim/labs` (Portal InfoLabs, https://labs.frankjuchim.de) wird von einer anderen Session
 gepflegt – aus diesem Repository heraus wird es **nur gelesen**, nie geändert. Abweichungen vom Vertrag werden nie
@@ -129,6 +129,13 @@ bringen keine Punkte und bleiben im Browser.
 API: `docs/AUFGABENFORMAT.md`. Die übrigen Module folgen in PR 4/5.
 
 ## 7. Weitere Vertragspunkte
+
+* **v1.2 – Anforderungsniveaus (§7, §9):** umgesetzt. Manifest `vertrag: "1.2"`, `kurs: "Informatik eA und gA,
+  Niedersachsen, Abitur ab 2027"`, `niveaus: ["eA", "gA"]`, `urls.niveaus: "/niveaus"`. Der Vertrag nennt als Beispiel
+  `/themen#niveaus`; bei AutomatenLab leitet `/themen` auf die Hash-Route `/#/themen` um – ein Fragment `#niveaus`
+  ginge dabei verloren. Deshalb der eigene Pfad `/niveaus` → `/#/themen?teil=niveaus` (vertragsgemäß: „Pfad, beginnend
+  mit /“). Zuordnung nach KC 2017 in `app/js/data/niveaus.js` (Materialien: `materials/lib/niveau.js`, Test hält beide
+  gleich). Nach dem Deploy im Portal unter Plattformen „Jetzt prüfen“, dann erscheint der Link auf der Karte.
 
 * **V3 – Fallen-Liste P1–P10:** Entwurf in `docs/einheit/FALLEN.md` (zur Freigabe durch Frank),
   danach in Aufgaben (Feld `fallen`), Quiz, Material und Fallen-Profil verankert. Keine Vertragsänderung nötig.

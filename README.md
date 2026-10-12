@@ -38,7 +38,7 @@ Erzeugte Dateien (`materials/build`, `materials/out`, `materials/dist`) sind nic
 
 ## Weiterentwicklung
 
-Die Entwicklung läuft mit Claude Code. Einstieg: `CLAUDE.md` (Regeln für den Agenten). Nächster großer Schritt: **Anschluss an den Plattform-Verbund InfoLabs** – Anmeldung über das Portal https://labs.frankjuchim.de, Fortschritts-Synchronisation und Lehrkraft-Dashboard. Verbindlich ist der Vertrag des Plattform-Verbunds: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.1). Umsetzung: `docs/VERBUND.md`, Plan: `docs/ROADMAP.md`.
+Die Entwicklung läuft mit Claude Code. Einstieg: `CLAUDE.md` (Regeln für den Agenten). Nächster großer Schritt: **Anschluss an den Plattform-Verbund InfoLabs** – Anmeldung über das Portal https://labs.frankjuchim.de, Fortschritts-Synchronisation und Lehrkraft-Dashboard. Verbindlich ist der Vertrag des Plattform-Verbunds: https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.2). Umsetzung: `docs/VERBUND.md`, Plan: `docs/ROADMAP.md`.
 
 Wichtig für alle Änderungen:
 

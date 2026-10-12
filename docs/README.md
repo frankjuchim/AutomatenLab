@@ -8,7 +8,7 @@
 | `ROADMAP.md` | Phasen 0–6 als Checklisten (→ GitHub-Issues) |
 | `ENTSCHEIDUNGEN.md` | Architekturentscheidungen (fortschreiben) |
 | `DEPLOYMENT.md` | CapRover (Webhook, `main` = live), GitHub-Prüfung, Backup |
-| `VERBUND.md` | **Anschluss an das Portal InfoLabs** (Vertrag v1.1): SSO, Manifest, Verbund-API, Konfiguration, Vertragsvorschläge |
+| `VERBUND.md` | **Anschluss an das Portal InfoLabs** (Vertrag v1.2): SSO, Manifest, Niveaus, Verbund-API, Konfiguration, Vertragsvorschläge |
 | `ALGOQUEST_VERGLEICH.md` | Analyse AlgoQuest, Empfehlungen für Server/Dashboard (Login-Teile überholt) |
 | `DATENSCHUTZ.md` | Arbeitsgrundlage und Text-Entwurf für die Datenschutzseite |
 | `MATERIALIEN.md` | Wie die Word-/PowerPoint-Dateien erzeugt und geprüft werden |
