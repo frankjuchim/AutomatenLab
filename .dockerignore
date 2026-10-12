@@ -1,4 +1,4 @@
-# Build-Kontext = Wurzelordner. Ins Image kommen nur package*.json, src/, scripts/ und app/ ohne Tests (siehe Dockerfile).
+# Build-Kontext = Wurzelordner. Ins Image kommen nur package*.json, src/, scripts/, inhalte/ und app/ ohne Tests (siehe Dockerfile).
 .git
 .github
 **/node_modules

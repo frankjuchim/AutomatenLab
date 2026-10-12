@@ -23,6 +23,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY src ./src
 COPY scripts ./scripts
+# Aufgaben mit Lösungen – nur für den Server (Vertrag §9), werden nie ausgeliefert
+COPY inhalte ./inhalte
 # Web-App ohne Tests und Doku (siehe .dockerignore)
 COPY app/package.json ./app/package.json
 COPY app/index.html ./app/index.html

@@ -39,11 +39,11 @@ jobs:
       - name: Image wie auf CapRover bauen und mit Test-Portal starten
         run: |
           docker build -t automatenlab .
-          docker run -d --rm -p 8080:80 --name automatenlab \
+          docker run -d -p 8080:80 --name automatenlab \
             -e PLATTFORM_URL=http://localhost:8080 -e PORTAL_URL=http://portal.test -e AUTH_MODUS=portal \
             -e SESSION_SECRET=ci-geheimnis-nur-fuer-die-pruefung -e PORTAL_PUBLIC_KEY="$(cat /tmp/qa-pub.pem)" automatenlab
           for i in $(seq 1 60); do curl -fsS http://localhost:8080/healthz >/dev/null && break; sleep 1; done
-          curl -fsS http://localhost:8080/healthz | grep -q '"anmeldung":"portal"'
+          curl -fsS http://localhost:8080/healthz | grep -q '"anmeldung":"portal"' || { docker logs automatenlab || true; exit 1; }
       - name: Vertragsprüfung (scripts/vertrag_pruefen.js)
         run: node scripts/vertrag_pruefen.js http://localhost:8080
       - name: Alle Deep-Links angemeldet (Lehrkraft mit Kurs, Test-Token)
