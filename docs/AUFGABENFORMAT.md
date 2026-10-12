@@ -26,7 +26,7 @@ findet er einen, schlägt die Prüfung fehl.
   (`#/baukasten?level=2`, `?aufgabe=endet-b`, `#/detektiv?fall=3`, `#/quiz?ds=7`).
 * Punkte nach §9: Standardpunkte **10/20/30 je Stufe**, beim ersten Lösen
   `round(punkte × max(0.25, 1 − 0.25·Fehlversuche − 0.2·Tipps))`, nach „Lösung zeigen“ 0 Punkte (danach selbst
-  gelöst = „nachgelöst“, zählt als gelöst, ohne Punkte).
+  gelöst = „nachgelöst“, zählt als gelöst und für Stufen-Abzeichen, ohne Punkte).
 * **Ausnahme Exit-Tickets (Quiz):** Ein Quiz ist eine Aufgabe; jede Frage wird einmal gewertet (richtig 1,
   teilweise ½, falsch 0), die Lösung der Frage erscheint sofort danach. Punkte = Anteil richtig im **ersten
   Durchgang** × Quizpunkte (Exit-Ticket je Level 10, Welt-Quiz 30). Wiederholen ist Übung ohne Wertung.
@@ -64,7 +64,7 @@ findet er einen, schlägt die Prüfung fehl.
 GET  /api/katalog[?modul=]            öffentliche Aufgabenliste (Titel, Stufe, Punkte – ohne Lösungen)
 GET  /api/lernstand                   Lernstand im Format von progress.js (punkte, solved, best, badges)
 GET  /api/aufgaben/:id                öffentlicher Teil + Zustand (+ Lösungsteil, wenn nicht mehr offen)
-POST /api/aufgaben/:id/pruefen        { antwort } → { ok, fertig, rueckmeldung, zustand, geloest, punkteErhalten, neueAbzeichen, loesung? }
+POST /api/aufgaben/:id/pruefen        { antwort } → { ok, fertig, rueckmeldung, zustand, geloest, nachgeloest, punkteErhalten, neueAbzeichen, loesung? }
 POST /api/aufgaben/:id/tipp           nächster Tipp
 POST /api/aufgaben/:id/aufdecken      „Lösung zeigen“ (0 Punkte; nicht beim Quiz)
 ```

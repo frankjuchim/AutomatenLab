@@ -99,11 +99,15 @@ async function route() {
   if (cleanup) { try { cleanup(); } catch (e) { console.error(e); } cleanup = null; }
   clear(main);
   // Gastmodus (Vertrag §4, Entscheidung V2): ohne Sitzung nur Demo-Aufgaben – sonst still zur Portal-Anmeldung,
-  // danach zurück genau auf diese Route (QR-Codes bleiben gültig). Ohne eingerichtete Anmeldung bleibt alles offen.
+  // danach zurück genau auf diese Route (QR-Codes bleiben gültig). Ohne eingerichtete Anmeldung und für Schüler ohne
+  // freigeschalteten Kurs (Vertrag §4, die Prüf-API antwortet dann 403) bleiben ebenfalls nur die Demo-Aufgaben offen.
   const sess = await sitzung();
   await lernstandBereit;
   if (seq !== navSeq) return;
-  if (sess.anmeldung && !sess.konto && !gastErlaubt(r, params)) { location.replace(anmeldeLink(location.pathname + location.hash)); return; }
+  if (!gastErlaubt(r, params) && !volleNutzung(sess.konto)) {
+    if (sess.anmeldung && !sess.konto) { location.replace(anmeldeLink(location.pathname + location.hash)); return; }
+    renderGesperrt(sess); finishNav('Nur Demo-Aufgaben'); return;
+  }
   const meta = findModule(r);
   let loader = SPECIAL[r] ?? meta?.load;
   let mod;
@@ -176,6 +180,18 @@ function renderComingSoon(meta) {
     h('p', { class: 'lead' }, meta.blurb),
     h('p', { class: 'notice' }, 'Dieses Modul ist bald verfügbar. Bis dahin kannst du hier üben:'),
     h('ul', { class: 'link-list' }, ready.map((m) => h('li', null, h('a', { href: link(m.route) }, m.title))))));
+}
+
+/** Volle Nutzung: Lehrkraft/Superadmin immer, Schüler nur mit mindestens einem freigeschalteten Kurs (§4). */
+const volleNutzung = (konto) => !!konto && (konto.rolle !== 'schueler' || (konto.kurse ?? []).length > 0);
+
+function renderGesperrt(sess) {
+  main.append(h('section', { class: 'page narrow' },
+    h('h1', null, sess.konto ? 'AutomatenLab ist für deinen Kurs noch nicht freigeschaltet.' : 'Die Anmeldung ist hier nicht eingerichtet.'),
+    h('p', null, sess.konto
+      ? 'Deine Lehrkraft schaltet AutomatenLab im Portal InfoLabs für euren Kurs frei. Bis dahin kannst du die Demo-Aufgaben ausprobieren.'
+      : 'Ohne Anmeldung über das Portal InfoLabs gibt es nur die Demo-Aufgaben.'),
+    h('p', null, h('a', { class: 'btn', href: '#/gast' }, 'Zu den Demo-Aufgaben'), ' ', h('a', { class: 'btn btn-ghost', href: '#/' }, 'Zur Übersicht'))));
 }
 
 function renderNotFound(r) {

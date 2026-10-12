@@ -24,7 +24,7 @@ export const GAST = [
 
 /** Darf ein Gast diese Route öffnen? (Startseite, Themen, Datenschutz, Gastseite sind immer frei.) */
 export function gastErlaubt(route, params) {
-  if (['', 'gast', 'themen', 'datenschutz', 'komponenten'].includes(route)) return true;
+  if (['', 'gast', 'themen', 'datenschutz'].includes(route)) return true;
   return GAST.some((g) => g.route === route
     && Object.entries(g.params).every(([k, v]) => params.get(k) === v)
     && [...params.keys()].every((k) => k in g.params || (g.erlaubt ?? []).includes(k)));

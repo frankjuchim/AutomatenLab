@@ -84,7 +84,7 @@ function createLernen(ctx, { aufgaben }) {
     const erg = a.typ.pruefe(a, antwort, zinfo(vorher), {});
     const fertig = erg.fertig ?? erg.ok;
     const zaehltFehler = erg.zaehltFehler ?? !erg.ok;
-    const neu = { geloest: false, punkte: 0, abzeichen: [] };
+    const neu = { geloest: false, nachgeloest: false, punkte: 0, abzeichen: [] };
     let ersterVersuch = false;
     db.transaction(() => {
       const r = sichereZeile(sub, a.id);
@@ -101,9 +101,10 @@ function createLernen(ctx, { aufgaben }) {
         }
       } else if (r.status === 'angesehen' && erg.ok && !r.nachgeloest && erg.anteil === undefined) {
         db.prepare('UPDATE fortschritt SET nachgeloest = 1, updated_at = ? WHERE sub = ? AND aufgabe_id = ?').run(iso(), sub, a.id);
+        neu.nachgeloest = true; // zählt als gelöst (Stufen-/Modul-Abzeichen), ohne Punkte und ohne Erstversuch
       }
     })();
-    if (neu.geloest) {
+    if (neu.geloest || neu.nachgeloest) {
       const zeilen = db.prepare('SELECT * FROM fortschritt WHERE sub = ? AND aufgabe_id LIKE ?').all(sub, `${a.modul}:%`);
       const geloest = new Set(zeilen.filter((z) => z.status === 'geloest' || z.nachgeloest).map((z) => z.aufgabe_id));
       const alleGeloest = aufgaben.liste.filter((x) => x.modul === a.modul).every((x) => geloest.has(x.id));
@@ -111,7 +112,7 @@ function createLernen(ctx, { aufgaben }) {
     }
     const r2 = zeile(sub, a.id);
     const z = zustand(a, r2);
-    const out = { ok: erg.ok, fertig, rueckmeldung: erg.rueckmeldung, zustand: z, geloest: neu.geloest, punkteErhalten: neu.punkte, neueAbzeichen: neu.abzeichen };
+    const out = { ok: erg.ok, fertig, rueckmeldung: erg.rueckmeldung, zustand: z, geloest: neu.geloest, nachgeloest: neu.nachgeloest, punkteErhalten: neu.punkte, neueAbzeichen: neu.abzeichen };
     if (z.status !== 'offen' && (neu.geloest || erg.ok || fertig)) out.loesung = a.typ.loesungsteil(a, zinfo(r2));
     return out;
   }

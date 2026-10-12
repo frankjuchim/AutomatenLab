@@ -117,10 +117,32 @@ test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = 
   const r = (await post(s, `/api/aufgaben/${id}/pruefen`, { antwort: { automat: { alphabet: ['a', 'b'], start: 'S0', accepting: ['S1'], delta: { S0: { a: 'S0', b: 'S1' }, S1: { a: 'S0', b: 'S1' } } } } })).body;
   assert.equal(r.ok, true);
   assert.equal(r.punkteErhalten, 0);
+  assert.equal(r.geloest, false, 'kein erstes Lösen');
+  assert.equal(r.nachgeloest, true, 'Signal für den Browser: Lernstand neu laden');
+  assert.deepEqual(r.neueAbzeichen.map((b) => b.id), ['baukasten-erster']);
   const ls = (await s.get('/api/lernstand')).body;
   assert.ok(ls.solved[id], 'nachgelöst zählt als gelöst');
   assert.equal(ls.punkte, 0);
+  const r2 = (await post(s, `/api/aufgaben/${id}/pruefen`, { antwort: { automat: d.loesung.musterloesung } })).body;
+  assert.equal(r2.nachgeloest, false, 'nur einmal nachgelöst');
   assert.equal((await post(s, '/api/aufgaben/quiz:ds-1/aufdecken')).status, 400, 'Quiz ohne Aufdecken');
+});
+
+test('Nachgelöst zählt für Stufen-Abzeichen (ohne Punkte, ohne Volltreffer)', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const stufe1 = (await s.get('/api/katalog?modul=baukasten')).body.aufgaben.filter((a) => a.stufe === 1);
+  assert.ok(stufe1.length > 1);
+  let letzte;
+  for (const a of stufe1) {
+    const d = (await post(s, `/api/aufgaben/${a.id}/aufdecken`)).body;
+    letzte = (await post(s, `/api/aufgaben/${a.id}/pruefen`, { antwort: { automat: d.loesung.musterloesung } })).body;
+    assert.equal(letzte.nachgeloest, true, a.id);
+  }
+  assert.ok(letzte.neueAbzeichen.some((b) => b.id === 'baukasten-stufe-1'), 'Stufen-Abzeichen nach der letzten nachgelösten Challenge');
+  const ls = (await s.get('/api/lernstand')).body;
+  assert.ok(ls.badges.includes('baukasten-stufe-1'));
+  assert.equal(ls.punkte, 0);
 });
 
 test('Quiz: jede Frage einmal gewertet, Punkte = Anteil richtig im ersten Durchgang; Wiederholen ist Übung', async () => {

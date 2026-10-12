@@ -22,7 +22,7 @@ async function api(method, url, body) {
 
 /** Nach dem Lösen den Lernstand neu laden (Punkte, gelöst, Abzeichen) und neue Abzeichen anzeigen. */
 async function nachPruefen(r) {
-  if (r?.geloest || r?.neueAbzeichen?.length) {
+  if (r?.geloest || r?.nachgeloest || r?.neueAbzeichen?.length) {
     try { progress._server(await api('GET', '/api/lernstand')); } catch { /* nächste Anzeige lädt neu */ }
   }
   progress._abzeichen(r?.neueAbzeichen);

@@ -142,13 +142,20 @@ export default {
     renderProgress();
     const unsub = progress.subscribe(renderProgress);
 
-    const resetBtn = h('button', { type: 'button', class: 'btn btn-danger-ghost', onclick: () => {
-      if (window.confirm('Wirklich alle Punkte, gelösten Challenges und Abzeichen auf diesem Gerät löschen?')) {
+    // Gespeichert wird je nach Sitzung: angemeldet auf dem Server (Prüf-Module), sonst nur im Browser dieses Geräts.
+    const speicherText = h('p', { class: 'muted' }, 'Gespeichert wird nur auf diesem Gerät, ohne Namen und ohne Cookies. Auf einem anderen iPad beginnst du bei null.');
+    const resetSlot = h('p');
+    const resetBtn = (angemeldet) => h('button', { type: 'button', class: 'btn btn-danger-ghost', onclick: () => {
+      const frage = angemeldet
+        ? 'Den Fortschritt auf diesem Gerät löschen (Module, die noch im Browser prüfen, und Entwürfe)? Punkte und Abzeichen auf dem Server bleiben erhalten.'
+        : 'Wirklich alle Punkte, gelösten Challenges und Abzeichen auf diesem Gerät löschen?';
+      if (window.confirm(frage)) {
         progress.reset();
-        ctx.toast('Dein Fortschritt wurde zurückgesetzt.', { type: 'info' });
+        ctx.toast(angemeldet ? 'Der Fortschritt auf diesem Gerät wurde zurückgesetzt.' : 'Dein Fortschritt wurde zurückgesetzt.', { type: 'info' });
         ctx.navigate('', {}, { replace: true });
       }
-    } }, 'Fortschritt zurücksetzen');
+    } }, angemeldet ? 'Fortschritt auf diesem Gerät zurücksetzen' : 'Fortschritt zurücksetzen');
+    clear(resetSlot, resetBtn(false));
 
     // Gastmodus: Hinweis auf Demo-Aufgaben und Anmeldung (nur wenn die Portal-Anmeldung eingerichtet ist)
     const gastSlot = h('div');
@@ -157,6 +164,13 @@ export default {
         h('span', null, h('strong', null, 'Du bist nicht angemeldet. '), 'Ohne Anmeldung kannst du je Modul eine Aufgabe ausprobieren.'),
         h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren'),
         h('a', { class: 'btn', href: anmeldeLink('/') }, 'Anmelden über InfoLabs')));
+      else if (konto?.rolle === 'schueler' && !(konto.kurse ?? []).length) clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
+        h('span', null, h('strong', null, 'Noch nicht freigeschaltet. '), 'Deine Lehrkraft schaltet AutomatenLab im Portal für euren Kurs frei – bis dahin gibt es die Demo-Aufgaben.'),
+        h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren')));
+      if (konto) {
+        speicherText.textContent = 'Punkte und Abzeichen der Aufgaben mit Prüfung speichert der Server unter deinem Konto – sie zählen im Portal und für deine Lehrkraft. Module, die noch im Browser prüfen, speichern vorerst nur auf diesem Gerät.';
+        clear(resetSlot, resetBtn(true));
+      }
     });
 
     clear(el,
@@ -174,9 +188,9 @@ export default {
       h('section', { class: 'page-section progress-section', 'aria-labelledby': 'fortschritt-h' },
         h('div', { class: 'progress-head' },
           h('h2', { id: 'fortschritt-h' }, 'Dein Fortschritt'), pointsBig),
-        h('p', { class: 'muted' }, 'Gespeichert wird nur auf diesem Gerät, ohne Namen und ohne Cookies. Auf einem anderen iPad beginnst du bei null.'),
+        speicherText,
         badgeList,
-        h('p', null, resetBtn)));
+        resetSlot));
 
     return () => unsub();
   },
