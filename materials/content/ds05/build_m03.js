@@ -51,6 +51,6 @@ const pairs = (lst) => lst.map((p) => `(${p[0]}, ${p[1]})`).join(', ');
     ...side([...D.img(IMG + 'endet_ab.png', { widthCm: 7.4, caption: 'Entwurf: 5 Zustände' })], [...D.img(IMG + 'endet_ab_min.png', { widthCm: 7.4, caption: 'Minimal: S1, S3, S4 zusammengefasst (Bedeutung: „zuletzt ein a“)' })], [8.7, 8.7]),
     ...D.warn('Typischer Fehler', [D.p('„S3 und S4 sind verschieden, weil sie verschiedene Namen haben / in verschiedene Zustände führen“ – das ist **keine** Begründung. Unterscheidbarkeit wird immer mit einem **konkreten Wort** gezeigt, Äquivalenz mit dem Verhalten für **alle** Wörter.', { size: 20 })]),
   ];
-  const f = await D.save(D.doc({ kind: 'MB', niveau: 'alle', title: 'Minimierung & Zustandsanzahl begründen', subtitle: 'Merkblatt M03 · Level 5 · Unterscheidbarkeit, Markierungsverfahren, Mindestzahl', metaText: 'M03  ·  Welt A', code: 'M03 · Merkblatt Minimierung', body }), OUT + 'M03_Merkblatt_Minimierung.docx');
+  const f = await D.save(D.doc({ kind: 'MB', niveau: 'plus', title: 'Minimierung & Zustandsanzahl begründen', subtitle: 'Merkblatt M03 · Level 5 · Unterscheidbarkeit, Markierungsverfahren, Mindestzahl', metaText: 'M03  ·  Welt A', code: 'M03 · Merkblatt Minimierung', body }), OUT + 'M03_Merkblatt_Minimierung.docx');
   console.log(f);
 })();

@@ -4,7 +4,7 @@ Unterrichtseinheit **Automaten und formale Sprachen** (Informatik Sek II, **Grun
 
 * **Web-App „AutomatenLab“** – 13 interaktive Übungsmodule (Akzeptor-Arena, Baukasten, Keller-Labor, Ableitungs-Rallye, Turing-Labor …), live unter <https://automatenlab.frankjuchim.de>
 * **Unterrichtsmaterial** – 16 Doppelstunden (Pflicht/Vertiefung/Bonus) mit Arbeitsblatt, Lehrkraft-Handreichung und Folien, 12 Merkblätter, Boss-Level, Übungsklausur
-* **Niveaus:** Kern für beide Kurse (Welt A, Level 7), Kellerautomaten und Grammatiken nur eA, NEA und Turingmaschine als Zusatz – Übersicht unter <https://automatenlab.frankjuchim.de/niveaus>
+* **Niveaus:** Kern für beide Kurse (Welt A ohne Minimierung, Level 7), Kellerautomaten und Grammatiken nur eA, Minimierung, NEA und Turingmaschine als Zusatz; je eine Übungsklausur für Grund- und Leistungskurs – Übersicht unter <https://automatenlab.frankjuchim.de/niveaus>
 * **Erklärvideo-Reihe** – 9 Videos + 2 Extras: Folien, Ablaufpläne, OBS-Overlays, Thumbnails
 
 Alle Materialien werden per Skript erzeugt; jeder Automat, jede Grammatik und jede Lösung wird dabei automatisch geprüft.

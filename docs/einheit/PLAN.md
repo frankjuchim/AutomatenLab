@@ -1,7 +1,7 @@
 # Unterrichtseinheit „Maschinen, die Sprache verstehen“
 ## Automaten und formale Sprachen – Informatik LK (eA), Q-Phase, Niedersachsen
 
-> **Grund- und Leistungskurs:** Der Plan beschreibt den Leistungskurs. Für den Grundkurs (gA) gilt der Kern des KC (Welt A und Level 7); Level 9–15 sind nur eA, Level 8 und 16 Zusatz. Zuordnung: `app/js/data/niveaus.js`, öffentlich unter `/niveaus`, Begründung in `docs/ENTSCHEIDUNGEN.md` (2026-10-12).
+> **Grund- und Leistungskurs:** Der Plan beschreibt den Leistungskurs. Für den Grundkurs (gA) gilt der Kern des KC (Welt A ohne Level 5, dazu Level 7); Level 9–15 sind nur eA, Level 5, 8 und 16 Zusatz (NEA im LK als Hinleitung zum Kellerautomaten). Übungsklausur gA: „Fahrradverleih“ (`materials/content/abschluss/automata_klausur_ga.py`). Zuordnung: `app/js/data/niveaus.js`, öffentlich unter `/niveaus`, Begründung in `docs/ENTSCHEIDUNGEN.md` (2026-10-12).
 Lehrkraft: Frank Juchim, Max-Planck-Gymnasium Delmenhorst · Umfang: 16 Doppelstunden (DS) à 90 min
 
 Dieses Dokument ist die verbindliche Planungsgrundlage für ALLE Materialien (Arbeitsblätter, Lehrkraft-Handreichungen, Folien, Merkblätter, Web-App). Alle Materialien sind auf **Deutsch**, Fachsprache gemäß KC Niedersachsen und den **Ergänzenden Hinweisen 2025 (verbindlich ab Abitur 2027)**.

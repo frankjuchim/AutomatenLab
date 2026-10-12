@@ -114,15 +114,15 @@ async function planung() {
       'Abschnitt „Notation 2025“ lesen: Einige Konventionen weichen von älteren Schulbüchern ab (z. B. Akzeptanz beim Kellerautomaten).',
     ]),
     D.h2('Grund- und Leistungskurs (KC 2017)'),
-    D.p('Maßstab ist das Kerncurriculum Informatik (2017), Lernfeld „Automaten und Sprachen“: Der Kern gilt für **beide Kurse**, die Spalte **„Erweiterung eA“** (Kellerautomat, formale Sprachen und Grammatiken) ist im Abitur **nur im Leistungskurs** gefordert. Was das KC nur als Ergänzung nennt (Turingmaschine, Chomsky-Hierarchie) oder gar nicht (NEA), ist **Zusatz**. Jedes Arbeitsblatt, jede Handreichung, jedes Merkblatt und jeder Foliensatz nennt das Niveau im Kopf; in der App tragen eA-Level das Etikett „LK“ und Zusatz-Level ein „+“.'),
+    D.p('Maßstab ist das Kerncurriculum Informatik (2017), Lernfeld „Automaten und Sprachen“: Der Kern gilt für **beide Kurse**, die Spalte **„Erweiterung eA“** (Kellerautomat, formale Sprachen und Grammatiken) ist im Abitur **nur im Leistungskurs** gefordert. Was das KC nur als Ergänzung nennt (Turingmaschine, Chomsky-Hierarchie) oder gar nicht (Minimierung, NEA), ist **Zusatz**. Jedes Arbeitsblatt, jede Handreichung, jedes Merkblatt und jeder Foliensatz nennt das Niveau im Kopf; in der App tragen eA-Level das Etikett „LK“ und Zusatz-Level ein „+“.'),
     D.table([
       ['Niveau', 'Level', 'Inhalte'],
-      ['gA + eA (beide Kurse)', nivLevel('alle').join(', ') + ' · Boss-Level A', 'DEA beschreiben, analysieren, entwickeln und minimieren; Mealy-Automaten; Grenzen endlicher Automaten'],
-      ['nur eA (Leistungskurs)', nivLevel('eA').join(', ') + ' · Boss-Level B, C · Übungsklausur', 'Kellerautomaten (Abi-Tabelle), formale vs. natürliche Sprachen, reguläre und kontextfreie Grammatiken, Zusammenhang Grammatik ↔ Automat, Sprachdesign-Projekt'],
-      ['Zusatz', nivLevel('plus').join(', '), 'NEA (im Leistungskurs als Brücke zum Kellerautomaten empfohlen), Turingmaschine; in Level 14 die Chomsky-Hierarchie'],
+      ['gA + eA (beide Kurse)', nivLevel('alle').join(', ') + ' · Boss-Level A', 'DEA beschreiben, analysieren und entwickeln; Mealy-Automaten; Grenzen endlicher Automaten; Übungsklausur „Fahrradverleih“ (gA)'],
+      ['nur eA (Leistungskurs)', nivLevel('eA').join(', ') + ' · Boss-Level B, C · Übungsklausur „Smart-Home-Befehle“', 'Kellerautomaten (Abi-Tabelle), formale vs. natürliche Sprachen, reguläre und kontextfreie Grammatiken, Zusammenhang Grammatik ↔ Automat, Sprachdesign-Projekt'],
+      ['Zusatz', nivLevel('plus').join(', '), 'Minimierung (Markierungsverfahren), NEA (im Leistungskurs eine gute Hinleitung zum Kellerautomaten), Turingmaschine; in Level 14 die Chomsky-Hierarchie'],
     ], { widthsCm: [4.0, 4.6, 8.8], size: 19, firstColBold: true }),
     ...D.bullets([
-      '**Grundkurs:** Pflicht L1, L2, L3, L6, L7 (5 Doppelstunden), Vertiefung L4 und L5, Boss-Level A als Übung. Welt C und die Keller-Level sind im Grundkurs freiwillig.',
+      '**Grundkurs:** Pflicht L1, L2, L3, L6, L7 (5 Doppelstunden), Vertiefung L4, Boss-Level A als Übung, Übungsklausur „Fahrradverleih“ (90 min, 30 BE). L5 (Minimierung) ist Zusatz; Welt C und die Keller-Level sind im Grundkurs freiwillig.',
       '**Leistungskurs:** Wochenplan unten (Pflichtweg 9 Doppelstunden, mit Vertiefung 12).',
       'Die Niveau-Übersicht steht auch öffentlich in der App: https://automatenlab.frankjuchim.de/niveaus',
     ]),
@@ -273,7 +273,7 @@ async function planung() {
       ['AutomatenLab_WebApp, Quelltexte', 'App-Paket für Docker/CapRover mit README; Erzeugungsskripte der Materialien (optional)'],
     ], { widthsCm: [5.4, 12.0], size: 18, firstColBold: true, noSpacer: true }),
   ];
-  return D.save(D.doc({ kind: 'PL', title: 'Maschinen, die Sprache verstehen', subtitle: 'Einheitsplanung und Ablaufplan · Automaten und formale Sprachen · Informatik eA und gA, Q-Phase · 9 + 3 Doppelstunden (gA: 5 + 2)', metaText: 'Gesamtplanung der Einheit', code: '00 · Einheitsplanung', body }), OUT + '00_Einheitsplanung.docx');
+  return D.save(D.doc({ kind: 'PL', title: 'Maschinen, die Sprache verstehen', subtitle: 'Einheitsplanung und Ablaufplan · Automaten und formale Sprachen · Informatik eA und gA, Q-Phase · 9 + 3 Doppelstunden (gA: 5 + 1)', metaText: 'Gesamtplanung der Einheit', code: '00 · Einheitsplanung', body }), OUT + '00_Einheitsplanung.docx');
 }
 
 async function lernlandkarte() {
@@ -284,7 +284,7 @@ async function lernlandkarte() {
   const body = [
     D.p('Diese Karte begleitet dich durch die Einheit. Kreuze nach jedem Level an, wie sicher du dich fühlst. Wo du „noch nicht“ ankreuzt, helfen dir das Merkblatt (M…) und das passende Modul im **AutomatenLab**.'),
     D.small('Level ohne Zusatz gehören zum Pflichtweg. **V** = Vertiefung (bei vier Wochen im Unterricht), **B** = Bonus (freiwillig, zum Üben und Weiterdenken).'),
-    D.small('**Grundkurs (gA):** Welt A und Level 7 sind dein Abiturstoff. Level 9 bis 15 (Kellerautomaten, Grammatiken) sind nur im Leistungskurs (eA) Abiturthema – im Grundkurs freiwillig. Level 8 und 16 sind für alle Zusatz.'),
+    D.small('**Grundkurs (gA):** Welt A (ohne Level 5) und Level 7 sind dein Abiturstoff. Level 9 bis 15 (Kellerautomaten, Grammatiken) sind nur im Leistungskurs (eA) Abiturthema – im Grundkurs freiwillig. Level 5, 8 und 16 sind für alle Zusatz.'),
     D.h2('Welt A – Endliche Automaten'),
     rows([
       ['den Aufbau eines DEA beschreiben (Σ, Zustände, Start-/Endzustände, Übergänge)', '1', 'M01, Arena'],

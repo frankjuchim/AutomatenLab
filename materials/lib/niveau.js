@@ -4,7 +4,7 @@
 'use strict';
 
 const LEVEL_NIVEAU = {
-  1: 'alle', 2: 'alle', 3: 'alle', 4: 'alle', 5: 'alle', 6: 'alle',
+  1: 'alle', 2: 'alle', 3: 'alle', 4: 'alle', 5: 'plus', 6: 'alle',
   7: 'alle', 8: 'plus', 9: 'eA', 10: 'eA',
   11: 'eA', 12: 'eA', 13: 'eA', 14: 'eA',
   15: 'eA', 16: 'plus',

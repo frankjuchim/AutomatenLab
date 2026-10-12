@@ -43,7 +43,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 ## Grund- und Leistungskurs (Vertrag v1.2)
 - ✅ Niveaus nach KC 2017 (gA + eA / nur eA / Zusatz) für Level, Boss-Level, Module, Merkblätter; Niveau-Übersicht `/niveaus` (= `#/themen?teil=niveaus`), Manifest v1.2 (`kurs`, `niveaus`, `urls.niveaus`), Etiketten in der App, Niveau im Kopf aller Materialien, Abschnitt in der Einheitsplanung
 - [ ] Kurs-Einstellung „Kursart“ (Grundkurs/Leistungskurs) wie Algo Quest: eA-Level im Grundkurs als „freiwillig“, Kursübersicht für das Portal nur über die Level des Kurses (mit PR 7)
-- [ ] Übungsklausur und Boss-Level für den Grundkurs (nur Welt A und Level 7) – nach Franks Freigabe
+- ✅ Übungsklausur für den Grundkurs „Fahrradverleih“ (90 min, 30 BE, DEA/Mealy/Grenzen, alle Automaten geprüft)
 
 ## Phase 5 – Lehrkraft-Bereich
 - [ ] PR 6: Lernstand-Matrix Level 1–16 × Schüler wie Algo Quest, Aufgabenstatistik, Fallen-Profil (nach V3), CSV, Aufgaben-Vorschau mit Lösungen; Kursübersicht für das Portal mit echten Kennzahlen

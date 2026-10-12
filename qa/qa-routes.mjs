@@ -54,7 +54,7 @@ idsIn('| `#/turing?programm=<id>`').forEach((id) => add(`#/turing?programm=${id}
 ['A', 'B', 'C', 'D'].forEach((w) => add(`#/quiz?welt=${w}`));
 range(16).forEach((n) => add(`#/quiz?ds=${n}`));
 // Bewusst gleich der Übersicht (laut README): #/turing zeigt bereits das Programm „Binärzahl + 1“
-const GLEICH_UEBERSICHT = new Set(['#/turing?programm=binaer-plus-1', '#/arena?stufe=1']); // Stufe 1 ist Standard
+const GLEICH_UEBERSICHT = new Set(['#/turing?programm=binaer-plus-1', '#/arena?stufe=1', '#/themen?teil=niveaus']); // Stufe 1 ist Standard; teil=niveaus springt nur zum Abschnitt
 // Geschützte Seiten: ohne Sitzung leiten sie still zur Portal-Anmeldung (/sso/start, Vertrag InfoLabs §5) – das ist
 // hier der erwartete Ausgang. /sso/start wird abgefangen, damit kein Aufruf ans Portal hinausgeht.
 const GESCHUETZT = new Set(['#/lehrkraft']);
