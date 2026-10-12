@@ -1,0 +1,963 @@
+{
+ "version": 1,
+ "akten": [
+  {
+   "id": "level-1",
+   "titel": "Level 1: Ein Automat hört zu",
+   "welt": "A",
+   "level": 1,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS01_AB_Ein-Automat-hoert-zu.pdf",
+     "original": "original/DS01_AB_Ein-Automat-hoert-zu.docx",
+     "bytes": {
+      "schueler": 396007,
+      "original": 379067
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS01_Folien_Ein-Automat-hoert-zu_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS01_Folien_Ein-Automat-hoert-zu_Notizen.pdf",
+     "original": "original/DS01_Folien_Ein-Automat-hoert-zu.pptx",
+     "bytes": {
+      "schueler": 702018,
+      "lehrkraft": 481925,
+      "original": 755386
+     }
+    },
+    {
+     "titel": "Merkblatt M01: DEA",
+     "art": "merkblatt",
+     "schueler": "schueler/M01_Merkblatt_DEA.pdf",
+     "original": "original/M01_Merkblatt_DEA.docx",
+     "bytes": {
+      "schueler": 167032,
+      "original": 105778
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS01_Lehrkraft_Ein-Automat-hoert-zu.pdf",
+     "original": "original/DS01_Lehrkraft_Ein-Automat-hoert-zu.docx",
+     "bytes": {
+      "lehrkraft": 385059,
+      "original": 466228
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-2",
+   "titel": "Level 2: Was macht dieser Automat?",
+   "welt": "A",
+   "level": 2,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS02_AB_Was-macht-dieser-Automat.pdf",
+     "original": "original/DS02_AB_Was-macht-dieser-Automat.docx",
+     "bytes": {
+      "schueler": 537830,
+      "original": 490967
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS02_Folien_Was-macht-dieser-Automat_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
+     "lehrkraft": "lehrkraft/DS02_Folien_Was-macht-dieser-Automat_Notizen.pdf",
+     "original": "original/DS02_Folien_Was-macht-dieser-Automat.pptx",
+     "bytes": {
+      "schueler": 622555,
+      "lehrkraft": 518632,
+      "original": 707314
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS02_Lehrkraft_Was-macht-dieser-Automat.pdf",
+     "original": "original/DS02_Lehrkraft_Was-macht-dieser-Automat.docx",
+     "bytes": {
+      "lehrkraft": 455715,
+      "original": 446978
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-3",
+   "titel": "Level 3: Bauplan gesucht",
+   "welt": "A",
+   "level": 3,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS03_AB_Bauplan-gesucht.pdf",
+     "original": "original/DS03_AB_Bauplan-gesucht.docx",
+     "bytes": {
+      "schueler": 237197,
+      "original": 122740
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS03_Folien_Bauplan-gesucht_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
+     "lehrkraft": "lehrkraft/DS03_Folien_Bauplan-gesucht_Notizen.pdf",
+     "original": "original/DS03_Folien_Bauplan-gesucht.pptx",
+     "bytes": {
+      "schueler": 903788,
+      "lehrkraft": 487000,
+      "original": 860652
+     }
+    },
+    {
+     "titel": "Merkblatt M02: DEA entwickeln",
+     "art": "merkblatt",
+     "schueler": "schueler/M02_Merkblatt_DEA-entwickeln.pdf",
+     "original": "original/M02_Merkblatt_DEA-entwickeln.docx",
+     "bytes": {
+      "schueler": 348365,
+      "original": 516205
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS03_Lehrkraft_Bauplan-gesucht.pdf",
+     "original": "original/DS03_Lehrkraft_Bauplan-gesucht.docx",
+     "bytes": {
+      "lehrkraft": 674312,
+      "original": 966656
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-4",
+   "titel": "Level 4: Modellierungswerkstatt",
+   "welt": "A",
+   "level": 4,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS04_AB_Modellierungswerkstatt.pdf",
+     "original": "original/DS04_AB_Modellierungswerkstatt.docx",
+     "bytes": {
+      "schueler": 216714,
+      "original": 20176
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS04_Folien_Modellierungswerkstatt_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS04_Folien_Modellierungswerkstatt_Notizen.pdf",
+     "original": "original/DS04_Folien_Modellierungswerkstatt.pptx",
+     "bytes": {
+      "schueler": 196525,
+      "lehrkraft": 215019,
+      "original": 185362
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS04_Lehrkraft_Modellierungswerkstatt.pdf",
+     "original": "original/DS04_Lehrkraft_Modellierungswerkstatt.docx",
+     "bytes": {
+      "lehrkraft": 682004,
+      "original": 1028139
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-5",
+   "titel": "Level 5: Weniger ist mehr",
+   "welt": "A",
+   "level": 5,
+   "niveau": "plus",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS05_AB_Weniger-ist-mehr.pdf",
+     "original": "original/DS05_AB_Weniger-ist-mehr.docx",
+     "bytes": {
+      "schueler": 415488,
+      "original": 428492
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS05_Folien_Weniger-ist-mehr_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
+     "lehrkraft": "lehrkraft/DS05_Folien_Weniger-ist-mehr_Notizen.pdf",
+     "original": "original/DS05_Folien_Weniger-ist-mehr.pptx",
+     "bytes": {
+      "schueler": 1013685,
+      "lehrkraft": 553830,
+      "original": 928266
+     }
+    },
+    {
+     "titel": "Merkblatt M03: Minimierung",
+     "art": "merkblatt",
+     "schueler": "schueler/M03_Merkblatt_Minimierung.pdf",
+     "original": "original/M03_Merkblatt_Minimierung.docx",
+     "bytes": {
+      "schueler": 210039,
+      "original": 209910
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS05_Lehrkraft_Weniger-ist-mehr.pdf",
+     "original": "original/DS05_Lehrkraft_Weniger-ist-mehr.docx",
+     "bytes": {
+      "lehrkraft": 473336,
+      "original": 515960
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-6",
+   "titel": "Level 6: Automaten, die antworten",
+   "welt": "A",
+   "level": 6,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS06_AB_Automaten-die-antworten.pdf",
+     "original": "original/DS06_AB_Automaten-die-antworten.docx",
+     "bytes": {
+      "schueler": 384567,
+      "original": 478165
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS06_Folien_Automaten-die-antworten_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS06_Folien_Automaten-die-antworten_Notizen.pdf",
+     "original": "original/DS06_Folien_Automaten-die-antworten.pptx",
+     "bytes": {
+      "schueler": 756577,
+      "lehrkraft": 503914,
+      "original": 785181
+     }
+    },
+    {
+     "titel": "Merkblatt M04: Mealy-Automaten",
+     "art": "merkblatt",
+     "schueler": "schueler/M04_Merkblatt_Mealy-Automaten.pdf",
+     "original": "original/M04_Merkblatt_Mealy-Automaten.docx",
+     "bytes": {
+      "schueler": 216881,
+      "original": 338987
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS06_Lehrkraft_Automaten-die-antworten.pdf",
+     "original": "original/DS06_Lehrkraft_Automaten-die-antworten.docx",
+     "bytes": {
+      "lehrkraft": 445320,
+      "original": 722228
+     }
+    }
+   ]
+  },
+  {
+   "id": "boss-a",
+   "titel": "Boss-Level A",
+   "welt": "A",
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Aufgabe",
+     "art": "aufgabe",
+     "schueler": "schueler/BossLevel_A_Endliche-Automaten.pdf",
+     "original": "original/BossLevel_A_Endliche-Automaten.docx",
+     "bytes": {
+      "schueler": 329303,
+      "original": 368590
+     }
+    },
+    {
+     "titel": "Erwartungshorizont",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/BossLevel_A_Erwartungshorizont.pdf",
+     "original": "original/BossLevel_A_Erwartungshorizont.docx",
+     "bytes": {
+      "lehrkraft": 338314,
+      "original": 333297
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-7",
+   "titel": "Level 7: Der Automat stößt an Grenzen",
+   "welt": "B",
+   "level": 7,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS07_AB_Der-Automat-stoesst-an-Grenzen.pdf",
+     "original": "original/DS07_AB_Der-Automat-stoesst-an-Grenzen.docx",
+     "bytes": {
+      "schueler": 264965,
+      "original": 148281
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS07_Folien_Der-Automat-stoesst-an-Grenzen_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS07_Folien_Der-Automat-stoesst-an-Grenzen_Notizen.pdf",
+     "original": "original/DS07_Folien_Der-Automat-stoesst-an-Grenzen.pptx",
+     "bytes": {
+      "schueler": 637618,
+      "lehrkraft": 447997,
+      "original": 569312
+     }
+    },
+    {
+     "titel": "Merkblatt M05: Grenzen endlicher Automaten",
+     "art": "merkblatt",
+     "schueler": "schueler/M05_Merkblatt_Grenzen-endlicher-Automaten.pdf",
+     "original": "original/M05_Merkblatt_Grenzen-endlicher-Automaten.docx",
+     "bytes": {
+      "schueler": 162137,
+      "original": 159475
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS07_Lehrkraft_Der-Automat-stoesst-an-Grenzen.pdf",
+     "original": "original/DS07_Lehrkraft_Der-Automat-stoesst-an-Grenzen.docx",
+     "bytes": {
+      "lehrkraft": 473309,
+      "original": 691552
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-8",
+   "titel": "Level 8: Raten erlaubt",
+   "welt": "B",
+   "level": 8,
+   "niveau": "plus",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS08_AB_Raten-erlaubt.pdf",
+     "original": "original/DS08_AB_Raten-erlaubt.docx",
+     "bytes": {
+      "schueler": 355134,
+      "original": 355534
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS08_Folien_Raten-erlaubt_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS08_Folien_Raten-erlaubt_Notizen.pdf",
+     "original": "original/DS08_Folien_Raten-erlaubt.pptx",
+     "bytes": {
+      "schueler": 748580,
+      "lehrkraft": 511479,
+      "original": 730151
+     }
+    },
+    {
+     "titel": "Merkblatt M06: NEA",
+     "art": "merkblatt",
+     "schueler": "schueler/M06_Merkblatt_NEA.pdf",
+     "original": "original/M06_Merkblatt_NEA.docx",
+     "bytes": {
+      "schueler": 176089,
+      "original": 170344
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS08_Lehrkraft_Raten-erlaubt.pdf",
+     "original": "original/DS08_Lehrkraft_Raten-erlaubt.docx",
+     "bytes": {
+      "lehrkraft": 355738,
+      "original": 264853
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-9",
+   "titel": "Level 9: Der Automat bekommt ein Gedächtnis",
+   "welt": "B",
+   "level": 9,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS09_AB_Der-Automat-bekommt-ein-Gedaechtnis.pdf",
+     "original": "original/DS09_AB_Der-Automat-bekommt-ein-Gedaechtnis.docx",
+     "bytes": {
+      "schueler": 327977,
+      "original": 218667
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS09_Folien_Der-Automat-bekommt-ein-Gedaechtnis_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS09_Folien_Der-Automat-bekommt-ein-Gedaechtnis_Notizen.pdf",
+     "original": "original/DS09_Folien_Der-Automat-bekommt-ein-Gedaechtnis.pptx",
+     "bytes": {
+      "schueler": 471270,
+      "lehrkraft": 362220,
+      "original": 365218
+     }
+    },
+    {
+     "titel": "Merkblatt M07: Kellerautomaten",
+     "art": "merkblatt",
+     "schueler": "schueler/M07_Merkblatt_Kellerautomaten.pdf",
+     "original": "original/M07_Merkblatt_Kellerautomaten.docx",
+     "bytes": {
+      "schueler": 155303,
+      "original": 88514
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS09_Lehrkraft_Der-Automat-bekommt-ein-Gedaechtnis.pdf",
+     "original": "original/DS09_Lehrkraft_Der-Automat-bekommt-ein-Gedaechtnis.docx",
+     "bytes": {
+      "lehrkraft": 468088,
+      "original": 337272
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-10",
+   "titel": "Level 10: Keller-Profis",
+   "welt": "B",
+   "level": 10,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS10_AB_Keller-Profis.pdf",
+     "original": "original/DS10_AB_Keller-Profis.docx",
+     "bytes": {
+      "schueler": 599955,
+      "original": 724873
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS10_Folien_Keller-Profis_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS10_Folien_Keller-Profis_Notizen.pdf",
+     "original": "original/DS10_Folien_Keller-Profis.pptx",
+     "bytes": {
+      "schueler": 520143,
+      "lehrkraft": 445731,
+      "original": 448127
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS10_Lehrkraft_Keller-Profis.pdf",
+     "original": "original/DS10_Lehrkraft_Keller-Profis.docx",
+     "bytes": {
+      "lehrkraft": 248545,
+      "original": 23110
+     }
+    }
+   ]
+  },
+  {
+   "id": "boss-b",
+   "titel": "Boss-Level B",
+   "welt": "B",
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Aufgabe",
+     "art": "aufgabe",
+     "schueler": "schueler/BossLevel_B_Grenzen-und-Keller.pdf",
+     "original": "original/BossLevel_B_Grenzen-und-Keller.docx",
+     "bytes": {
+      "schueler": 165700,
+      "original": 95152
+     }
+    },
+    {
+     "titel": "Erwartungshorizont",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/BossLevel_B_Erwartungshorizont.pdf",
+     "original": "original/BossLevel_B_Erwartungshorizont.docx",
+     "bytes": {
+      "lehrkraft": 259642,
+      "original": 187082
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-11",
+   "titel": "Level 11: Sprache – natürlich oder formal?",
+   "welt": "C",
+   "level": 11,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS11_AB_Sprache-natuerlich-oder-formal.pdf",
+     "original": "original/DS11_AB_Sprache-natuerlich-oder-formal.docx",
+     "bytes": {
+      "schueler": 137242,
+      "original": 17548
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS11_Folien_Sprache-natuerlich-oder-formal_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS11_Folien_Sprache-natuerlich-oder-formal_Notizen.pdf",
+     "original": "original/DS11_Folien_Sprache-natuerlich-oder-formal.pptx",
+     "bytes": {
+      "schueler": 328771,
+      "lehrkraft": 358291,
+      "original": 304375
+     }
+    },
+    {
+     "titel": "Merkblatt M08: Grammatiken",
+     "art": "merkblatt",
+     "schueler": "schueler/M08_Merkblatt_Grammatiken.pdf",
+     "original": "original/M08_Merkblatt_Grammatiken.docx",
+     "bytes": {
+      "schueler": 113789,
+      "original": 48097
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS11_Lehrkraft_Sprache-natuerlich-oder-formal.pdf",
+     "original": "original/DS11_Lehrkraft_Sprache-natuerlich-oder-formal.docx",
+     "bytes": {
+      "lehrkraft": 284908,
+      "original": 189254
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-12",
+   "titel": "Level 12: Grammatik trifft Automat",
+   "welt": "C",
+   "level": 12,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS12_AB_Grammatik-trifft-Automat.pdf",
+     "original": "original/DS12_AB_Grammatik-trifft-Automat.docx",
+     "bytes": {
+      "schueler": 226633,
+      "original": 125712
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS12_Folien_Grammatik-trifft-Automat_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS12_Folien_Grammatik-trifft-Automat_Notizen.pdf",
+     "original": "original/DS12_Folien_Grammatik-trifft-Automat.pptx",
+     "bytes": {
+      "schueler": 691665,
+      "lehrkraft": 492292,
+      "original": 660495
+     }
+    },
+    {
+     "titel": "Merkblatt M09: Reguläre Grammatik",
+     "art": "merkblatt",
+     "schueler": "schueler/M09_Merkblatt_Regulaere-Grammatik.pdf",
+     "original": "original/M09_Merkblatt_Regulaere-Grammatik.docx",
+     "bytes": {
+      "schueler": 197135,
+      "original": 165651
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS12_Lehrkraft_Grammatik-trifft-Automat.pdf",
+     "original": "original/DS12_Lehrkraft_Grammatik-trifft-Automat.docx",
+     "bytes": {
+      "lehrkraft": 448383,
+      "original": 487693
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-13",
+   "titel": "Level 13: Klammern, Spiegel, Programme",
+   "welt": "C",
+   "level": 13,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS13_AB_Klammern-Spiegel-Programme.pdf",
+     "original": "original/DS13_AB_Klammern-Spiegel-Programme.docx",
+     "bytes": {
+      "schueler": 182796,
+      "original": 18743
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS13_Folien_Klammern-Spiegel-Programme_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS13_Folien_Klammern-Spiegel-Programme_Notizen.pdf",
+     "original": "original/DS13_Folien_Klammern-Spiegel-Programme.pptx",
+     "bytes": {
+      "schueler": 896469,
+      "lehrkraft": 578448,
+      "original": 753849
+     }
+    },
+    {
+     "titel": "Merkblatt M10: Kontextfreie Grammatiken",
+     "art": "merkblatt",
+     "schueler": "schueler/M10_Merkblatt_Kontextfreie-Grammatiken.pdf",
+     "original": "original/M10_Merkblatt_Kontextfreie-Grammatiken.docx",
+     "bytes": {
+      "schueler": 241922,
+      "original": 341628
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS13_Lehrkraft_Klammern-Spiegel-Programme.pdf",
+     "original": "original/DS13_Lehrkraft_Klammern-Spiegel-Programme.docx",
+     "bytes": {
+      "lehrkraft": 484190,
+      "original": 518013
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-14",
+   "titel": "Level 14: Die Landkarte der Sprachen",
+   "welt": "C",
+   "level": 14,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS14_AB_Landkarte-der-Sprachen.pdf",
+     "original": "original/DS14_AB_Landkarte-der-Sprachen.docx",
+     "bytes": {
+      "schueler": 406617,
+      "original": 359477
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS14_Folien_Landkarte-der-Sprachen_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
+     "lehrkraft": "lehrkraft/DS14_Folien_Landkarte-der-Sprachen_Notizen.pdf",
+     "original": "original/DS14_Folien_Landkarte-der-Sprachen.pptx",
+     "bytes": {
+      "schueler": 1164832,
+      "lehrkraft": 505321,
+      "original": 1141647
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS14_Lehrkraft_Landkarte-der-Sprachen.pdf",
+     "original": "original/DS14_Lehrkraft_Landkarte-der-Sprachen.docx",
+     "bytes": {
+      "lehrkraft": 375402,
+      "original": 653282
+     }
+    }
+   ]
+  },
+  {
+   "id": "boss-c",
+   "titel": "Boss-Level C",
+   "welt": "C",
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Aufgabe",
+     "art": "aufgabe",
+     "schueler": "schueler/BossLevel_C_Formale-Sprachen.pdf",
+     "original": "original/BossLevel_C_Formale-Sprachen.docx",
+     "bytes": {
+      "schueler": 50696,
+      "original": 13317
+     }
+    },
+    {
+     "titel": "Erwartungshorizont",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/BossLevel_C_Erwartungshorizont.pdf",
+     "original": "original/BossLevel_C_Erwartungshorizont.docx",
+     "bytes": {
+      "lehrkraft": 211488,
+      "original": 245219
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-15",
+   "titel": "Level 15: Sprachdesign-Studio",
+   "welt": "D",
+   "level": 15,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS15_AB_Sprachdesign-Studio.pdf",
+     "original": "original/DS15_AB_Sprachdesign-Studio.docx",
+     "bytes": {
+      "schueler": 201149,
+      "original": 20840
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS15_Folien_Sprachdesign-Studio_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS15_Folien_Sprachdesign-Studio_Notizen.pdf",
+     "original": "original/DS15_Folien_Sprachdesign-Studio.pptx",
+     "bytes": {
+      "schueler": 396719,
+      "lehrkraft": 374652,
+      "original": 298868
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS15_Lehrkraft_Sprachdesign-Studio.pdf",
+     "original": "original/DS15_Lehrkraft_Sprachdesign-Studio.docx",
+     "bytes": {
+      "lehrkraft": 407226,
+      "original": 318645
+     }
+    }
+   ]
+  },
+  {
+   "id": "level-16",
+   "titel": "Level 16: Ausblick: Die Turingmaschine",
+   "welt": "D",
+   "level": 16,
+   "niveau": "plus",
+   "dateien": [
+    {
+     "titel": "Arbeitsblatt",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/DS16_AB_Ausblick-Turingmaschine.pdf",
+     "original": "original/DS16_AB_Ausblick-Turingmaschine.docx",
+     "bytes": {
+      "schueler": 437447,
+      "original": 392985
+     }
+    },
+    {
+     "titel": "Folien",
+     "art": "folien",
+     "schueler": "schueler/DS16_Folien_Ausblick-Turingmaschine_Handout.pdf",
+     "lehrkraft": "lehrkraft/DS16_Folien_Ausblick-Turingmaschine_Notizen.pdf",
+     "original": "original/DS16_Folien_Ausblick-Turingmaschine.pptx",
+     "bytes": {
+      "schueler": 580171,
+      "lehrkraft": 415111,
+      "original": 519226
+     }
+    },
+    {
+     "titel": "Merkblatt M11: Turingmaschine",
+     "art": "merkblatt",
+     "schueler": "schueler/M11_Merkblatt_Turingmaschine.pdf",
+     "original": "original/M11_Merkblatt_Turingmaschine.docx",
+     "bytes": {
+      "schueler": 133213,
+      "original": 85025
+     }
+    },
+    {
+     "titel": "Lehrkraft-Handreichung mit Lösungen",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/DS16_Lehrkraft_Ausblick-Turingmaschine.pdf",
+     "original": "original/DS16_Lehrkraft_Ausblick-Turingmaschine.docx",
+     "bytes": {
+      "lehrkraft": 269788,
+      "original": 147110
+     }
+    }
+   ]
+  },
+  {
+   "id": "klausur-ga",
+   "titel": "Übungsklausur Grundkurs „Fahrradverleih“",
+   "welt": null,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Klausur",
+     "art": "klausur",
+     "lehrkraft": "lehrkraft/Uebungsklausur_Grundkurs_Endliche-Automaten.pdf",
+     "original": "original/Uebungsklausur_Grundkurs_Endliche-Automaten.docx",
+     "bytes": {
+      "lehrkraft": 236863,
+      "original": 218246
+     }
+    },
+    {
+     "titel": "Erwartungshorizont",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/Uebungsklausur_Grundkurs_Erwartungshorizont.pdf",
+     "original": "original/Uebungsklausur_Grundkurs_Erwartungshorizont.docx",
+     "bytes": {
+      "lehrkraft": 265006,
+      "original": 313396
+     }
+    }
+   ]
+  },
+  {
+   "id": "klausur-ea",
+   "titel": "Übungsklausur Leistungskurs „Smart-Home-Befehle“",
+   "welt": null,
+   "niveau": "eA",
+   "dateien": [
+    {
+     "titel": "Klausur",
+     "art": "klausur",
+     "lehrkraft": "lehrkraft/Uebungsklausur_Automaten-und-Sprachen.pdf",
+     "original": "original/Uebungsklausur_Automaten-und-Sprachen.docx",
+     "bytes": {
+      "lehrkraft": 359815,
+      "original": 360659
+     }
+    },
+    {
+     "titel": "Erwartungshorizont",
+     "art": "loesung",
+     "lehrkraft": "lehrkraft/Uebungsklausur_Erwartungshorizont.pdf",
+     "original": "original/Uebungsklausur_Erwartungshorizont.docx",
+     "bytes": {
+      "lehrkraft": 337310,
+      "original": 401336
+     }
+    }
+   ]
+  },
+  {
+   "id": "einheit",
+   "titel": "Zur ganzen Einheit",
+   "welt": null,
+   "niveau": "alle",
+   "dateien": [
+    {
+     "titel": "Lernlandkarte",
+     "art": "arbeitsblatt",
+     "schueler": "schueler/00_Lernlandkarte.pdf",
+     "original": "original/00_Lernlandkarte.docx",
+     "bytes": {
+      "schueler": 158941,
+      "original": 16945
+     }
+    },
+    {
+     "titel": "Merkblatt M12: Abi-Spickzettel",
+     "art": "merkblatt",
+     "schueler": "schueler/M12_Merkblatt_Abi-Spickzettel.pdf",
+     "original": "original/M12_Merkblatt_Abi-Spickzettel.docx",
+     "bytes": {
+      "schueler": 91072,
+      "original": 16179
+     }
+    },
+    {
+     "titel": "Einheitsplanung und Ablaufplan",
+     "art": "planung",
+     "lehrkraft": "lehrkraft/00_Einheitsplanung.pdf",
+     "original": "original/00_Einheitsplanung.docx",
+     "bytes": {
+      "lehrkraft": 378811,
+      "original": 31821
+     }
+    },
+    {
+     "titel": "Planung der Erklärvideo-Reihe",
+     "art": "planung",
+     "lehrkraft": "lehrkraft/00_Videoreihe_Planung.pdf",
+     "original": "original/00_Videoreihe_Planung.docx",
+     "bytes": {
+      "lehrkraft": 549270,
+      "original": 82639
+     }
+    }
+   ]
+  }
+ ]
+}
