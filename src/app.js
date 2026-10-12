@@ -8,6 +8,13 @@ const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
 const { openDatabase } = require('./db');
+const S = require('./security');
+const { schluesselListe } = require('./jwt');
+const { createKonten } = require('./konten');
+const { createAuswertung } = require('./auswertung');
+const { ssoRoutes } = require('./routes/sso');
+const { verbundRoutes } = require('./routes/verbund');
+const { apiRoutes } = require('./routes/api');
 
 const APP_DIR = path.join(__dirname, '..', 'app');
 const VERSION = require('../package.json').version;
@@ -46,9 +53,12 @@ const WEITERLEITUNGEN = {
  * @param {string} [opts.plattformId]       PLATTFORM_ID (Standard „automatenlab“)
  * @param {string} [opts.plattformUrl]      PLATTFORM_URL (sonst aus der Anfrage)
  * @param {string} [opts.portalUrl]         PORTAL_URL (leer = Plattform läuft allein)
- * @param {string} [opts.authModus]         AUTH_MODUS laut Konfiguration (lokal | beides | portal)
+ * @param {string} [opts.authModus]         AUTH_MODUS (lokal | beides | portal); AutomatenLab hat keine lokale Anmeldung
+ * @param {string} [opts.portalPublicKey]   PORTAL_PUBLIC_KEY (PEM, auch einzeilig mit \n, ggf. mehrere Blöcke)
+ * @param {string} opts.sessionSecret       Geheimnis zum Signieren der Cookies (≥ 16 Zeichen)
  * @param {string|number|boolean} [opts.trustProxy]
  * @param {Function} [opts.log]
+ * @param {Function} [opts.now]             Uhr (ms) – für Tests
  */
 function createApp(opts) {
   const log = opts.log || (() => {});
@@ -57,6 +67,33 @@ function createApp(opts) {
   const plattformUrl = String(opts.plattformUrl || '').replace(/\/+$/, '');
   const portalUrl = String(opts.portalUrl || '').replace(/\/+$/, '');
   const katalog = opts.katalog;
+  const now = opts.now || (() => Date.now());
+  if (!opts.sessionSecret || opts.sessionSecret.length < 16) throw new Error('SESSION_SECRET fehlt oder ist zu kurz (mind. 16 Zeichen).');
+  const secret = opts.sessionSecret;
+
+  // Anmeldung über das Portal (Vertrag §5): nur mit PORTAL_URL, gültigem PORTAL_PUBLIC_KEY und AUTH_MODUS ≠ lokal
+  let publicKey = [];
+  try {
+    publicKey = opts.portalPublicKey ? schluesselListe(opts.portalPublicKey) : [];
+  } catch (e) {
+    log(`FEHLER: PORTAL_PUBLIC_KEY ist ungültig (${e.message}) – Anmeldung über das Portal abgeschaltet.`);
+  }
+  const authModus = ['lokal', 'beides', 'portal'].includes(opts.authModus) ? opts.authModus : 'portal';
+  const basis = (req) => plattformUrl || `${req.protocol}://${req.get('host')}`;
+  const sso = {
+    aktiv: !!portalUrl && publicKey.length > 0 && authModus !== 'lokal',
+    modus: authModus,
+    portalUrl,
+    plattformId,
+    publicKey,
+    basis,
+    ruecksprung: (req) => `${basis(req)}/sso/ende`
+  };
+  if (!sso.aktiv) log(`Hinweis: Anmeldung über das Portal ist aus (PORTAL_URL ${portalUrl ? 'gesetzt' : 'fehlt'}, PORTAL_PUBLIC_KEY ${publicKey.length ? 'gültig' : 'fehlt/ungültig'}, AUTH_MODUS ${authModus}).`);
+
+  const ctx = { db, now, log };
+  const konten = createKonten(ctx);
+  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog }) };
 
   const app = express();
   app.disable('x-powered-by');
@@ -79,6 +116,15 @@ function createApp(opts) {
   // gzip wie bisher (Graphviz 1,2 MB → ca. 470 KB)
   app.use(compression());
 
+  // Sitzung lesen (signiertes Cookie {k: sub, g: session_gen}); gelöschte Konten sind sofort abgemeldet
+  app.use((req, res, next) => {
+    const c = S.parseCookies(req.headers.cookie)[S.COOKIE_SITZUNG];
+    const s = c ? S.verify(c, secret) : null;
+    req.konto = s && typeof s.k === 'string' && Number.isInteger(s.g) ? konten.ausSitzung(s.k, s.g) : null;
+    if (req.konto) konten.aktiv(req.konto.sub);
+    next();
+  });
+
   /* ---------- Vertrag: Healthcheck und Manifest ---------- */
 
   app.get('/healthz', (req, res) => {
@@ -90,10 +136,8 @@ function createApp(opts) {
     }
   });
 
-  const basis = (req) => plattformUrl || `${req.protocol}://${req.get('host')}`;
-
-  // Auth-Modus im Manifest: Die Anmeldung über das Portal (SSO, Verbund-API) folgt in Phase 3. Bis dahin meldet
-  // die Plattform ehrlich „lokal“ ohne SSO – sonst würde das Portal Aufträge an noch fehlende Endpunkte schicken.
+  // Auth-Modus im Manifest: ohne eingerichtete Portal-Anmeldung ehrlich „lokal“ ohne SSO – sonst würde das Portal
+  // Aufträge an eine Plattform schicken, die Tokens nicht prüfen kann.
   const manifest = (req) => ({
     vertrag: VERTRAG,
     id: plattformId,
@@ -107,8 +151,16 @@ function createApp(opts) {
     version: VERSION,
     basis: basis(req),
     icon: '/assets/favicon.svg',
-    urls: { start: '/', gast: '/gast', themen: '/themen', lehrkraft: '/lehrer', datenschutz: '/datenschutz', healthz: '/healthz' },
-    auth: { modus: 'lokal', portal: portalUrl || null, sso: false },
+    urls: {
+      start: '/',
+      gast: '/gast',
+      themen: '/themen',
+      lehrkraft: '/lehrer',
+      datenschutz: '/datenschutz',
+      healthz: '/healthz',
+      ...(sso.aktiv ? { ssoStart: '/sso/start', ssoEnde: '/sso/ende' } : {})
+    },
+    auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
     umfang: katalog.umfang,
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
     faehigkeiten: ['gast', 'themen']
@@ -128,6 +180,10 @@ function createApp(opts) {
     res.json({ welten: katalog.welten, module: katalog.module, portal: portalUrl || null });
   });
 
+  const h = { svc, secret, sso, now, log, katalog };
+  verbundRoutes(app, h);
+  apiRoutes(app, h);
+  ssoRoutes(app, h);
   app.use('/api', (req, res) => res.status(404).json({ error: 'Unbekannte API-Route.' }));
 
   /* ---------- Vertragspfade → Hash-Routen ---------- */
@@ -169,6 +225,8 @@ function createApp(opts) {
 
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {
+    if (err && err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Ungültiges JSON.' });
+    if (err && err.type === 'entity.too.large') return res.status(413).json({ error: 'Anfrage zu groß.' });
     const status = err && Number.isInteger(err.status) ? err.status : 500;
     if (status >= 500) log(err && err.stack ? err.stack : String(err));
     const text = status >= 500 ? 'Interner Fehler.' : err.message || 'Fehler.';
@@ -178,6 +236,8 @@ function createApp(opts) {
 
   app.locals.db = db;
   app.locals.manifest = manifest;
+  app.locals.svc = svc;
+  app.locals.sso = sso;
   return app;
 }
 

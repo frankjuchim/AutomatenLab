@@ -30,7 +30,7 @@ npm run materials:build        # alle Materialien → materials/dist/Automaten_L
 5. **Keine Original-Abituraufgaben und keine fremden Buchauszüge ins Repository** (Urheberrecht). Eigene, angelehnte Varianten sind erlaubt.
 6. **Barrierefreiheit:** Tastaturbedienung, Kontraste, Großansicht „A A“ erhalten; neue Oberflächen genauso.
 7. Keine Secrets committen (`.env` ist ignoriert; Beispiel in `.env.example`). Tokens nie loggen.
-8. **Kein eigenes Login**: keine Passwörter, persönlichen Codes oder Klarnamen auf der Plattform – nur `sub`, Anzeigename, Kurs-IDs und Lernstand (Vertrag §3, §9). `src/jwt.js` und `scripts/vertrag_pruefen.js` sind unveränderte Kopien aus `frankjuchim/labs`.
+8. **Kein eigenes Login**: keine Passwörter, persönlichen Codes oder Klarnamen auf der Plattform – nur `sub`, Anzeigename, Kurs-IDs und Lernstand (Vertrag §3, §9). `src/jwt.js` und `scripts/vertrag_pruefen.js` sind unveränderte Kopien aus `frankjuchim/labs`, `src/security.js` die Fassung des Portals (nur Cookie-Name `al_s` geändert) – nicht umbauen, sondern bei Änderungen im Portal nachziehen.
 9. **Lösungen nur auf dem Server** (Vertrag §9): Lösungen, Referenzautomaten, Prüffunktionen, Tipps und Erklärungen nie in `app/` – sie liegen in `inhalte/`; Prüfung und Punkte nur serverseitig. Die Engine `app/js/engine` ist gemeinsamer Code für Browser und Server.
 
 ## Arbeitsweise

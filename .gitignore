@@ -10,3 +10,4 @@ materials/dist/
 qa/shots*/
 __pycache__/
 *.pyc
+qa/*.log

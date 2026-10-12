@@ -560,3 +560,30 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .themen-level > li { padding: 0.7rem 1rem; border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); }
 .themen-level-kopf { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: center; }
 .themen-module { margin: 0.35rem 0 0; }
+
+/* ───── Kopfzeile: Portal, Anmelden, Kontomenü (Vertrag InfoLabs §5/§9) ───── */
+.konto-tools { display: contents; }
+.site-header .header-btn { color: #fff; min-height: var(--touch); padding: 0 0.7rem; border-color: rgba(255,255,255,0.5); background: transparent; text-decoration: none; display: inline-flex; align-items: center; }
+.site-header .header-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.site-header .header-login { border-color: #fff; font-weight: 700; }
+.konto-menu { position: relative; }
+.konto-menu > summary { list-style: none; cursor: pointer; }
+.konto-menu > summary::-webkit-details-marker { display: none; }
+.konto-menu > summary::after { content: ' ▾'; }
+.konto-name { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.konto-liste { position: absolute; right: 0; top: calc(100% + 0.35rem); z-index: 50; list-style: none; margin: 0; padding: 0.35rem; min-width: 13rem; background: var(--surface); border: 1px solid var(--teal-soft); border-radius: var(--r-m); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.konto-liste a { display: block; padding: 0.6rem 0.8rem; color: var(--ink); text-decoration: none; border-radius: 6px; min-height: var(--touch); box-sizing: border-box; }
+.konto-liste a:hover, .konto-liste a:focus-visible { background: var(--teal-mist); }
+@media (max-width: 600px) { .header-btn-text { display: none; } .konto-name { max-width: 6.5rem; } }
+.kurs-liste { list-style: none; padding: 0; display: grid; gap: 0.6rem; }
+.kurs-liste > li { padding: 0.8rem 1rem; border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); }
+@media (max-width: 480px) {
+  .site-header:has(.konto-tools > *) .brand-name { display: none; } /* Logo bleibt, Link heißt weiter „AutomatenLab – zur Übersicht“ */
+  .site-header .header-tools { gap: 0.35rem; }
+  .site-header .header-btn { padding: 0 0.55rem; }
+}
+@media (max-width: 360px) {
+  .site-header .header-btn, .site-header .btn-big-toggle { padding: 0 0.4rem; }
+  .site-header .header-tools { gap: 0.25rem; }
+  .konto-name { max-width: 4.5rem; }
+}
