@@ -2,6 +2,9 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-12 · Eigenes Erscheinungsbild mit Weltfarben und „Automaten-Effekten“
+AutomatenLab behält sein eigenes Design (Karopapier, Teal/Ocker, Atkinson Hyperlegible) und ergänzt Weltfarben (A Teal, B Ocker, C Blau, D Aubergine) sowie wenige Effekte, die fachlich etwas zeigen: ein kleiner DEA liest im Kopf der Startseite „aab“ und akzeptiert, das gewählte Level pulsiert wie ein aktiver Zustand, „Richtig“ und Abzeichen erscheinen mit Doppelkreis (Endzustand). Begründung: Frank möchte, dass sich das Lab von den anderen abhebt. Barrierefreiheit: reine CSS-Animationen, endlich (dreimal) bzw. anhaltbar, aus bei `prefers-reduced-motion`, Text gibt es immer auch ohne Animation. Verworfen: Konfetti/Partikel (lenkt ab, ohne fachlichen Bezug).
+
 ## 2026-10-12 · Prüfung auf dem Server: Aufbau und Punkte (PR 3)
 Lösungsdaten in `inhalte/` (ES-Module, nur vom Server geladen), reine Prüflogik in `app/js/engine/pruefer.js` (gemeinsam für Server und Demo-Aufgaben), Lernstand in `fortschritt`/`abzeichen` je `sub`. Antwortoptionen tragen HMAC-Kennungen statt Positionen. Punkte nach §9 (10/20/30, Formel); dadurch ändern sich die bisherigen Werte: Baukasten 20/30/40 → 10/20/30, Detektiv nach Fallnummer gestuft (1–4/5–8/9–12) statt 30/20/10 nach Versuchen, Quiz = Anteil im ersten Durchgang statt Bestwert. Begründung: Vergleichbarkeit im Portal und Schutz vor Manipulation (Entscheidung V1). Gast-Fortschritt im Browser wird nicht übernommen (Gäste sehen nur Demo-Aufgaben). Übergang: Module, die noch im Browser prüfen, speichern bis PR 4/5 weiter lokal; angemeldet zählen in der Kopfzeile nur die Server-Punkte.
 

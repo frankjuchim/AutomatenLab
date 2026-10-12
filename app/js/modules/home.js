@@ -10,6 +10,7 @@ import { BADGES } from '../data/badges.js';
 import { progress } from '../core/progress.js';
 import { api } from '../core/api.js';
 import { sitzung, anmeldeLink } from '../core/sitzung.js';
+import { heroAutomat } from '../components/hero-automat.js';
 
 let katalogCache = null;
 /** Öffentlicher Aufgabenkatalog des Servers (Titel, Stufe, Punkte – keine Lösungen); offline: leer. */
@@ -98,7 +99,7 @@ export default {
         chain.append(h('li', { class: ['level-step', wi === 0 && i === 0 && 'is-first', i === 0 && wi > 0 && 'is-continued'] },
           btn, h('span', { class: 'level-name', 'aria-hidden': 'true' }, LEVELS[n], typ !== 'pflicht' ? h('span', { class: `type-tag type-${typ}` }, LEVEL_TYPE_LABEL[typ]) : null, boss ? h('span', { class: 'boss-tag' }, 'Boss-Level (Extra)') : null)));
       });
-      map.append(h('section', { class: 'world-row', role: 'listitem', 'aria-labelledby': `welt-${w.id}` },
+      map.append(h('section', { class: 'world-row', 'data-welt': w.id, role: 'listitem', 'aria-labelledby': `welt-${w.id}` },
         h('h3', { class: 'world-label', id: `welt-${w.id}` }, h('span', { class: 'world-letter' }, `Welt ${w.id}`), h('span', { class: 'world-title' }, w.title)),
         h('div', { class: 'chain-scroller' }, chain)));
     });
@@ -112,7 +113,7 @@ export default {
       const grid = h('ul', { class: 'tile-grid' });
       for (const m of mods) {
         const status = h('span', { class: 'tile-status' });
-        const tile = h('li', { class: ['tile', m.load ? 'is-ready' : 'is-sketch'] },
+        const tile = h('li', { class: ['tile', m.load ? 'is-ready' : 'is-sketch'], 'data-welt': m.world ?? 'alle' },
           h('a', { class: 'tile-link', href: ctx.link(m.route) },
             h('span', { class: 'tile-title' }, m.title),
             h('span', { class: 'tile-blurb' }, m.blurb),
@@ -123,7 +124,7 @@ export default {
         grid.append(tile);
         if (m.load && STATUS[m.route]) STATUS[m.route]().then((text) => { status.textContent = text; }).catch(() => {});
       }
-      catalogue.append(h('section', { class: 'catalogue-group' }, h('h3', null, g.title), grid));
+      catalogue.append(h('section', { class: 'catalogue-group', 'data-welt': g.id ?? 'alle' }, h('h3', null, g.title), grid));
     }
 
     // ───── Fortschritt ─────
@@ -176,9 +177,11 @@ export default {
     clear(el,
       gastSlot,
       h('section', { class: 'hero' },
-        h('div', { class: 'hero-text' },
-          h('h1', { class: 'hero-title' }, 'Maschinen, die Sprache verstehen'),
-          h('p', { class: 'hero-lead' }, 'Neun Pflicht-Level, drei Vertiefungen und Bonus-Level für Neugierige – ein Ziel: Automaten und formale Sprachen so sicher beherrschen, dass dich im Abitur nichts überrascht. Tippe auf ein Level, um die passenden Module zu sehen.')),
+        h('div', { class: 'hero-top' },
+          h('div', { class: 'hero-text' },
+            h('h1', { class: 'hero-title' }, 'Maschinen, die ', h('span', { class: 'hero-mark' }, 'Sprache'), ' verstehen'),
+            h('p', { class: 'hero-lead' }, 'Neun Pflicht-Level, drei Vertiefungen und Bonus-Level für Neugierige – ein Ziel: Automaten und formale Sprachen so sicher beherrschen, dass dich im Abitur nichts überrascht. Tippe auf ein Level, um die passenden Module zu sehen.')),
+          heroAutomat()),
         h('div', { class: 'map-panel' }, map,
           h('p', { class: 'map-legend' }, h('span', { class: 'legend-item legend-pflicht' }, 'Pflicht'), h('span', { class: 'legend-item legend-vertiefung' }, 'Vertiefung'), h('span', { class: 'legend-item legend-bonus' }, 'Bonus')),
           info)),
