@@ -8,14 +8,25 @@ const ALL_LEVELS = WORLDS.flatMap((w) => w.levels);
 import { MODULES } from './manifest.js';
 import { BADGES } from '../data/badges.js';
 import { progress } from '../core/progress.js';
+import { api } from '../core/api.js';
+import { sitzung, anmeldeLink } from '../core/sitzung.js';
+import { heroAutomat } from '../components/hero-automat.js';
+
+let katalogCache = null;
+/** Öffentlicher Aufgabenkatalog des Servers (Titel, Stufe, Punkte – keine Lösungen); offline: leer. */
+const katalog = async (modul) => {
+  katalogCache ??= api('GET', '/api/katalog').then((r) => r.aufgaben).catch(() => []);
+  return (await katalogCache).filter((a) => a.modul === modul);
+};
 
 /** Fortschrittszeile je Modul: wie viel schon gelöst ist (nur IDs zählen, die es in den Daten gibt). */
 const solvedOf = (modul, ids) => ids.filter((id) => progress.isSolved(modul, id)).length;
 const geloest = (n, total, was = 'gelöst') => `${n} von ${total} ${was}`;
 const STATUS = {
   arena: async () => { const best = Math.max(...[1, 2, 3].map((s) => progress.best(`arena:${s}`) ?? 0)); return best ? `Rekord ${best} Punkte` : ''; },
-  detektiv: async () => { const { DETEKTIV_FAELLE: F } = await import('../data/detektiv.js'); return geloest(solvedOf('detektiv', F.map((_, i) => `fall-${i + 1}`)), F.length); },
-  baukasten: async () => { const { BAUKASTEN_CHALLENGES: C } = await import('../data/baukasten.js'); return geloest(solvedOf('baukasten', C.map((c) => c.id)), C.length); },
+  // Module mit Prüfung auf dem Server: Aufgabenliste aus dem öffentlichen Katalog (ohne Lösungen)
+  detektiv: async () => { const F = await katalog('detektiv'); return geloest(solvedOf('detektiv', F.map((f) => `fall-${f.nr}`)), F.length); },
+  baukasten: async () => { const C = await katalog('baukasten'); return geloest(solvedOf('baukasten', C.map((c) => c.schluessel)), C.length); },
   minimierer: async () => { const { MINIMIERER_AUFGABEN: A } = await import('../data/minimierer.js'); return geloest(solvedOf('minimierer', A.map((x) => x.id)), A.length); },
   mealy: async () => { const { MEALY_AUFGABEN: A } = await import('../data/mealy.js'); return geloest(solvedOf('mealy', A.map((x) => x.id)), A.length, 'repariert'); },
   ueberliste: async () => {
@@ -39,9 +50,9 @@ const STATUS = {
   sortierer: async () => { const b = progress.best('sortierer:runde'); return b != null ? `Rekord ${b} richtig einsortiert` : ''; },
   turing: async () => { const { TURING_CHALLENGES: C } = await import('../data/turing.js'); return geloest(solvedOf('turing', C.map((x) => x.id)), C.length); },
   quiz: async () => {
-    const { QUIZ_WELTEN: W, QUIZ_DS: D } = await import('../data/quiz.js');
-    const done = (keys) => keys.filter((k) => progress.best(`quiz:${k}`) != null).length;
-    const w = Object.keys(W).map((k) => `welt-${k}`); const d = Object.keys(D).map((k) => `ds-${k}`);
+    const Q = await katalog('quiz');
+    const done = (keys) => keys.filter((k) => progress.best(k) != null).length;
+    const w = Q.filter((a) => a.id.startsWith('quiz:welt-')).map((a) => a.id); const d = Q.filter((a) => a.id.startsWith('quiz:ds-')).map((a) => a.id);
     return `Welten ${done(w)}/${w.length} · Exit-Tickets ${done(d)}/${d.length}`;
   },
 };
@@ -88,7 +99,7 @@ export default {
         chain.append(h('li', { class: ['level-step', wi === 0 && i === 0 && 'is-first', i === 0 && wi > 0 && 'is-continued'] },
           btn, h('span', { class: 'level-name', 'aria-hidden': 'true' }, LEVELS[n], typ !== 'pflicht' ? h('span', { class: `type-tag type-${typ}` }, LEVEL_TYPE_LABEL[typ]) : null, boss ? h('span', { class: 'boss-tag' }, 'Boss-Level (Extra)') : null)));
       });
-      map.append(h('section', { class: 'world-row', role: 'listitem', 'aria-labelledby': `welt-${w.id}` },
+      map.append(h('section', { class: 'world-row', 'data-welt': w.id, role: 'listitem', 'aria-labelledby': `welt-${w.id}` },
         h('h3', { class: 'world-label', id: `welt-${w.id}` }, h('span', { class: 'world-letter' }, `Welt ${w.id}`), h('span', { class: 'world-title' }, w.title)),
         h('div', { class: 'chain-scroller' }, chain)));
     });
@@ -102,7 +113,7 @@ export default {
       const grid = h('ul', { class: 'tile-grid' });
       for (const m of mods) {
         const status = h('span', { class: 'tile-status' });
-        const tile = h('li', { class: ['tile', m.load ? 'is-ready' : 'is-sketch'] },
+        const tile = h('li', { class: ['tile', m.load ? 'is-ready' : 'is-sketch'], 'data-welt': m.world ?? 'alle' },
           h('a', { class: 'tile-link', href: ctx.link(m.route) },
             h('span', { class: 'tile-title' }, m.title),
             h('span', { class: 'tile-blurb' }, m.blurb),
@@ -113,7 +124,7 @@ export default {
         grid.append(tile);
         if (m.load && STATUS[m.route]) STATUS[m.route]().then((text) => { status.textContent = text; }).catch(() => {});
       }
-      catalogue.append(h('section', { class: 'catalogue-group' }, h('h3', null, g.title), grid));
+      catalogue.append(h('section', { class: 'catalogue-group', 'data-welt': g.id ?? 'alle' }, h('h3', null, g.title), grid));
     }
 
     // ───── Fortschritt ─────
@@ -132,19 +143,45 @@ export default {
     renderProgress();
     const unsub = progress.subscribe(renderProgress);
 
-    const resetBtn = h('button', { type: 'button', class: 'btn btn-danger-ghost', onclick: () => {
-      if (window.confirm('Wirklich alle Punkte, gelösten Challenges und Abzeichen auf diesem Gerät löschen?')) {
+    // Gespeichert wird je nach Sitzung: angemeldet auf dem Server (Prüf-Module), sonst nur im Browser dieses Geräts.
+    const speicherText = h('p', { class: 'muted' }, 'Gespeichert wird nur auf diesem Gerät, ohne Namen und ohne Cookies. Auf einem anderen iPad beginnst du bei null.');
+    const resetSlot = h('p');
+    const resetBtn = (angemeldet) => h('button', { type: 'button', class: 'btn btn-danger-ghost', onclick: () => {
+      const frage = angemeldet
+        ? 'Den Fortschritt auf diesem Gerät löschen (Module, die noch im Browser prüfen, und Entwürfe)? Punkte und Abzeichen auf dem Server bleiben erhalten.'
+        : 'Wirklich alle Punkte, gelösten Challenges und Abzeichen auf diesem Gerät löschen?';
+      if (window.confirm(frage)) {
         progress.reset();
-        ctx.toast('Dein Fortschritt wurde zurückgesetzt.', { type: 'info' });
+        ctx.toast(angemeldet ? 'Der Fortschritt auf diesem Gerät wurde zurückgesetzt.' : 'Dein Fortschritt wurde zurückgesetzt.', { type: 'info' });
         ctx.navigate('', {}, { replace: true });
       }
-    } }, 'Fortschritt zurücksetzen');
+    } }, angemeldet ? 'Fortschritt auf diesem Gerät zurücksetzen' : 'Fortschritt zurücksetzen');
+    clear(resetSlot, resetBtn(false));
+
+    // Gastmodus: Hinweis auf Demo-Aufgaben und Anmeldung (nur wenn die Portal-Anmeldung eingerichtet ist)
+    const gastSlot = h('div');
+    sitzung().then(({ konto, anmeldung }) => {
+      if (anmeldung && !konto) clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
+        h('span', null, h('strong', null, 'Du bist nicht angemeldet. '), 'Ohne Anmeldung kannst du je Modul eine Aufgabe ausprobieren.'),
+        h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren'),
+        h('a', { class: 'btn', href: anmeldeLink('/') }, 'Anmelden über InfoLabs')));
+      else if (konto?.rolle === 'schueler' && !(konto.kurse ?? []).length) clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
+        h('span', null, h('strong', null, 'Noch nicht freigeschaltet. '), 'Deine Lehrkraft schaltet AutomatenLab im Portal für euren Kurs frei – bis dahin gibt es die Demo-Aufgaben.'),
+        h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren')));
+      if (konto) {
+        speicherText.textContent = 'Punkte und Abzeichen der Aufgaben mit Prüfung speichert der Server unter deinem Konto – sie zählen im Portal und für deine Lehrkraft. Module, die noch im Browser prüfen, speichern vorerst nur auf diesem Gerät.';
+        clear(resetSlot, resetBtn(true));
+      }
+    });
 
     clear(el,
+      gastSlot,
       h('section', { class: 'hero' },
-        h('div', { class: 'hero-text' },
-          h('h1', { class: 'hero-title' }, 'Maschinen, die Sprache verstehen'),
-          h('p', { class: 'hero-lead' }, 'Neun Pflicht-Level, drei Vertiefungen und Bonus-Level für Neugierige – ein Ziel: Automaten und formale Sprachen so sicher beherrschen, dass dich im Abitur nichts überrascht. Tippe auf ein Level, um die passenden Module zu sehen.')),
+        h('div', { class: 'hero-top' },
+          h('div', { class: 'hero-text' },
+            h('h1', { class: 'hero-title' }, 'Maschinen, die ', h('span', { class: 'hero-mark' }, 'Sprache'), ' verstehen'),
+            h('p', { class: 'hero-lead' }, 'Neun Pflicht-Level, drei Vertiefungen und Bonus-Level für Neugierige – ein Ziel: Automaten und formale Sprachen so sicher beherrschen, dass dich im Abitur nichts überrascht. Tippe auf ein Level, um die passenden Module zu sehen.')),
+          heroAutomat()),
         h('div', { class: 'map-panel' }, map,
           h('p', { class: 'map-legend' }, h('span', { class: 'legend-item legend-pflicht' }, 'Pflicht'), h('span', { class: 'legend-item legend-vertiefung' }, 'Vertiefung'), h('span', { class: 'legend-item legend-bonus' }, 'Bonus')),
           info)),
@@ -154,9 +191,9 @@ export default {
       h('section', { class: 'page-section progress-section', 'aria-labelledby': 'fortschritt-h' },
         h('div', { class: 'progress-head' },
           h('h2', { id: 'fortschritt-h' }, 'Dein Fortschritt'), pointsBig),
-        h('p', { class: 'muted' }, 'Gespeichert wird nur auf diesem Gerät, ohne Namen und ohne Cookies. Auf einem anderen iPad beginnst du bei null.'),
+        speicherText,
         badgeList,
-        h('p', null, resetBtn)));
+        resetSlot));
 
     return () => unsub();
   },

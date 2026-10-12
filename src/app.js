@@ -12,6 +12,7 @@ const S = require('./security');
 const { schluesselListe } = require('./jwt');
 const { createKonten } = require('./konten');
 const { createAuswertung } = require('./auswertung');
+const { createLernen } = require('./lernen');
 const { ssoRoutes } = require('./routes/sso');
 const { verbundRoutes } = require('./routes/verbund');
 const { apiRoutes } = require('./routes/api');
@@ -53,7 +54,7 @@ function normalisiereSchluessel(roh) {
 
 /** Vertragspfade (§7 urls) → Hash-Routen der App. Die bisherigen Hash-Routen bleiben unverändert. */
 const WEITERLEITUNGEN = {
-  '/gast': '/#/',
+  '/gast': '/#/gast',
   '/themen': '/#/themen',
   '/lehrer': '/#/lehrkraft',
   '/datenschutz': '/#/datenschutz'
@@ -64,6 +65,7 @@ const WEITERLEITUNGEN = {
  * @param {object} opts
  * @param {string} opts.dbFile              SQLite-Datei oder ':memory:'
  * @param {object} opts.katalog             Ergebnis von ladeKatalog() (src/inhalte.js)
+ * @param {object} opts.aufgaben            Ergebnis von ladeAufgaben(sessionSecret) (src/aufgaben)
  * @param {string} [opts.plattformId]       PLATTFORM_ID (Standard „automatenlab“)
  * @param {string} [opts.plattformUrl]      PLATTFORM_URL (sonst aus der Anfrage)
  * @param {string} [opts.portalUrl]         PORTAL_URL (leer = Plattform läuft allein)
@@ -114,7 +116,7 @@ function createApp(opts) {
 
   const ctx = { db, now, log };
   const konten = createKonten(ctx);
-  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog }) };
+  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog }), lernen: createLernen(ctx, { aufgaben: opts.aufgaben }) };
 
   const app = express();
   app.disable('x-powered-by');

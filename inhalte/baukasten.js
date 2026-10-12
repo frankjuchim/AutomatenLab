@@ -13,8 +13,8 @@
 //   tipp       optionaler Hinweis (aufklappbar)
 //   pruefe     optional: Prädikat auf dem Wort (Array von Symbolen) – nur für die automatischen Tests
 
-import { nfa, subsetConstruction } from '../engine/nfa.js';
-import { minimalWithImplicitError, complementDFA, normalizeDFA } from '../engine/dfa.js';
+import { nfa, subsetConstruction } from '../app/js/engine/nfa.js';
+import { minimalWithImplicitError, complementDFA, normalizeDFA } from '../app/js/engine/dfa.js';
 
 export const STUFEN = {
   1: { name: 'Basis', text: 'Ein Baustein: Präfix, Teilwort, Endung, Zählen' },

@@ -9,8 +9,8 @@ import assert from 'node:assert/strict';
 import { dfa, runDFA, randomWord, equivalent } from '../js/engine/dfa.js';
 import { enumerateWords, makeRng } from '../js/engine/tokenize.js';
 import { ARENA_AUTOMATEN, ARENA_LEVELS } from '../js/data/arena.js';
-import { DETEKTIV_FAELLE } from '../js/data/detektiv.js';
-import { BAUKASTEN_CHALLENGES } from '../js/data/baukasten.js';
+import { DETEKTIV_FAELLE } from '../../inhalte/detektiv.js';
+import { BAUKASTEN_CHALLENGES } from '../../inhalte/baukasten.js';
 import { MODULES } from '../js/modules/manifest.js';
 import { BADGES } from '../js/data/badges.js';
 

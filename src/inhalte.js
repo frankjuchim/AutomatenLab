@@ -6,7 +6,14 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const APP_JS = path.join(__dirname, '..', 'app', 'js');
-const lade = (rel) => import(pathToFileURL(path.join(APP_JS, rel)).href);
+const INHALTE = path.join(__dirname, '..', 'inhalte');
+// Module mit Prüfung auf dem Server: Daten samt Lösungen liegen in inhalte/ (nie ausgeliefert)
+const SERVER_DATEN = new Set(['baukasten', 'detektiv', 'quiz']);
+const lade = (rel) => {
+  const m = /^data\/(\w+)\.js$/.exec(rel);
+  const datei = m && SERVER_DATEN.has(m[1]) ? path.join(INHALTE, `${m[1]}.js`) : path.join(APP_JS, rel);
+  return import(pathToFileURL(datei).href);
+};
 
 /** Welten A–D: im Verbund als Zahl `nr` 1–4 mit Anzeigekennung `kennung` (Vertragsvorschlag V4). */
 const WELT_FARBEN = { A: '#0E6455', B: '#B26A0F', C: '#3D5A99', D: '#7A3E65' };

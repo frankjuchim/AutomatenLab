@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { MODULES } from '../js/modules/manifest.js';
 import { WORLDS } from '../js/data/worlds.js';
-import { BAUKASTEN_CHALLENGES } from '../js/data/baukasten.js';
+import { BAUKASTEN_CHALLENGES } from '../../inhalte/baukasten.js';
 import { ARENA_AUTOMATEN } from '../js/data/arena.js';
 import { KELLER_AUTOMATEN } from '../js/data/keller.js';
 import { TURING_PROGRAMME } from '../js/data/turing.js';
@@ -35,7 +35,7 @@ test('README: Routenliste vollständig, IDs existieren', () => {
   const mainJs = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
   const special = (r) => new RegExp(`^\\s*${r}: \\(\\) => import\\(`, 'm').test(mainJs);
   for (const r of routes) assert.ok(r === '' || MODULES.some((m) => m.route === r) || special(r), `README nennt unbekannte Route #/${r}`);
-  for (const r of ['themen', 'datenschutz', 'lehrkraft']) assert.ok(routes.has(r) && special(r), `Sonderseite #/${r}`);
+  for (const r of ['themen', 'datenschutz', 'lehrkraft', 'gast']) assert.ok(routes.has(r) && special(r), `Sonderseite #/${r}`);
   // Deep-Link-IDs aus der README gegen die Daten prüfen
   const zeile = (prefix) => readme.split('\n').find((l) => l.startsWith(prefix)) ?? '';
   const ids = (l) => [...l.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1]);

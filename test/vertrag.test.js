@@ -58,7 +58,7 @@ test('Pflicht-URLs aus dem Manifest antworten (< 400); Vertragspfade führen auf
     assert.ok(r.status < 400, `${k} ${m.urls[k]} → ${r.status}`);
   }
   assert.equal((await request(app).get('/themen')).headers.location, '/#/themen');
-  assert.equal((await request(app).get('/gast')).headers.location, '/#/');
+  assert.equal((await request(app).get('/gast')).headers.location, '/#/gast');
   assert.equal((await request(app).get('/lehrer')).headers.location, '/#/lehrkraft');
   assert.equal((await request(app).get('/datenschutz')).headers.location, '/#/datenschutz');
 });

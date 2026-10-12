@@ -35,7 +35,7 @@ Neu kommen Server-Pfade (Vertrag) und Hash-Routen (Oberfläche) hinzu:
 | Pfad | Zweck | Umsetzung |
 |---|---|---|
 | `/` | Start (bisherige App) | `app/index.html` |
-| `/gast` | Gastmodus mit Demo-Aufgaben (§4, Manifest `urls.gast`) | Weiterleitung auf `/#/` (bis die Demo-Seite `#/gast` steht, siehe §3) |
+| `/gast` | Gastmodus mit Demo-Aufgaben (§4, Manifest `urls.gast`) | Weiterleitung auf `/#/gast` |
 | `/themen` | Themenseite ohne Lösungen (`urls.themen`) | Weiterleitung auf `/#/themen` (neu: Welten, Level, Module, Arbeitsblatt-Bezug) |
 | `/lehrer` | Lehrkraft-Bereich (`urls.lehrkraft`) | Weiterleitung auf `/#/lehrkraft` (ohne Sitzung → `/sso/start?ziel=/lehrer`) |
 | `/datenschutz` | Besonderheiten der Plattform + Link auf `<PORTAL_URL>/datenschutz` (§3) | Weiterleitung auf `/#/datenschutz` |
@@ -53,6 +53,8 @@ Neu kommen Server-Pfade (Vertrag) und Hash-Routen (Oberfläche) hinzu:
   Ohne Sitzung zeigt die App einen kurzen Hinweis und leitet über `/sso/start?ziel=/%23/<route>` zum Portal; nach der
   Anmeldung landet man genau auf der verlinkten Aufgabe. Im Unterricht sind die SuS über das Portal angemeldet
   (Sitzung 30 Tage), der QR-Code führt also direkt zur Aufgabe.
+* Schüler ohne freigeschalteten Kurs (§4, die Prüf-API antwortet 403) und ein Server ohne eingerichtete Anmeldung
+  (`PORTAL_URL` leer) sehen ebenfalls nur die Demo-Aufgaben – die App fällt nie auf „alles offen“ zurück.
 * Themenseite (`/themen`), Datenschutz und Übersicht sind öffentlich – ohne Lösungen.
 
 ## 4. Konfiguration (§8)
@@ -123,6 +125,9 @@ Bisher liegen alle Inhalte samt Lösungen als JavaScript in `app/js/data` und we
 Freie Modi und Simulatoren (Baukasten frei, Grammatik frei, Turing-Programme, NEA-/Keller-Simulation ohne Aufgabe)
 bringen keine Punkte und bleiben im Browser.
 
+**Stand:** Level-Quiz, Sprach-Detektiv und Automaten-Baukasten prüfen auf dem Server (PR 3); Format, IDs, Punkte und
+API: `docs/AUFGABENFORMAT.md`. Die übrigen Module folgen in PR 4/5.
+
 ## 7. Weitere Vertragspunkte
 
 * **V3 – Fallen-Liste P1–P10:** Entwurf in `docs/einheit/FALLEN.md` (zur Freigabe durch Frank),
@@ -130,6 +135,12 @@ bringen keine Punkte und bleiben im Browser.
 * **V4 – Weltkennungen:** umgesetzt. Manifest und Kursübersicht führen `nr` 1–4 und das zusätzliche Feld
   `kennung` (`"A"` … `"D"`); neue Felder sind nach §7 erlaubt. Vorschlag zur Klarstellung in `VERTRAG.md` §7 (für die
   Portal-Session): „`welten[].kennung` (KANN): Anzeigekennung der Welt, falls sie von `nr` abweicht (z. B. `"A"`).“
+* **„Lösung zeigen“ (§9 Sicherheit):** Wie in Algo Quest kann eine offene Aufgabe aufgegeben werden: Sie wird
+  endgültig „angesehen“ (0 Punkte, auch nach späterem Selbstlösen – „nachgelöst“ zählt nur als gelöst), erst dann
+  liefert der Server Lösung und Erklärung. Das lesen wir als „nach dem Lösen“ im Sinn von „nach Abschluss der
+  Aufgabe“. Vorschlag zur Klarstellung in `VERTRAG.md` §9 (für die Portal-Session, Nebenversion): „Lösungen,
+  Erklärungen und nicht abgerufene Tipps nur serverseitig und erst nach dem Lösen **oder Aufgeben („Lösung zeigen“,
+  danach 0 Punkte für diese Aufgabe)**.“
 * **Farben (§9 Oberfläche, SOLL):** AutomatenLab führt eigene Farben (Grün-Petrol `#0E6455`, Ocker `#B26A0F`, Schrift
   Atkinson Hyperlegible, Großansicht „A A“) – von Frank so entschieden. Plattformfarbe im Manifest `#0E6455`. Der Link
   „⌂ Portal“ kommt mit der Anmeldung in die Kopfzeile.

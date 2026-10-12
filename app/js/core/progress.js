@@ -1,5 +1,8 @@
-// Fortschritt (gelöste Challenges, Punkte, Abzeichen, Bestwerte) – NUR lokal im Browser (localStorage).
-// Keine Cookies, kein Server. Funktioniert auch ohne localStorage (dann nur bis zum Neuladen).
+// Fortschritt (gelöste Challenges, Punkte, Abzeichen, Bestwerte).
+// • Gäste und Module mit Prüfung im Browser: lokal (localStorage). Funktioniert auch ohne localStorage (bis zum Neuladen).
+// • Angemeldet (Portal InfoLabs): Für Module mit Prüfung auf dem Server (Vertrag §9) kommt der Stand vom Server
+//   (GET /api/lernstand, intern über progress._server()). Diese Module lösen nur über die Prüf-API; solve()/award()
+//   rufen sie nicht auf. Die öffentliche API unten bleibt unverändert.
 //
 // API:
 //   progress.points                        aktuelle Punktzahl
@@ -31,6 +34,10 @@ function load() {
 let state = load();
 const listeners = new Set();
 const badgeListeners = new Set();
+// Lernstand vom Server (nur angemeldet): { module: Set, punkte, solved, best, badges }
+let server = null;
+const vomServer = (modul) => !!server && server.module.has(modul);
+const badgeModul = (id) => String(id).split('-')[0];
 
 function save() {
   try { window.localStorage?.setItem(KEY, JSON.stringify(state)); } catch { /* privater Modus o. Ä. – egal */ }
@@ -38,10 +45,11 @@ function save() {
 }
 
 export const progress = {
-  get points() { return state.points; },
-  get badges() { return [...state.badges]; },
-  isSolved: (modul, id) => !!state.solved[`${modul}:${id}`],
-  solvedIds: (modul) => Object.keys(state.solved).filter((k) => k.startsWith(`${modul}:`)).map((k) => k.slice(modul.length + 1)),
+  // Angemeldet zählen die Punkte des Servers (die einzigen, die das Portal und die Lehrkraft sehen)
+  get points() { return server ? server.punkte : state.points; },
+  get badges() { return server ? [...new Set([...state.badges.filter((b) => !vomServer(badgeModul(b))), ...server.badges])] : [...state.badges]; },
+  isSolved: (modul, id) => (vomServer(modul) ? !!server.solved[`${modul}:${id}`] : !!state.solved[`${modul}:${id}`]),
+  solvedIds: (modul) => Object.keys(vomServer(modul) ? server.solved : state.solved).filter((k) => k.startsWith(`${modul}:`)).map((k) => k.slice(modul.length + 1)),
   solve(modul, id, punkte = 0) {
     const k = `${modul}:${id}`;
     const first = !state.solved[k];
@@ -49,12 +57,12 @@ export const progress = {
     return { first };
   },
   addPoints(n) { if (n > 0) { state.points += n; save(); } },
-  best: (key) => state.best[key] ?? null,
+  best: (key) => (vomServer(String(key).split(':')[0]) ? server.best[key] ?? null : state.best[key] ?? null),
   setBest(key, value) {
     if (state.best[key] == null || value > state.best[key]) { state.best[key] = value; save(); return true; }
     return false;
   },
-  hasBadge: (id) => state.badges.includes(id),
+  hasBadge: (id) => (vomServer(badgeModul(id)) ? server.badges.includes(id) : state.badges.includes(id)),
   award(id) {
     if (state.badges.includes(id)) return false;
     state.badges.push(id); save();
@@ -69,4 +77,16 @@ export const progress = {
   reset() { const prefs = state.prefs; state = { ...empty(), prefs }; save(); },
   subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   onBadge(fn) { badgeListeners.add(fn); return () => badgeListeners.delete(fn); },
+
+  // ── intern (Kern der App, nicht für Module) ──
+  /** Lernstand vom Server übernehmen (null = abgemeldet/Gast). */
+  _server(ls) {
+    server = ls ? { module: new Set(ls.module), punkte: ls.punkte, solved: ls.solved, best: ls.best, badges: ls.badges } : null;
+    for (const fn of listeners) { try { fn(state); } catch (e) { console.error(e); } }
+  },
+  get _angemeldet() { return !!server; },
+  /** Neu verdiente Abzeichen aus einer Server-Antwort anzeigen. */
+  _abzeichen(liste) {
+    for (const b of liste ?? []) for (const fn of badgeListeners) fn({ id: b.id, titel: b.titel, text: b.text });
+  },
 };

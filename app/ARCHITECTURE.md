@@ -81,10 +81,11 @@ Notation verbindlich nach PLAN.md Abschnitt 1 (Endzustände = `accepting`/F, Kel
 | `--reject` / `--reject-soft` | #A8322B / #F9E3E0 | „abgelehnt“, Fehler, Gegenbeispiele |
 | `--ink` / `--ink-2` / `--line` | #15302B / #4B625D / #C3D4CF | Text, Graph-Linien / Nebentext / Rahmen |
 | `--paper` / `--grid` / `--surface` | #F3F8F6 / #E0EBE8 / #FFF | Karopapier-Hintergrund / Karolinien / Flächen |
+| `--welt-a … --welt-d`, `--welt` | #0E6455 / #B26A0F / #3D5A99 / #7A3E65 | Weltfarben (wie `WELT_FARBEN` in `src/inhalte.js`); `data-welt="A"` … setzt `--welt` für Kachel-Oberkante, Weltname, Gruppenpunkt |
 | `--font` / `--mono` | Atkinson Hyperlegible Next / Mono (lokal) | Fließtext / Wörter, Symbole, Bänder |
 | `--fs-s … --fs-hero`, `--gap`, `--pad`, `--r-s/m/l`, `--touch` (44 px), `--focus` | | Typo-Skala, Abstände, Radien, Mindest-Touchgröße, Fokusring |
 
-Gestaltungsprinzipien: Karopapier als Grund, darauf gezeichnete Automaten; **Ocker heißt immer „hier ist der Automat gerade“**; gestrichelt = noch nicht gebaut (Level-Karte, „bald verfügbar“-Kacheln). Fertige Module haben eine Teal-Oberkante. Großansicht (Knopf „A A“, Klasse `html.is-gross`) für den Beamer. `prefers-reduced-motion` schaltet Animationen ab.
+Gestaltungsprinzipien: Karopapier als Grund, darauf gezeichnete Automaten; **Ocker heißt immer „hier ist der Automat gerade“**; gestrichelt = noch nicht gebaut (Level-Karte, „bald verfügbar“-Kacheln). Fertige Module haben eine Oberkante in ihrer Weltfarbe. Großansicht (Knopf „A A“, Klasse `html.is-gross`) für den Beamer. `prefers-reduced-motion` schaltet Animationen ab. Kleine Effekte erzählen immer „Automat“: animierter DEA im Kopf der Startseite (`components/hero-automat.js`, läuft dreimal, Knopf Anhalten/Nochmal), pulsierender Ring am gewählten Level, Doppelring-Puls bei „Richtig“ (`.notice-success`), aufspringender Doppelkreis in Abzeichen-Meldungen.
 
 ## 5. Konventionen
 

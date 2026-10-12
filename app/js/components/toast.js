@@ -2,7 +2,7 @@
 //   toast('Richtig!', { type: 'success' });   type: 'success' | 'error' | 'info' | 'badge'
 //   toast(text, { timeout: 5000 })            0 = bleibt bis zum Klick
 
-import { h } from '../core/dom.js';
+import { h, stateGlyph } from '../core/dom.js';
 
 let region = null;
 function ensureRegion() {
@@ -14,7 +14,10 @@ function ensureRegion() {
 
 export function toast(message, { type = 'info', timeout = 3800, title = null } = {}) {
   const r = ensureRegion();
+  const glyph = type === 'badge' ? stateGlyph({ accepting: true, size: 34 }) : null;
+  glyph?.classList.add('toast-glyph');
   const el = h('div', { class: `toast toast-${type}` },
+    glyph,
     title ? h('strong', { class: 'toast-title' }, title) : null,
     h('span', null, message),
     h('button', { class: 'toast-close', type: 'button', 'aria-label': 'Meldung schließen', onclick: () => close() }, '×'));

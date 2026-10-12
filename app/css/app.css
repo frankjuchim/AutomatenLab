@@ -531,6 +531,111 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
   .run-controls { gap: 0.25rem; }
   .dialog-body { padding-inline: 0.8rem; }
 }
+/* ───────── Weltfarben & kleine Effekte ─────────
+   Jede Welt hat eine Akzentfarbe (gleiche Werte wie WELT_FARBEN in src/inhalte.js). Effekte erzählen „Automat“:
+   Lesekopf, aktiver Zustand (Ocker), Endzustand (Doppelkreis, Teal). Bei „Bewegung reduzieren“ alles ruhig. */
+:root { --welt-a: #0E6455; --welt-b: #B26A0F; --welt-c: #3D5A99; --welt-d: #7A3E65; --welt-alle: #4B625D; }
+[data-welt="A"] { --welt: var(--welt-a); }
+[data-welt="B"] { --welt: var(--welt-b); }
+[data-welt="C"] { --welt: var(--welt-c); }
+[data-welt="D"] { --welt: var(--welt-d); }
+[data-welt="alle"] { --welt: var(--welt-alle); }
+.world-row .world-letter { color: var(--welt, var(--teal)); }
+.world-row { border-left: 4px solid transparent; transition: border-color var(--t); }
+.world-row:has(.level-node.is-active) { border-left-color: var(--welt, var(--teal)); }
+.tile .tile-link { border-top-color: var(--welt, var(--teal)); position: relative; }
+.tile.is-ready .tile-title::after { content: '→'; display: inline-block; margin-left: 0.35em; color: var(--welt, var(--teal)); opacity: 0; transform: translateX(-6px); transition: opacity var(--t), transform var(--t); }
+.tile.is-ready .tile-link:hover .tile-title::after, .tile.is-ready .tile-link:focus-visible .tile-title::after { opacity: 1; transform: none; }
+.catalogue-group h3 { display: flex; align-items: center; gap: 0.5rem; }
+.catalogue-group h3::before { content: ''; width: 0.85em; height: 0.85em; border-radius: 50%; flex: 0 0 auto;
+  border: 2px solid var(--welt, var(--teal)); box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 6px var(--welt, var(--teal)); }
+
+/* Textmarker auf „Sprache“ wie im Heft */
+.hero-mark { background: linear-gradient(transparent 62%, var(--ocker-soft) 62%, var(--ocker-soft) 92%, transparent 92%); padding: 0 0.04em; }
+
+/* Kopfbereich: Text links, kleiner Automat rechts */
+.hero-top { display: grid; gap: var(--gap); align-items: center; }
+@media (min-width: 900px) { .hero-top { grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 1fr); } }
+.hero-automat { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--shadow); padding: 0.8rem 1rem 0.6rem; max-width: 30rem; width: 100%; justify-self: end; }
+@media (max-width: 899px) { .hero-automat { justify-self: start; } }
+@media (max-width: 520px) { .hero-automat { display: none; } }
+.ha-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ha-svg text { font-family: var(--font); font-size: 15px; fill: var(--ink-2); }
+.ha-kante path { fill: none; stroke: var(--ink); stroke-width: 2; }
+.ha-spitze { fill: var(--ink); }
+.ha-zustand text { font-family: var(--mono); font-weight: 700; font-size: 16px; fill: var(--ink); }
+.ha-kreis { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.ha-innen { fill: none; stroke: var(--ink); stroke-width: 2; }
+.ha-zelle rect { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 1.5; }
+.ha-zelle text { font-family: var(--mono); font-weight: 700; font-size: 18px; fill: var(--ink); }
+.ha-kopf { fill: var(--ocker); opacity: 0; }
+.ha-urteil text { font-weight: 800; font-size: 15px; fill: var(--teal-deep); }
+/* Endbild (ohne Animation): S2 akzeptiert */
+.ha-s2 .ha-kreis { fill: var(--teal); stroke: var(--teal-deep); }
+.ha-s2 .ha-innen { stroke: #fff; }
+.ha-s2 text { fill: #fff; }
+.hero-automat-text { font-size: var(--fs-s); color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.3rem 0.8rem; margin-top: 0.3rem; }
+@media (prefers-reduced-motion: reduce) { .hero-automat-knopf { display: none; } }
+
+/* Ablauf (9 s, dreimal): S0 –a→ S1 –a→ S1 –b→ S2, dann „akzeptiert“ */
+.hero-automat.is-laeuft :is(.ha-kreis, .ha-innen, .ha-zustand text, .ha-zelle rect, .ha-kopf, .ha-urteil, .ha-kante path) {
+  animation-duration: 9s; animation-iteration-count: 3; animation-fill-mode: both; animation-timing-function: ease-in-out; }
+.hero-automat.is-laeuft .ha-s0 .ha-kreis { animation-name: ha-s0; }
+.hero-automat.is-laeuft .ha-s1 .ha-kreis { animation-name: ha-s1; }
+.hero-automat.is-laeuft .ha-s2 .ha-kreis { animation-name: ha-s2; }
+.hero-automat.is-laeuft .ha-s2 .ha-innen { animation-name: ha-s2-innen; }
+.hero-automat.is-laeuft .ha-s2 text { animation-name: ha-s2-text; }
+.hero-automat.is-laeuft .ha-z1 rect { animation-name: ha-z1; }
+.hero-automat.is-laeuft .ha-z2 rect { animation-name: ha-z2; }
+.hero-automat.is-laeuft .ha-z3 rect { animation-name: ha-z3; }
+.hero-automat.is-laeuft .ha-kopf { animation-name: ha-kopf; }
+.hero-automat.is-laeuft .ha-urteil { animation-name: ha-urteil; }
+.hero-automat.is-laeuft .ha-k01 path { animation-name: ha-k01; }
+.hero-automat.is-laeuft .ha-l1 path { animation-name: ha-l1; }
+.hero-automat.is-laeuft .ha-k12 path { animation-name: ha-k12; }
+@keyframes ha-s0 { 0%, 14% { fill: var(--ocker-fill); } 18%, 100% { fill: var(--surface); } }
+@keyframes ha-s1 { 0%, 14% { fill: var(--surface); } 18%, 33% { fill: var(--ocker-fill); stroke-width: 2; } 36% { fill: var(--ocker-fill); stroke-width: 4.5; }
+  40%, 53% { fill: var(--ocker-fill); stroke-width: 2; } 57%, 100% { fill: var(--surface); } }
+@keyframes ha-s2 { 0%, 53% { fill: var(--surface); stroke: var(--ink); } 57%, 62% { fill: var(--ocker-fill); stroke: var(--ink); } 68%, 100% { fill: var(--teal); stroke: var(--teal-deep); } }
+@keyframes ha-s2-innen { 0%, 62% { stroke: var(--ink); } 68%, 100% { stroke: #fff; } }
+@keyframes ha-s2-text { 0%, 62% { fill: var(--ink); } 68%, 100% { fill: #fff; } }
+@keyframes ha-z1 { 0%, 14% { fill: var(--surface); } 18%, 100% { fill: var(--teal-soft); } }
+@keyframes ha-z2 { 0%, 33% { fill: var(--surface); } 37%, 100% { fill: var(--teal-soft); } }
+@keyframes ha-z3 { 0%, 53% { fill: var(--surface); } 57%, 100% { fill: var(--teal-soft); } }
+@keyframes ha-kopf { 0% { opacity: 0; transform: none; } 4%, 14% { opacity: 1; transform: none; } 18%, 33% { opacity: 1; transform: translateX(38px); }
+  37%, 53% { opacity: 1; transform: translateX(76px); } 57% { opacity: 1; transform: translateX(114px); } 64%, 100% { opacity: 0; transform: translateX(114px); } }
+@keyframes ha-urteil { 0%, 64% { opacity: 0; transform: translateY(6px); } 70%, 100% { opacity: 1; transform: none; } }
+@keyframes ha-k01 { 0%, 13%, 21%, 100% { stroke: var(--ink); stroke-width: 2; } 16% { stroke: var(--ocker); stroke-width: 3.5; } }
+@keyframes ha-l1 { 0%, 32%, 40%, 100% { stroke: var(--ink); stroke-width: 2; } 35% { stroke: var(--ocker); stroke-width: 3.5; } }
+@keyframes ha-k12 { 0%, 52%, 60%, 100% { stroke: var(--ink); stroke-width: 2; } 55% { stroke: var(--ocker); stroke-width: 3.5; } }
+
+/* Gewähltes Level: pulsierender Ring wie der aktive Zustand in der Simulation */
+.level-node.is-active::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; border: 2px solid var(--ocker); opacity: 0; animation: ring-puls 2.4s ease-out infinite; pointer-events: none; }
+@keyframes ring-puls { 0% { transform: scale(0.85); opacity: 0.9; } 70%, 100% { transform: scale(1.25); opacity: 0; } }
+
+/* Richtig gelöst: „Endzustand erreicht“ – Doppelring breitet sich einmal aus */
+.notice-success { animation: endzustand 900ms ease-out 1; }
+@keyframes endzustand {
+  0% { box-shadow: 0 0 0 0 rgba(14, 100, 85, 0.45), 0 0 0 0 rgba(14, 100, 85, 0.3); }
+  100% { box-shadow: 0 0 0 10px rgba(14, 100, 85, 0), 0 0 0 20px rgba(14, 100, 85, 0); }
+}
+
+/* Abzeichen-Meldung: Doppelkreis springt auf */
+.toast-badge { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 0.7rem; }
+.toast-badge .toast-glyph { grid-row: 1 / span 2; }
+.toast-badge .toast-title, .toast-badge > span { grid-column: 2; }
+.toast-badge .toast-close { grid-column: 3; grid-row: 1 / span 2; }
+.toast-glyph { flex: 0 0 auto; animation: glyph-pop 700ms cubic-bezier(.2, 1.6, .4, 1) 1; }
+.toast-glyph circle { fill: none; stroke: var(--ink); stroke-width: 2; }
+.toast-glyph circle + circle { fill: var(--ocker-fill); }
+@keyframes glyph-pop { 0% { transform: scale(0.2) rotate(-90deg); opacity: 0; } 60% { transform: scale(1.2) rotate(8deg); opacity: 1; } 100% { transform: none; } }
+.badge.is-earned .glyph { transition: transform var(--t); }
+.badge.is-earned:hover .glyph { transform: rotate(-12deg) scale(1.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-automat *, .level-node.is-active::after, .notice-success, .toast-glyph { animation: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
 }
@@ -587,3 +692,10 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
   .site-header .header-tools { gap: 0.25rem; }
   .konto-name { max-width: 4.5rem; }
 }
+
+/* ───── Gastmodus ───── */
+.gast-liste { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.gast-karte { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.9rem 1rem; min-height: var(--touch); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); color: var(--ink); text-decoration: none; }
+.gast-karte:hover, .gast-karte:focus-visible { border-color: var(--teal); background: var(--teal-mist); }
+.gast-karte span { color: var(--ink-2); font-size: var(--fs-s); }
+.gast-hinweis { margin: 0 0 1.2rem; display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }

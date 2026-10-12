@@ -4,6 +4,18 @@
 // Aufruf: PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node qa-routes.mjs [baseUrl]
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
+import { gastErlaubt } from '../app/js/data/gast.js';
+const require = createRequire(import.meta.url);
+
+// Anmeldung (Vertrag InfoLabs §5): Mit QA_PORTAL_KEY (Pfad zu einem privaten Ed25519-Testschlüssel, PKCS#8-PEM) meldet
+// sich jeder Browser-Kontext vorab als Lehrkraft mit Kurs an – der Server muss mit PORTAL_URL = QA_PORTAL (Standard
+// http://portal.test) und dem passenden PORTAL_PUBLIC_KEY laufen. Mit QA_GAST=1 läuft die Prüfung als Gast: nur die
+// Gast-Routen (app/js/data/gast.js) dürfen öffnen, alle anderen müssen zur Anmeldung führen.
+const QA_KEY = process.env.QA_PORTAL_KEY ? fs.readFileSync(process.env.QA_PORTAL_KEY, 'utf8') : null;
+const QA_PORTAL = process.env.QA_PORTAL ?? 'http://portal.test';
+const QA_GAST = process.env.QA_GAST === '1';
 
 const BASE = process.argv[2] ?? 'http://localhost:8080/';
 const OUT = new URL('./shots-routes/', import.meta.url).pathname;
@@ -46,6 +58,19 @@ const GLEICH_UEBERSICHT = new Set(['#/turing?programm=binaer-plus-1', '#/arena?s
 // Geschützte Seiten: ohne Sitzung leiten sie still zur Portal-Anmeldung (/sso/start, Vertrag InfoLabs §5) – das ist
 // hier der erwartete Ausgang. /sso/start wird abgefangen, damit kein Aufruf ans Portal hinausgeht.
 const GESCHUETZT = new Set(['#/lehrkraft']);
+const routeTeile = (r) => { const m = /^#\/([a-z]*)\??(.*)$/.exec(r); return { route: m[1], params: new URLSearchParams(m[2]) }; };
+const istGeschuetzt = (r) => GESCHUETZT.has(r) || (QA_GAST && !gastErlaubt(routeTeile(r).route, routeTeile(r).params));
+
+async function anmelden(ctx) {
+  if (!QA_KEY) return;
+  const { signiere } = require('../src/jwt.js');
+  const start = await ctx.request.get(new URL('sso/start', BASE).href, { maxRedirects: 0 });
+  const state = new URL(start.headers().location).searchParams.get('state');
+  const iat = Math.floor(Date.now() / 1000);
+  const token = signiere({ iss: QA_PORTAL, aud: 'automatenlab', sub: 'l:900', rolle: 'lehrkraft', name: 'QA Lehrkraft', kurse: [{ id: 'k:900', name: 'QA-Kurs', rolle: 'lehrkraft' }], iat, exp: iat + 90, jti: crypto.randomBytes(16).toString('hex'), v: 1 }, QA_KEY);
+  const ende = await ctx.request.get(new URL(`sso/ende?token=${token}&state=${state}&ziel=%2F`, BASE).href, { maxRedirects: 0 });
+  if (ende.status() !== 302) throw new Error(`QA-Anmeldung fehlgeschlagen (${ende.status()})`);
+}
 const FILTER = process.env.ROUTE_FILTER ? new RegExp(process.env.ROUTE_FILTER) : null;
 const ROUTES = [...routes].sort((a, b) => a.localeCompare(b)).filter((r) => !FILTER || FILTER.test(r));
 
@@ -54,6 +79,7 @@ const browser = await chromium.launch();
 const t0 = Date.now();
 for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipad' }]) {
   const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1 });
+  await anmelden(ctx);
   const page = await ctx.newPage();
   const origin = new URL(BASE).origin;
   await page.route((u) => u.origin === origin && u.pathname === '/sso/start', (rt) => rt.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Anmeldung (QA)</title><main><h1>Anmeldung (QA)</h1></main>' }));
@@ -74,11 +100,13 @@ for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipa
     await page.waitForTimeout(500);
     if (new URL(page.url()).pathname === '/sso/start') {
       const ziel = new URL(page.url()).searchParams.get('ziel');
-      const ok = GESCHUETZT.has(r) && !errs.length;
-      const line = `${ok ? 'OK  ' : 'FAIL'} [${vp.tag}] ${r}  ·  → Portal-Anmeldung (ziel ${ziel})${ok ? '' : `  →  ${GESCHUETZT.has(r) ? errs.join(' | ') : 'unerwartete Weiterleitung zur Anmeldung'}`}`;
+      const zielOk = GESCHUETZT.has(r) || ziel === `/${r}`; // QR-Code: nach der Anmeldung genau auf diese Route
+      const ok = istGeschuetzt(r) && zielOk && !errs.length;
+      const line = `${ok ? 'OK  ' : 'FAIL'} [${vp.tag}] ${r}  ·  → Portal-Anmeldung (ziel ${ziel})${ok ? '' : `  →  ${!istGeschuetzt(r) ? 'unerwartete Weiterleitung zur Anmeldung' : !zielOk ? 'falsches ziel' : errs.join(' | ')}`}`;
       results.push(line); if (!ok) fails.push(line);
       continue;
     }
+    if (QA_GAST && istGeschuetzt(r)) { const line = `FAIL [${vp.tag}] ${r}  →  Gast sieht geschützte Route ohne Anmeldung`; results.push(line); fails.push(line); continue; }
     const info = await page.evaluate(() => ({
       title: document.title,
       h1: document.querySelector('main h1')?.textContent ?? '',
