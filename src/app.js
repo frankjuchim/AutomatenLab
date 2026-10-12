@@ -37,6 +37,20 @@ const CSP = {
   'upgrade-insecure-requests': null
 };
 
+/**
+ * PORTAL_PUBLIC_KEY tolerant einlesen, bevor src/jwt.js (unverändert) ihn prüft: Anführungszeichen, „\\n“ statt
+ * Zeilenumbrüchen, Leerzeichen statt Zeilenumbrüchen (so speichern manche Oberflächen mehrzeilige Werte) oder nur die
+ * Base64-Zeile ohne BEGIN/END werden in sauberes PEM übersetzt. Mehrere Blöcke (Schlüsselwechsel) bleiben erhalten.
+ */
+function normalisiereSchluessel(roh) {
+  let t = String(roh || '').trim().replace(/^(['"])([\s\S]*)\1$/, '$2').replace(/\\n/g, '\n');
+  const pem = (b64) => `-----BEGIN PUBLIC KEY-----\n${b64.match(/.{1,64}/g).join('\n')}\n-----END PUBLIC KEY-----\n`;
+  const bloecke = [...t.matchAll(/-----BEGIN PUBLIC KEY-----([\s\S]*?)-----END PUBLIC KEY-----/g)].map((m) => m[1].replace(/\s+/g, ''));
+  if (bloecke.length) return bloecke.filter(Boolean).map(pem).join('');
+  t = t.replace(/\s+/g, '');
+  return /^[A-Za-z0-9+/]{40,}={0,2}$/.test(t) ? pem(t) : t;
+}
+
 /** Vertragspfade (§7 urls) → Hash-Routen der App. Die bisherigen Hash-Routen bleiben unverändert. */
 const WEITERLEITUNGEN = {
   '/gast': '/#/',
@@ -75,7 +89,7 @@ function createApp(opts) {
   let publicKey = [];
   try {
     // Nur Ed25519-Schlüssel zählen (Vertrag §5) – ein anderer parsebarer Schlüssel (z. B. RSA) würde jedes Token ablehnen
-    publicKey = opts.portalPublicKey ? schluesselListe(opts.portalPublicKey).filter((k) => k.asymmetricKeyType === 'ed25519') : [];
+    publicKey = opts.portalPublicKey ? schluesselListe(normalisiereSchluessel(opts.portalPublicKey)).filter((k) => k.asymmetricKeyType === 'ed25519') : [];
   } catch (e) {
     log(`FEHLER: PORTAL_PUBLIC_KEY ist ungültig (${e.message}) – Anmeldung über das Portal abgeschaltet.`);
   }
@@ -90,7 +104,13 @@ function createApp(opts) {
     basis,
     ruecksprung: (req) => `${basis(req)}/sso/ende`
   };
-  if (!sso.aktiv) log(`Hinweis: Anmeldung über das Portal ist aus (PORTAL_URL ${portalUrl ? 'gesetzt' : 'fehlt'}, PORTAL_PUBLIC_KEY ${publicKey.length ? 'gültig' : 'fehlt/ungültig'}, AUTH_MODUS ${authModus}).`);
+  // Grund für eine abgeschaltete Anmeldung (ohne Geheimnisse) – im Log und in /healthz, damit Fehlkonfigurationen auffallen
+  sso.grund = sso.aktiv ? null
+    : !portalUrl ? 'PORTAL_URL fehlt'
+      : authModus === 'lokal' ? 'AUTH_MODUS ist lokal'
+        : !opts.portalPublicKey ? 'PORTAL_PUBLIC_KEY fehlt'
+          : 'PORTAL_PUBLIC_KEY enthält keinen gültigen Ed25519-Schlüssel';
+  if (!sso.aktiv) log(`Hinweis: Anmeldung über das Portal ist aus (${sso.grund}).`);
 
   const ctx = { db, now, log };
   const konten = createKonten(ctx);
@@ -131,7 +151,7 @@ function createApp(opts) {
   app.get('/healthz', (req, res) => {
     try {
       db.prepare('SELECT 1').get();
-      res.set('Cache-Control', 'no-store').json({ status: 'ok', version: VERSION });
+      res.set('Cache-Control', 'no-store').json({ status: 'ok', version: VERSION, anmeldung: sso.aktiv ? 'portal' : `aus: ${sso.grund}` });
     } catch {
       res.status(500).json({ status: 'error' });
     }
@@ -242,4 +262,4 @@ function createApp(opts) {
   return app;
 }
 
-module.exports = { createApp, VERSION, VERTRAG, WEITERLEITUNGEN, PLATTFORM_ID_STANDARD };
+module.exports = { createApp, normalisiereSchluessel, VERSION, VERTRAG, WEITERLEITUNGEN, PLATTFORM_ID_STANDARD };

@@ -171,7 +171,9 @@ test('Ohne Schlüssel oder mit AUTH_MODUS=lokal: keine Anmeldung, Manifest „lo
     assert.equal((await request(app).get('/sso/start')).status, 503);
     assert.equal((await request(app).get('/sso/ende').query({ token: H.ssoToken(app.now), state: 'x'.repeat(22) })).status, 503);
     assert.equal((await request(app).get('/api/sitzung')).body.anmeldung, false);
+    assert.match((await request(app).get('/healthz')).body.anmeldung, /^aus: /);
   }
+  assert.equal((await request(await H.verbundApp()).get('/healthz')).body.anmeldung, 'portal');
 });
 
 test('Ein gelöschtes Konto ist sofort abgemeldet, auch die Aktivitätsmarke im Arbeitsspeicher ist weg', async () => {
@@ -189,4 +191,24 @@ test('Mehrere Schlüssel (Schlüsselwechsel): RSA-Block wird ignoriert, Ed25519-
   const app = await H.verbundApp({ portalPublicKey: rsa + H.PUBLIC_PEM });
   assert.equal(app.locals.sso.aktiv, true);
   await H.angemeldet(app);
+});
+
+test('PORTAL_PUBLIC_KEY wird tolerant eingelesen (CapRover-Formate)', async () => {
+  const { normalisiereSchluessel } = require('../src/app');
+  const pem = H.PUBLIC_PEM.trim();
+  const b64 = pem.replace(/-----(BEGIN|END) PUBLIC KEY-----/g, '').replace(/\s+/g, '');
+  const varianten = {
+    'PEM mehrzeilig': pem,
+    'einzeilig mit \\n': pem.replace(/\n/g, '\\n'),
+    'Leerzeichen statt Zeilenumbrüchen': pem.replace(/\n/g, ' '),
+    'in Anführungszeichen': `"${pem.replace(/\n/g, '\\n')}"`,
+    'nur Base64': b64,
+    'Windows-Zeilenenden': pem.replace(/\n/g, '\r\n')
+  };
+  for (const [fall, wert] of Object.entries(varianten)) {
+    const app = await H.verbundApp({ portalPublicKey: wert });
+    assert.equal(app.locals.sso.aktiv, true, fall);
+    await H.angemeldet(app);
+  }
+  assert.equal(normalisiereSchluessel('kein Schlüssel'), 'keinSchlüssel');
 });
