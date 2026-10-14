@@ -21,7 +21,19 @@ schritt "Testschlüssel für die Portal-Anmeldung (nur für diese Prüfung)"
 node -e "const c=require('crypto');const p=c.generateKeyPairSync('ed25519');const fs=require('fs');fs.writeFileSync('$TMP/priv.pem',p.privateKey.export({type:'pkcs8',format:'pem'}));fs.writeFileSync('$TMP/pub.pem',p.publicKey.export({type:'spki',format:'pem'}))"
 
 schritt "Image wie auf CapRover bauen und mit Test-Portal starten"
-docker build -q -t "$NAME" . > /dev/null
+# Hinter einem Proxy mit eigener CA (z. B. Cloud-Sitzung): Proxy und CA nur für diesen Build mitgeben – das
+# Dockerfile des Projekts bleibt unverändert (die Kopie liegt im Temp-Ordner), TLS-Prüfung bleibt an. Nur HTTPS über
+# den Proxy (npm); apt holt seine Pakete wie gewohnt direkt.
+if [ -n "${HTTPS_PROXY:-}" ] && [ -f "${PRUEFUNG_CA:-/root/.ccr/ca-bundle.crt}" ]; then
+  CA="${PRUEFUNG_CA:-/root/.ccr/ca-bundle.crt}"
+  sed '/^FROM .* AS deps$/a COPY --from=proxyca ca.crt /etc/ssl/certs/proxy-ca.crt\nENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/proxy-ca.crt' Dockerfile > "$TMP/Dockerfile"
+  mkdir -p "$TMP/ca" && cp "$CA" "$TMP/ca/ca.crt"
+  docker build -q --network host --build-context proxyca="$TMP/ca" -f "$TMP/Dockerfile" \
+    --build-arg HTTPS_PROXY="$HTTPS_PROXY" --build-arg https_proxy="$HTTPS_PROXY" \
+    -t "$NAME" . > /dev/null
+else
+  docker build -q -t "$NAME" . > /dev/null
+fi
 docker rm -f "$NAME" > /dev/null 2>&1 || true
 docker run -d -p "$PORT:80" --name "$NAME" \
   -e PLATTFORM_URL="http://localhost:$PORT" -e PORTAL_URL=http://portal.test -e AUTH_MODUS=portal \
