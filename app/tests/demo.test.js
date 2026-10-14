@@ -4,12 +4,15 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, kellerFolge, pruefeKellerTabelle, pruefeKellerRueckwaerts, kellerTabellenLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel } from '../js/engine/pruefer.js';
+import { TURING_PROGRAMME } from '../js/data/turing.js';
+import { pda, runPDA } from '../js/engine/pda.js';
+import { nfa, runNFA, subsetConstruction } from '../js/engine/nfa.js';
 import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
-  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'quiz']);
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'grammatik', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'rallye', 'turing', 'ueberliste']);
   assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
   assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
@@ -74,6 +77,64 @@ test('Demo-Mealy: Beispiele und Prädikat passen, Vorhersage und Bug-Jagd wie au
   const fix = {}; for (const f of mealyLoesung(x.automat, x.fehler).fehler) (fix[f.von] ??= {})[f.zeichen] = f.richtig;
   assert.equal(pruefeMealyReparatur(x.automat, F, fix).ok, true);
   assert.equal(pruefeMealyTest(x.automat, F, { test: '10', urteil: 'bug', ausgaben: fix }).bug, false);
+});
+
+test('Demo-Überliste: Automat zählt bis ±2 richtig, irrt danach; Beispiel aus der Lösung überlistet ihn', () => {
+  const x = DEMO.find((d) => d.modul === 'ueberliste').daten;
+  const A = dfa(x.automat);
+  for (const w of enumerateWords(A.alphabet, 4)) assert.equal(runDFA(A, w).accepted, x.pruefe(w), w.join(''));
+  const w = ueberlisteBeispiel(x.automat, x.pruefe, x.praefix, x.fortsetzung);
+  assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: w.join('') }).ok, true);
+  assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: '+-' }).ok, false);
+  assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: '+++---' }).ok, true, 'Tipp 3 stimmt');
+});
+
+test('Demo-Parallelwelten: NEA = Prädikat, Rätsel und Teilmengen wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.id === 'demo:parallelwelten').daten;
+  const N = nfa(x.automat);
+  for (const w of enumerateWords(N.alphabet, 8)) assert.equal(runNFA(N, w).accepted, x.pruefe(w), w.join(''));
+  for (const w of x.beispiele.ja) assert.equal(runNFA(N, w === 'ε' ? '' : w).accepted, true, w);
+  for (const w of x.beispiele.nein) assert.equal(runNFA(N, w === 'ε' ? '' : w).accepted, false, w);
+  let stand = null; let r;
+  x.raetsel.forEach((w, i) => { r = pruefeNeaRaetsel(x.automat, x.raetsel, stand, { wort: i, zustaende: runNFA(N, w === 'ε' ? '' : w).sets.at(-1) }); stand = r.stand; });
+  assert.equal(r.fertig, true); assert.equal(r.anteil, 1);
+  let st = null;
+  for (const z of subsetConstruction(N).table) { r = pruefeTeilmengenZeile(x.automat, st, { menge: z.set, ziele: z.targets }); st = r.stand; }
+  assert.equal(r.ok, true);
+});
+
+test('Demo-Keller: Automat = Prädikat, Tabellen und Rückwärts wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.id === 'demo:keller:tabelle').daten;
+  const P = pda(x.automat);
+  for (const w of enumerateWords(P.inputAlphabet, 6)) assert.equal(runPDA(P, w).accepted, x.pruefe(w), w.join(''));
+  let stand = null; let r;
+  kellerTabellenLoesung(x.automat, x.tabelle).tabellen.forEach((t, i) => { r = pruefeKellerTabelle(x.automat, x.tabelle, stand, { wort: i, zeilen: t.zeilen, akzeptiert: t.akzeptiert }); stand = r.stand; });
+  assert.equal(r.ok, true);
+  const folge = kellerFolge(x.automat, x.rueckwaerts[0]);
+  assert.equal(pruefeKellerRueckwaerts(x.automat, folge, { wort: x.rueckwaerts[0] }).ok, true);
+  assert.equal(pruefeKellerRueckwaerts(x.automat, folge, { wort: 'acb' }).ok, false);
+});
+
+test('Demo-Rallye: Zielwort ableitbar, Prüfung wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.modul === 'rallye').daten;
+  assert.equal(rallyeLoesung(x.grammatik, x.ziel).schritte, 4);
+  assert.equal(pruefeRallye(x.grammatik, x.ziel, 'ableiten', { regeln: [['S', 0], ['A', 0], ['A', 1], ['A', 2]] }).ok, true);
+  assert.equal(pruefeRallye(x.grammatik, x.ziel, 'ableiten', { regeln: [['S', 1]] }).ok, false);
+});
+
+test('Demo-Grammatik: Musterlösung richtig und rechtsregulär, kontextfreie Lösung abgelehnt', () => {
+  const c = DEMO.find((d) => d.modul === 'grammatik').daten;
+  assert.equal(pruefeGrammatikChallenge(c, { grammatik: c.musterloesung }).ok, true);
+  assert.equal(pruefeGrammatikChallenge(c, { grammatik: 'S → aA\nA → AA | a | b | ε' }).rueckmeldung.grund, 'regulaer');
+  assert.equal(pruefeGrammatikChallenge(c, { grammatik: 'S → bA\nA → aA | ε' }).ok, false);
+});
+
+test('Demo-Turing: fehlende Regel existiert, richtige Regel besteht die Tests, falsche nicht', () => {
+  const x = DEMO.find((d) => d.modul === 'turing').daten;
+  const p = TURING_PROGRAMME.find((y) => y.id === x.programm);
+  const [to, write, move] = p.maschine.delta[x.fehlt.from][x.fehlt.read];
+  assert.equal(pruefeTuringRegel(p.maschine, x.fehlt, x.tests, { to, write, move }).ok, true);
+  assert.equal(pruefeTuringRegel(p.maschine, x.fehlt, x.tests, { to, write, move: move === 'L' ? 'R' : 'L' }).ok, false);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

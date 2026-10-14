@@ -8,7 +8,7 @@ const { pathToFileURL } = require('node:url');
 const APP_JS = path.join(__dirname, '..', 'app', 'js');
 const INHALTE = path.join(__dirname, '..', 'inhalte');
 // Module mit Prüfung auf dem Server: Daten samt Lösungen liegen in inhalte/ (nie ausgeliefert)
-const SERVER_DATEN = new Set(['baukasten', 'detektiv', 'mealy', 'minimierer', 'quiz']);
+const SERVER_DATEN = new Set(['baukasten', 'detektiv', 'grammatik', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'rallye', 'turing', 'ueberliste']);
 const lade = (rel) => {
   const m = /^data\/(\w+)\.js$/.exec(rel);
   const datei = m && SERVER_DATEN.has(m[1]) ? path.join(INHALTE, `${m[1]}.js`) : path.join(APP_JS, rel);

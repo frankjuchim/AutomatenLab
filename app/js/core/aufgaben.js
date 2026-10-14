@@ -3,15 +3,18 @@
 //   liste(modul) · aufgabe(id) · pruefen(id, antwort) · tipp(id) · aufdecken(id)
 // • serverQuelle(): angemeldet – Lösungen bleiben auf dem Server, Punkte vergibt nur der Server.
 // • demoQuelle(): Gastmodus – eigene Demo-Aufgaben (app/js/data/demo.js), im Browser geprüft, ohne Punkte.
-// Training (Arena, „Unterscheide!“): quelle.training = { lokal, neu(modul, optionen), ende(id, antworten) } – auf dem
-// Server gezählt (1 Punkt je richtiger Antwort, Tageshöchstwert) bzw. mit lokalesTraining() im Browser ohne Punkte.
+// Training (Arena, „Unterscheide!“, Sortierer): quelle.training = { lokal, neu(modul, optionen), antwort(id, i, typ),
+// ende(id, antworten) } – auf dem Server gezählt (1 Punkt je richtiger Antwort, Tageshöchstwert) bzw. mit
+// lokalesTraining() im Browser ohne Punkte.
 
 import { api as apiRoh } from './api.js';
 import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
-import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } from '../engine/pruefer.js';
+import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde, erzeugeSortiererRunde, pruefeSortiererKarte, werteSortiererRunde } from '../engine/training.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } from '../engine/pruefer.js';
+import { TURING_PROGRAMME } from '../data/turing.js';
+import { tm } from '../engine/turing.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -45,6 +48,7 @@ export function serverQuelle() {
     training: {
       lokal: false,
       neu: (modul, optionen = {}) => api('POST', `/api/training/${encodeURIComponent(modul)}/neu`, optionen),
+      antwort: (id, i, typ) => api('POST', `/api/training/runde/${encodeURIComponent(id)}/antwort`, { i, typ }),
       ende: async (id, antworten) => nachTraining(await api('POST', `/api/training/runde/${encodeURIComponent(id)}/ende`, { antworten })),
     },
     liste: async (modul) => (await api('GET', `/api/katalog?modul=${encodeURIComponent(modul)}`)).aufgaben,
@@ -81,6 +85,29 @@ function vorbereiten(d) {
       const beispiele = x.beispiele.filter(([ein]) => !pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug).slice(0, 3);
       oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele, worte: x.vorhersage };
     }
+  } else if (d.modul === 'turing') {
+    const x = d.daten;
+    const p = TURING_PROGRAMME.find((y) => y.id === x.programm);
+    const T = tm(p.maschine);
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, programm: x.programm, programmTitel: p.titel, kontext: p.kontext,
+      maschine: turingOhneRegel(p.maschine, x.fehlt), fehlt: x.fehlt, zustaende: T.states, bandalphabet: T.tapeAlphabet, tests: x.tests };
+  } else if (d.modul === 'grammatik') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, alphabet: x.alphabet, beispiele: x.beispiele, maxLen: x.maxLen ?? 8, regulaer: !!x.regulaer, tippsAnzahl: x.tipp ? 1 : 0 };
+  } else if (d.modul === 'rallye') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, grammatik: x.grammatik, ziel: x.ziel, sep: x.sep ?? null, modus: x.modus ?? 'ableiten' };
+  } else if (d.modul === 'keller') {
+    const x = d.daten;
+    oeffentlich = d.art === 'rueckwaerts'
+      ? { id: x.id, nr: 0, titel: x.titel, kontext: x.kontext, automat: x.automat, keller: x.keller, worte: x.tabelle, folge: kellerFolge(x.automat, x.rueckwaerts[0]) }
+      : { id: x.id, nr: 0, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, keller: x.keller, sim: x.sim, worte: x.tabelle };
+  } else if (d.modul === 'parallelwelten') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, worte: x.raetsel, teilmengen: !!x.teilmengen };
+  } else if (d.modul === 'ueberliste') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, sprache: x.sprache, automat: x.automat, praefix: x.praefix, fortsetzung: x.fortsetzung, tippsAnzahl: x.tipps.length };
   } else if (d.modul === 'minimierer') {
     const x = d.daten;
     oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, frage: x.frage, automat: x.automat };
@@ -88,12 +115,13 @@ function vorbereiten(d) {
     const c = d.daten;
     oeffentlich = { id: c.id, nr: 0, stufe: c.stufe, titel: c.titel, aufgabe: c.aufgabe, alphabet: c.referenz.alphabet, beispiele: c.beispiele, tippsAnzahl: c.tipp ? 1 : 0 };
   }
-  return { d, idVon, oeffentlich, tipps: d.daten.tipp ? [d.daten.tipp] : [], angesehen: false, geloest: false, fehlversuche: 0, tippsGenutzt: 0, antworten: {} };
+  return { d, idVon, oeffentlich, tipps: d.daten.tipps ?? (d.daten.tipp ? [d.daten.tipp] : []), angesehen: false, geloest: false, fehlversuche: 0, tippsGenutzt: 0, antworten: {} };
 }
 
 /**
  * Training im Browser (Gastmodus, ohne Anmeldung): dieselben Runden und dieselbe Auswertung wie auf dem Server, aber
- * ohne Punkte und ohne Speicherung. daten = { arena: ARENA_AUTOMATEN } bzw. { minimierer: [{ id, automat }] }.
+ * ohne Punkte und ohne Speicherung. daten = { arena: ARENA_AUTOMATEN }, { minimierer: [{ id, automat }] } bzw.
+ * { sortierer: DEMO_SORTIERER } (eigene Demo-Karten, nicht die Karten des Servers).
  */
 export function lokalesTraining(daten) {
   const runden = new Map();
@@ -101,18 +129,32 @@ export function lokalesTraining(daten) {
   return {
     lokal: true,
     async neu(modul, o = {}) {
+      const id = naechste++;
+      if (modul === 'sortierer') {
+        const items = erzeugeSortiererRunde(daten.sortierer, { alle: o.alle === true });
+        runden.set(id, { modul, items, antworten: items.map(() => null) });
+        return { id, modul, art: o.alle === true ? 'alle' : 'runde', items: items.map((x) => ({ text: x.text })), heute: 0, maxProTag: 0 };
+      }
       const items = modul === 'arena'
         ? erzeugeArenaRunde(daten.arena, { stufe: o.stufe ?? 1, nurId: o.automat ?? null })
         : erzeugeUnterscheideRunde(daten.minimierer, { nurId: o.aufgabe ?? null });
-      const id = naechste++;
       runden.set(id, { modul, items });
       return { id, modul, items: items.map(({ akzeptiert, aequivalent, wort, ...rest }) => (modul === 'arena' ? { ...rest, wort } : rest)), heute: 0, maxProTag: 0 };
+    },
+    async antwort(id, i, typ) {
+      const r = runden.get(id);
+      if (!r) throw Object.assign(new Error('Diese Runde gibt es nicht (mehr).'), { status: 404 });
+      if (r.antworten[i] != null) return { ...pruefeSortiererKarte(r.items[i], r.antworten[i]), wiederholt: true };
+      const erg = pruefeSortiererKarte(r.items[i], typ);
+      r.antworten[i] = typ;
+      return erg;
     },
     async ende(id, antworten) {
       const r = runden.get(id);
       if (!r) throw Object.assign(new Error('Diese Runde gibt es nicht (mehr).'), { status: 404 });
       runden.delete(id);
-      const erg = r.modul === 'arena' ? werteArenaRunde(r.items, antworten) : werteUnterscheideRunde(daten.minimierer, r.items, antworten);
+      const erg = r.modul === 'arena' ? werteArenaRunde(r.items, antworten)
+        : r.modul === 'sortierer' ? werteSortiererRunde(r.items, r.antworten) : werteUnterscheideRunde(daten.minimierer, r.items, antworten);
       return { ...erg, punkteErhalten: 0, wertung: false, neueAbzeichen: [], heute: 0, maxProTag: 0 };
     },
   };
@@ -126,7 +168,16 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'mealy' ? (s.d.art === 'vorhersage'
+  const turingRef = (s) => TURING_PROGRAMME.find((y) => y.id === s.d.daten.programm).maschine;
+  const loesung = (s) => (s.d.modul === 'turing' ? (([to, write, move]) => ({ regel: { to, write, move } }))(turingRef(s).delta[s.d.daten.fehlt.from][s.d.daten.fehlt.read])
+    : s.d.modul === 'grammatik' ? { musterloesung: s.d.daten.musterloesung }
+    : s.d.modul === 'rallye' ? rallyeLoesung(s.d.daten.grammatik, s.d.daten.ziel, s.d.daten.sep ?? '')
+    : s.d.modul === 'keller' ? (s.d.art === 'tabelle' ? kellerTabellenLoesung(s.d.daten.automat, s.d.daten.tabelle) : kellerRueckwaertsLoesung(s.d.daten.automat, s.d.daten.rueckwaerts[0]))
+    : s.d.modul === 'parallelwelten' ? (s.d.art === 'raetsel'
+    ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.raetsel.length } }
+    : teilmengenLoesung(s.d.daten.automat))
+    : s.d.modul === 'ueberliste' ? { beispiel: ueberlisteBeispiel(s.d.daten.automat, s.d.daten.pruefe, s.d.daten.praefix, s.d.daten.fortsetzung) }
+    : s.d.modul === 'mealy' ? (s.d.art === 'vorhersage'
     ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.vorhersage.length } }
     : mealyLoesung(s.d.daten.automat, s.d.daten.fehler))
     : s.d.modul === 'minimierer' ? minimiererLoesung(s.d.daten.automat, s.d.daten.merke) : s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
@@ -153,6 +204,26 @@ export function demoQuelle() {
         const j = s.d.daten.optionen.findIndex((_, k) => s.idVon(0, k) === antwort?.wahl);
         if (j < 0) throw Object.assign(new Error('Bitte wähle eine Beschreibung.'), { status: 400 });
         erg = pruefeDetektiv(s.d.daten, j);
+      } else if (s.d.modul === 'turing') {
+        erg = pruefeTuringRegel(turingRef(s), s.d.daten.fehlt, s.d.daten.tests, antwort);
+      } else if (s.d.modul === 'grammatik') {
+        erg = pruefeGrammatikChallenge(s.d.daten, antwort);
+      } else if (s.d.modul === 'rallye') {
+        erg = pruefeRallye(s.d.daten.grammatik, s.d.daten.ziel, s.d.daten.modus ?? 'ableiten', antwort);
+      } else if (s.d.modul === 'keller' && s.d.art === 'tabelle') {
+        erg = pruefeKellerTabelle(s.d.daten.automat, s.d.daten.tabelle, s.stand, antwort);
+        s.stand = erg.stand;
+      } else if (s.d.modul === 'keller') {
+        erg = pruefeKellerRueckwaerts(s.d.daten.automat, s.oeffentlich.folge, antwort);
+      } else if (s.d.modul === 'parallelwelten' && s.d.art === 'raetsel') {
+        const r = pruefeNeaRaetsel(s.d.daten.automat, s.d.daten.raetsel, s.stand, antwort);
+        s.stand = r.stand;
+        erg = { ok: r.richtig, fertig: !s.geloest && r.fertig, zaehltFehler: false, rueckmeldung: r.rueckmeldung };
+      } else if (s.d.modul === 'parallelwelten') {
+        erg = pruefeTeilmengenZeile(s.d.daten.automat, s.stand, antwort);
+        s.stand = erg.stand;
+      } else if (s.d.modul === 'ueberliste') {
+        erg = pruefeUeberliste(s.d.daten.automat, s.d.daten.pruefe, antwort);
       } else if (s.d.modul === 'minimierer') {
         erg = pruefeMinimiererRunde(s.d.daten.automat, s.stand, antwort);
         s.stand = erg.stand;

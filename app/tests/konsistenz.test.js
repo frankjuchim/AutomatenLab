@@ -6,9 +6,9 @@ import { MODULES } from '../js/modules/manifest.js';
 import { WORLDS } from '../js/data/worlds.js';
 import { BAUKASTEN_CHALLENGES } from '../../inhalte/baukasten.js';
 import { ARENA_AUTOMATEN } from '../js/data/arena.js';
-import { KELLER_AUTOMATEN } from '../js/data/keller.js';
+import { KELLER_AUTOMATEN } from '../../inhalte/keller.js';
 import { TURING_PROGRAMME } from '../js/data/turing.js';
-import { PARALLELWELTEN } from '../js/data/parallelwelten.js';
+import { PARALLELWELTEN } from '../../inhalte/parallelwelten.js';
 
 const ALLE = WORLDS.flatMap((w) => w.levels);
 

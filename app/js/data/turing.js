@@ -85,20 +85,4 @@ export const TURING_PROGRAMME = [
   },
 ];
 
-// Challenge: Übergangstabelle vervollständigen (eine Regel fehlt). Geprüft wird über Testeingaben gegen die Referenz.
-export const TURING_CHALLENGES = [
-  {
-    id: 'binaer-luecke', titel: 'Binärzahl + 1: die fehlende Regel', programm: 'binaer-plus-1',
-    fehlt: { from: 'S1', read: '1' },
-    aufgabe: 'In der Übergangstabelle von „Binärzahl + 1“ fehlt die Regel für S1, wenn eine 1 gelesen wird. Was muss die Maschine schreiben, wohin gehen, und in welchen Zustand wechseln? Denk an den Übertrag.',
-    tests: ['1011', '111', '1', '1101'],
-    punkte: 30,
-  },
-  {
-    id: 'unaer-luecke', titel: 'Unärer Addierer: die fehlende Regel', programm: 'unaer-plus',
-    fehlt: { from: 'S0', read: '+' },
-    aufgabe: 'Beim unären Addierer fehlt die Regel für S0, wenn das + gelesen wird. Die Idee: Das + wird zur 1, danach läuft die Maschine ans Ende und löscht dort eine 1.',
-    tests: ['111+11', '1+1', '+1'],
-    punkte: 30,
-  },
-];
+// Die Challenges „Übergangstabelle vervollständigen“ (fehlende Regel, Testeingaben) liegen in inhalte/turing.js (nur Server).

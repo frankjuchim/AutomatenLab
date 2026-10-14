@@ -14,6 +14,10 @@
 //   sim          Vorschlagswörter für den Simulator
 //   tabelle      Wörter für den Tabellen-Trainer (Abi-Tabelle)
 //   rueckwaerts  akzeptierte Wörter, aus deren Lauf die Rückwärts-Aufgabe erzeugt wird
+//
+// Liegt in inhalte/ (nur Server, Vertrag InfoLabs §9): Die Rückwärts-Wörter sind die Lösung (die App bekommt nur die
+// Folge der Konfigurationen); Tabellen prüft und punktet der Server. Automat, Beispiele und Bedeutung des Kellers
+// kommen über die Aufgaben-API (Gegenstand der Aufgabe).
 
 const count = (w, c) => w.filter((x) => x === c).length;
 const isPal = (w) => w.join('') === [...w].reverse().join('');

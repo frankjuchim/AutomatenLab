@@ -200,6 +200,203 @@ test('Mealy: Vorhersage wie ein Quiz (erster Versuch zählt), Bug-Jagd mit Test 
   assert.ok(ls.solved[id] && ls.solved[v.id]);
 });
 
+test('Überliste: Testen kostet nichts, Tipps kosten Punkte, gelöst sobald der Automat irrt; Bonus wie ein Quiz', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=ueberliste')).body.aufgaben;
+  assert.deepEqual(k.map((a) => a.schluessel), ['anbn-klein', 'anbn-mittel', 'klammern', 'tuersteher', 'anbn-gross', 'bonus']);
+  assert.equal(k.at(-1).art, 'bonus');
+  const id = 'ueberliste:anbn-klein';
+  const a = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.equal(a.aufgabe.tippsAnzahl, 4);
+  assert.doesNotMatch(JSON.stringify(a), /pruefe|Schubfach/);
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr({ wort: 'aabb' })).body;
+  assert.deepEqual([r.rueckmeldung.akzeptiert, r.rueckmeldung.gehoertDazu, r.rueckmeldung.ueberlistet], [true, true, false]);
+  assert.equal(r.zustand.fehlversuche, 0);
+  const t = (await post(s, `/api/aufgaben/${id}/tipp`)).body;
+  assert.equal(t.zustand.tipps.length, 1);
+  r = (await pr({ wort: 'aaabb' })).body;
+  assert.equal(r.rueckmeldung.ueberlistet, true);
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 0, 1));
+  assert.ok(r.loesung.beispiel.length > 0);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'ueberliste-erster'));
+  assert.equal((await pr({ wort: 'abc' })).status, 400);
+  // Bonus: erster Durchgang zählt
+  const b = (await s.get('/api/aufgaben/ueberliste:bonus')).body.aufgabe;
+  assert.equal(b.fragen.length, 4);
+  let letzte;
+  for (let i = 0; i < b.fragen.length; i++) letzte = (await post(s, '/api/aufgaben/ueberliste:bonus/pruefen', { antwort: { frage: i, wahl: b.fragen[i].optionen[0].id } })).body;
+  assert.equal(letzte.geloest, true);
+  assert.ok(letzte.punkteErhalten >= 0 && letzte.punkteErhalten <= 20);
+  assert.equal((await post(s, '/api/aufgaben/ueberliste:bonus/aufdecken')).status, 400);
+});
+
+test('Parallelwelten: Rätsel wie ein Quiz, Teilmengenkonstruktion Zeile für Zeile, falsche Zeile = Fehlversuch', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=parallelwelten')).body.aufgaben;
+  assert.equal(k.filter((a) => a.art === 'raetsel').length, 6);
+  assert.equal(k.filter((a) => a.art === 'teilmengen').length, 5);
+  const { nfa, runNFA } = await import('../app/js/engine/nfa.js');
+  const { subsetConstruction } = await import('../app/js/engine/nfa.js');
+  // Rätsel „endet-ab“: a, ab, aa, abb, bab
+  const rid = 'parallelwelten:endet-ab:raetsel';
+  const ra = (await s.get(`/api/aufgaben/${rid}`)).body.aufgabe;
+  const N = nfa(ra.automat);
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr(rid, { wort: 0, zustaende: ['S2'] })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.deepEqual(r.rueckmeldung.zuViel, ['S2']);
+  assert.equal(r.rueckmeldung.loesung, undefined);
+  for (let i = 0; i < ra.worte.length; i++) r = (await pr(rid, { wort: i, zustaende: runNFA(N, ra.worte[i]).sets.at(-1) })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, 8, '4 von 5 im ersten Versuch → 10 × 0,8');
+  assert.equal((await pr(rid, { wort: 0, zustaende: ['X9'] })).status, 400);
+  // Teilmengenkonstruktion „lol“
+  const tid = 'parallelwelten:lol';
+  const ta = (await s.get(`/api/aufgaben/${tid}`)).body.aufgabe;
+  const { table } = subsetConstruction(nfa(ta.automat));
+  const falsch = (await pr(tid, { menge: table[0].set, ziele: {} })).body;
+  assert.equal(falsch.rueckmeldung.richtig, false);
+  assert.ok(falsch.rueckmeldung.falsch.length > 0);
+  assert.equal(falsch.zustand.fehlversuche, 1);
+  for (const z of table) r = (await pr(tid, { menge: z.set, ziele: z.targets })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(20, 1, 0));
+  assert.equal(r.loesung.zeilen.length, table.length);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'parallelwelten-teilmengen'));
+  assert.equal((await pr(tid, { menge: ['S1', 'S3'], ziele: {} })).status, 400, 'Menge kommt nicht vor');
+});
+
+test('Keller-Labor: Tabelle vollständig geprüft (Lauf + Entscheidung), Rückwärts nur mit Folge, Wort bleibt auf dem Server', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=keller')).body.aufgaben;
+  assert.equal(k.length, 20);
+  const { kellerTabellenLoesung } = await import('../app/js/engine/pruefer.js');
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // Tabellen-Trainer aⁿbⁿ: aabb, aab, abb
+  const tid = 'keller:anbn:tabelle';
+  const ta = (await s.get(`/api/aufgaben/${tid}`)).body.aufgabe;
+  assert.deepEqual(ta.worte, ['aabb', 'aab', 'abb']);
+  const L = kellerTabellenLoesung(ta.automat, ta.worte).tabellen;
+  const tabelle = (w) => L.find((t) => t.wort === w);
+  const t0 = tabelle('aabb');
+  let r = (await pr(tid, { wort: 0, zeilen: t0.zeilen, akzeptiert: false })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.rueckmeldung.fehler.grund, 'akzeptanz');
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr(tid, { wort: 0, zeilen: t0.zeilen.slice(0, 3), akzeptiert: true })).body;
+  assert.equal(r.rueckmeldung.fehler.grund, 'unvollstaendig');
+  const kaputt = t0.zeilen.map((z, i) => (i === 2 ? { ...z, keller: 'A#' } : z));
+  r = (await pr(tid, { wort: 0, zeilen: kaputt, akzeptiert: true })).body;
+  assert.deepEqual(r.rueckmeldung.fehler, { zeile: 2, grund: 'uebergang' });
+  for (let i = 0; i < 3; i++) r = (await pr(tid, { wort: i, zeilen: tabelle(ta.worte[i]).zeilen, akzeptiert: tabelle(ta.worte[i]).akzeptiert })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 3, 0));
+  assert.equal(r.loesung.tabellen.length, 3);
+  // Rückwärts: öffentlich nur die Folge
+  const rid = 'keller:anbn:rueckwaerts';
+  const ra = (await s.get(`/api/aufgaben/${rid}`)).body.aufgabe;
+  assert.ok(Array.isArray(ra.folge) && ra.folge.length > 3);
+  assert.doesNotMatch(JSON.stringify(ra), /aaabbb/);
+  r = (await pr(rid, { wort: 'aabb' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr(rid, { wort: 'aaabbb' })).body;
+  assert.equal(r.geloest, true);
+  assert.ok(r.rueckmeldung.zeilen.length === ra.folge.length);
+  assert.equal(r.loesung.wort, 'aaabbb');
+});
+
+test('Rallye: Linksableitung auf dem Server nachgespielt, Baum-Modus braucht zwei verschiedene Ableitungen', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // aⁿbⁿ: S → aSb | ab, Ziel aaabbb
+  let r = (await pr('rallye:anbn', { regeln: [['S', 0], ['S', 1]] })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr('rallye:anbn', { regeln: [['S', 0], ['S', 0], ['S', 1]] })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 1, 0));
+  assert.equal(r.loesung.schritte, 3);
+  assert.equal((await pr('rallye:anbn', { regeln: 'x' })).status, 400);
+  // Baum-Modus: zweimal dieselbe Ableitung genügt nicht
+  const k = (await s.get('/api/katalog?modul=rallye')).body.aufgaben;
+  const baum = k.find((a) => a.schluessel === 'term-mehrdeutig');
+  const ba = (await s.get(`/api/aufgaben/${baum.id}`)).body.aufgabe;
+  assert.equal(ba.modus, 'baum');
+  const { parseGrammar, tokenizeWord } = await import('../app/js/engine/grammar.js');
+  const g = parseGrammar(ba.grammatik);
+  const w = tokenizeWord(g, ba.ziel).tokens;
+  // alle Linksableitungen per Tiefensuche (klein)
+  const alle = [];
+  const dfs = (form, regeln) => {
+    if (alle.length >= 2 || regeln.length > 20) return;
+    const pos = form.findIndex((x) => x.t === 'N');
+    if (pos < 0) { if (form.length === w.length && form.every((x, i) => x.v === w[i])) alle.push(regeln); return; }
+    if (form.filter((x) => x.t === 'T').length > w.length) return;
+    (g.byLhs.get(form[pos].v) ?? []).forEach((rg, idx) => dfs([...form.slice(0, pos), ...rg.rhs, ...form.slice(pos + 1)], [...regeln, [form[pos].v, idx]]));
+  };
+  dfs([{ t: 'N', v: g.start }], []);
+  assert.equal(alle.length, 2);
+  assert.equal((await pr(baum.id, { baeume: [alle[0], alle[0]] })).body.rueckmeldung.richtig, false);
+  r = (await pr(baum.id, { baeume: alle })).body;
+  assert.equal(r.geloest, true);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'rallye-mehrdeutig'));
+});
+
+test('Grammatik-Tester: Sprache bis maxLen, rechtsregulär verlangt, Tipp kostet, Musterlösung erst danach', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=grammatik')).body.aufgaben;
+  assert.ok(k.length >= 8);
+  const id = 'grammatik:anbn';
+  const a = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.doesNotMatch(JSON.stringify(a), /musterloesung|aSb/);
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr({ grammatik: 'S → aSb | ε' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.rueckmeldung.grund, 'sprache');
+  assert.deepEqual(r.rueckmeldung.zuviel, []);
+  assert.equal((await pr({ grammatik: 'S → → x' })).status, 400);
+  assert.equal((await post(s, `/api/aufgaben/${id}/tipp`)).body.zustand.tipps.length, 1);
+  r = (await pr({ grammatik: 'S → aSb | ab' })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(20, 1, 1));
+  assert.equal(r.loesung.musterloesung, 'S → aSb | ab');
+  // rechtsregulär verlangt: kontextfreie Grammatik der richtigen Sprache reicht nicht
+  const reg = k.find((x) => x.stufe === 2 && x.schluessel !== 'anbn' && x.schluessel !== 'palindrome');
+  const ra = (await s.get(`/api/aufgaben/${reg.id}`)).body.aufgabe;
+  if (ra.regulaer) {
+    const { GRAMMATIK_CHALLENGES } = await import('../inhalte/grammatik.js');
+    const mu = GRAMMATIK_CHALLENGES.find((c) => c.id === reg.schluessel).musterloesung;
+    assert.equal((await post(s, `/api/aufgaben/${reg.id}/pruefen`, { antwort: { grammatik: mu } })).body.rueckmeldung.richtig, true);
+  }
+});
+
+test('Turing-Labor: fehlende Regel auf dem Server gegen die Referenz geprüft, Regel bleibt verborgen', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const id = 'turing:binaer-luecke';
+  const a = (await s.get(`/api/aufgaben/${id}`)).body.aufgabe;
+  assert.equal(a.maschine.delta.S1['1'], undefined, 'fehlende Regel nicht ausgeliefert');
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr({ to: 'S1', write: '1', move: 'L' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.zustand.fehlversuche, 1);
+  assert.equal((await pr({ to: 'X', write: '1', move: 'L' })).status, 400);
+  const { TURING_PROGRAMME } = await import('../app/js/data/turing.js');
+  const [to, write, move] = TURING_PROGRAMME.find((p) => p.id === 'binaer-plus-1').maschine.delta.S1['1'];
+  r = (await pr({ to, write, move })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(20, 1, 0));
+  assert.deepEqual(r.loesung.regel, { to, write, move });
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

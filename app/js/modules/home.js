@@ -33,25 +33,25 @@ const STATUS = {
   minimierer: async () => { const A = await katalog('minimierer'); return geloest(solvedOf('minimierer', A.map((x) => x.schluessel)), A.length); },
   mealy: async () => { const A = (await katalog('mealy')).filter((a) => a.art === 'bugjagd'); return geloest(solvedOf('mealy', A.map((x) => x.schluessel)), A.length, 'repariert'); },
   ueberliste: async () => {
-    const { UEBERLISTE_STUFEN: S } = await import('../data/ueberliste.js');
-    return geloest(solvedOf('ueberliste', S.map((x) => x.id)), S.length, 'überlistet') + (progress.isSolved('ueberliste', 'bonus') ? ' · Bonus' : '');
+    const S = (await katalog('ueberliste')).filter((a) => a.art !== 'bonus');
+    return geloest(solvedOf('ueberliste', S.map((x) => x.schluessel)), S.length, 'überlistet') + (progress.isSolved('ueberliste', 'bonus') ? ' · Bonus' : '');
   },
   parallelwelten: async () => {
-    const { PARALLELWELTEN: P } = await import('../data/parallelwelten.js');
-    const r = P.flatMap((x) => x.raetsel.map((w) => `${x.id}:${w}`));
-    const t = P.filter((x) => x.teilmengen).map((x) => x.id);
-    return `Rätsel ${solvedOf('parallelwelten-r', r)}/${r.length} · Teilmengen ${solvedOf('parallelwelten', t)}/${t.length}`;
+    const K = await katalog('parallelwelten');
+    const r = K.filter((a) => a.art === 'raetsel').map((a) => a.schluessel);
+    const t = K.filter((a) => a.art === 'teilmengen').map((a) => a.schluessel);
+    return `Rätsel ${solvedOf('parallelwelten', r)}/${r.length} · Teilmengen ${solvedOf('parallelwelten', t)}/${t.length}`;
   },
   keller: async () => {
-    const { KELLER_AUTOMATEN: K } = await import('../data/keller.js');
-    const t = K.flatMap((x) => x.tabelle.map((w) => `${x.id}:${w}`));
-    const r = K.flatMap((x) => x.rueckwaerts.map((w) => `${x.id}:${w}`));
-    return `Tabellen ${solvedOf('keller-t', t)}/${t.length} · Rückwärts ${solvedOf('keller-r', r)}/${r.length}`;
+    const K = await katalog('keller');
+    const t = K.filter((a) => a.art === 'tabelle').map((a) => a.schluessel);
+    const r = K.filter((a) => a.art === 'rueckwaerts').map((a) => a.schluessel);
+    return `Tabellen ${solvedOf('keller', t)}/${t.length} · Rückwärts ${solvedOf('keller', r)}/${r.length}`;
   },
-  rallye: async () => { const { RALLYE_AUFGABEN: A } = await import('../data/rallye.js'); return geloest(solvedOf('rallye', A.map((x) => x.id)), A.length); },
-  grammatik: async () => { const { GRAMMATIK_CHALLENGES: C } = await import('../data/grammatik.js'); return geloest(solvedOf('grammatik', C.map((x) => x.id)), C.length); },
+  rallye: async () => { const A = await katalog('rallye'); return geloest(solvedOf('rallye', A.map((x) => x.schluessel)), A.length); },
+  grammatik: async () => { const A = await katalog('grammatik'); return geloest(solvedOf('grammatik', A.map((x) => x.schluessel)), A.length); },
   sortierer: async () => { const b = progress.best('sortierer:runde'); return b != null ? `Rekord ${b} richtig einsortiert` : ''; },
-  turing: async () => { const { TURING_CHALLENGES: C } = await import('../data/turing.js'); return geloest(solvedOf('turing', C.map((x) => x.id)), C.length); },
+  turing: async () => { const A = await katalog('turing'); return geloest(solvedOf('turing', A.map((x) => x.schluessel)), A.length); },
   quiz: async () => {
     const Q = await katalog('quiz');
     const done = (keys) => keys.filter((k) => progress.best(k) != null).length;

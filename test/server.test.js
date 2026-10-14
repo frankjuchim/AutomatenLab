@@ -63,6 +63,29 @@ test('Unbekannte Pfade ohne Dateiendung liefern wie bisher die App (QR-Codes: BA
   assert.equal((await request(app).get('/api/gibtsnicht')).status, 404);
 });
 
+test('Datenbank: Migration 5 übernimmt die Trainingsrunden und erlaubt den Sortierer', () => {
+  const { MIGRATIONEN, setMeta } = require('../src/db');
+  const Database = require('better-sqlite3');
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const datei = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'al-mig-')), 'al.db');
+  const alt = new Database(datei);
+  for (const sql of MIGRATIONEN.slice(0, 4)) alt.exec(sql);
+  setMeta(alt, 'schema_version', 4);
+  setMeta(alt, 'app', 'automatenlab');
+  alt.prepare("INSERT INTO konten (sub, rolle, name, created_at) VALUES ('s:1', 'schueler', 'Mika R.', 'x')").run();
+  alt.prepare("INSERT INTO training (sub, modul, art, daten, tag, created_at, punkte) VALUES ('s:1', 'arena', 'stufe-1', '{}', '2026-10-14', 'x', 7)").run();
+  assert.throws(() => alt.prepare("INSERT INTO training (sub, modul, daten, tag, created_at) VALUES ('s:1', 'sortierer', '{}', 't', 'x')").run());
+  alt.close();
+  const db = openDatabase(datei);
+  assert.equal(Number(getMeta(db, 'schema_version')), SCHEMA_VERSION);
+  assert.deepEqual(db.prepare('SELECT sub, modul, punkte FROM training').all().map((r) => ({ ...r })), [{ sub: 's:1', modul: 'arena', punkte: 7 }]);
+  db.prepare("INSERT INTO training (sub, modul, daten, tag, created_at) VALUES ('s:1', 'sortierer', '{}', 't', 'x')").run();
+  db.prepare("DELETE FROM konten WHERE sub = 's:1'").run();
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM training').get().n, 0);
+  db.close();
+});
+
 test('Datenbank: Migrationen beim ersten Start, Daten bleiben beim Neustart erhalten', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'al-db-'));
   const datei = path.join(dir, 'unter', 'automatenlab.db');

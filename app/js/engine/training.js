@@ -5,6 +5,9 @@
 //                    werteArenaRunde(items, antworten)                        → { richtig, falsch, score, besteSerie, … }
 //   Unterscheide!:   erzeugeUnterscheideRunde(aufgaben, { nurId, rng })       → [{ aufgabe, p, q, aequivalent, wort }]
 //                    werteUnterscheideRunde(aufgaben, items, antworten)        → { richtig, falsch, ergebnisse }
+//   Chomsky-Sortierer: erzeugeSortiererRunde(karten, { alle, rng })          → [{ id, text, typ, warum }]
+//                    pruefeSortiererKarte(item, typ)                         → { richtig, typ, warum }
+//                    werteSortiererRunde(items, antworten)                   → { richtig, falsch, ergebnisse }
 
 import { dfa, runDFA, randomWord } from './dfa.js';
 import { makeRng, tokenize } from './tokenize.js';
@@ -120,4 +123,39 @@ export function werteUnterscheideRunde(aufgaben, items, antworten) {
     return { i, ...r };
   });
   return { richtig, falsch: ergebnisse.length - richtig, ergebnisse };
+}
+
+/** Fächer des Chomsky-Sortierers (Typ 3, Typ 2, Typ 0/1) und Kartenzahl einer normalen Runde (4 + 3 + 3). */
+export const SORTIERER_TYPEN = [3, 2, 0];
+export const SORTIERER_RUNDE = 10;
+
+/**
+ * Sortierer-Runde: ausgewogen 4 Karten Typ 3, 3 Karten Typ 2, 3 Karten Typ 0/1 – oder alle Karten (alle = true),
+ * jeweils gemischt. karten: [{ id, text, typ, warum }].
+ */
+export function erzeugeSortiererRunde(karten, { alle = false, rng = makeRng() } = {}) {
+  if (!karten.length) throw Object.assign(new Error('Diese Runde gibt es nicht.'), { status: 404 });
+  if (alle) return rng.shuffle(karten).map(({ id, text, typ, warum }) => ({ id, text, typ, warum }));
+  const von = (t) => rng.shuffle(karten.filter((k) => k.typ === t));
+  return rng.shuffle([...von(3).slice(0, 4), ...von(2).slice(0, 3), ...von(0).slice(0, 3)]).map(({ id, text, typ, warum }) => ({ id, text, typ, warum }));
+}
+
+/** Eine Karte einsortieren: typ ∈ SORTIERER_TYPEN → { richtig, typ (richtiges Fach), warum }. */
+export function pruefeSortiererKarte(item, typ) {
+  if (!SORTIERER_TYPEN.includes(typ)) throw Object.assign(new Error('Dieses Fach gibt es nicht.'), { status: 400 });
+  return { richtig: typ === item.typ, typ: item.typ, warum: item.warum };
+}
+
+/** Sortierer-Runde auswerten. antworten: [typ | null, …] je Karte (null = nicht beantwortet). */
+export function werteSortiererRunde(items, antworten) {
+  if (!Array.isArray(antworten) || antworten.length > items.length) throw Object.assign(new Error('Die Antworten passen nicht zu dieser Runde.'), { status: 400 });
+  let richtig = 0;
+  let falsch = 0;
+  const ergebnisse = antworten.map((t, i) => {
+    if (t == null) return { i, richtig: false, offen: true };
+    const r = pruefeSortiererKarte(items[i], t);
+    if (r.richtig) richtig++; else falsch++;
+    return { i, ...r };
+  });
+  return { richtig, falsch, ergebnisse };
 }

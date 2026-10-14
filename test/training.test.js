@@ -1,5 +1,5 @@
 'use strict';
-// Training (Arena, „Unterscheide!“): Runde vom Server, Antworten am Ende, 1 Punkt je richtiger Antwort, höchstens 30 je
+// Training (Arena, „Unterscheide!“, Sortierer): Runde vom Server, Antworten am Ende, 1 Punkt je richtiger Antwort, höchstens 30 je
 // Tag, Arena-Rekorde nur für rechtzeitig beendete Zeitrunden, Abzeichen serverseitig, Löschung.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -99,6 +99,53 @@ test('Unterscheide!: Paare ohne Lösung, unterscheidendes Wort oder „äquivale
   const e = (await post(s, `/api/training/runde/${r.id}/ende`, { antworten: r.items.map(() => ({ aequivalent: true })) })).body;
   assert.ok(e.falsch > 0 && e.ergebnisse.some((x) => !x.richtig && x.beispielWort));
   assert.equal((await post(s, '/api/training/unterscheide/neu', { aufgabe: 'gibts-nicht' })).status, 404);
+});
+
+test('Sortierer: Karten ohne Fach, Antwort je Karte mit Begründung, erste Antwort zählt, Rekord nur in Zehnerrunden', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const { SORTIERER_KARTEN } = await import('../inhalte/sortierer.js');
+  const typVon = new Map(SORTIERER_KARTEN.map((k) => [k.text, k.typ]));
+  const r = (await post(s, '/api/training/sortierer/neu')).body;
+  assert.equal(r.art, 'runde');
+  assert.equal(r.items.length, 10);
+  assert.ok(r.items.every((x) => Object.keys(x).join() === 'text'));
+  const typen = r.items.map((x) => typVon.get(x.text));
+  assert.deepEqual([3, 2, 0].map((t) => typen.filter((y) => y === t).length), [4, 3, 3]);
+  // erste Karte falsch, dann richtig versucht: es bleibt bei falsch
+  const falsch = typen[0] === 3 ? 2 : 3;
+  const a0 = (await post(s, `/api/training/runde/${r.id}/antwort`, { i: 0, typ: falsch })).body;
+  assert.deepEqual([a0.richtig, a0.typ], [false, typen[0]]);
+  assert.ok(a0.warum.length > 20);
+  const a0b = (await post(s, `/api/training/runde/${r.id}/antwort`, { i: 0, typ: typen[0] })).body;
+  assert.deepEqual([a0b.richtig, a0b.wiederholt], [false, true]);
+  for (let i = 1; i < 10; i++) assert.equal((await post(s, `/api/training/runde/${r.id}/antwort`, { i, typ: typen[i] })).body.richtig, true);
+  assert.equal((await post(s, `/api/training/runde/${r.id}/antwort`, { i: 10, typ: 3 })).status, 400);
+  assert.equal((await post(s, `/api/training/runde/${r.id}/antwort`, { i: 1, typ: 1 })).status, 200); // schon beantwortet
+  const e = (await post(s, `/api/training/runde/${r.id}/ende`)).body;
+  assert.deepEqual([e.richtig, e.falsch, e.punkteErhalten, e.wertung, e.rekord], [9, 1, 9, true, true]);
+  assert.deepEqual(e.neueAbzeichen.map((b) => b.id), ['sortierer-erste']);
+  assert.equal((await post(s, `/api/training/runde/${r.id}/antwort`, { i: 0, typ: 3 })).status, 409);
+  // perfekte Zehnerrunde → Abzeichen; ungültiges Fach → 400
+  const r2 = (await post(s, '/api/training/sortierer/neu')).body;
+  assert.equal((await post(s, `/api/training/runde/${r2.id}/antwort`, { i: 0, typ: 1 })).status, 400);
+  for (let i = 0; i < 10; i++) await post(s, `/api/training/runde/${r2.id}/antwort`, { i, typ: typVon.get(r2.items[i].text) });
+  const e2 = (await post(s, `/api/training/runde/${r2.id}/ende`)).body;
+  assert.deepEqual([e2.richtig, e2.rekord, e2.rekordVorher], [10, true, 9]);
+  assert.deepEqual(e2.neueAbzeichen.map((b) => b.id), ['sortierer-perfekt']);
+  // alle Karten: Punkte, aber kein Rekord
+  const r3 = (await post(s, '/api/training/sortierer/neu', { alle: true })).body;
+  assert.deepEqual([r3.art, r3.items.length], ['alle', SORTIERER_KARTEN.length]);
+  for (let i = 0; i < 3; i++) await post(s, `/api/training/runde/${r3.id}/antwort`, { i, typ: typVon.get(r3.items[i].text) });
+  const e3 = (await post(s, `/api/training/runde/${r3.id}/ende`)).body;
+  assert.deepEqual([e3.richtig, e3.punkteErhalten, e3.wertung], [3, 3, false]);
+  const ls = (await s.get('/api/lernstand')).body;
+  assert.equal(ls.best['sortierer:runde'], 10);
+  assert.equal(ls.punkte, 22);
+  assert.ok(ls.module.includes('sortierer'));
+  // Einzelantworten gibt es nur beim Sortierer
+  const u = (await post(s, '/api/training/arena/neu', { stufe: 1 })).body;
+  assert.equal((await post(s, `/api/training/runde/${u.id}/antwort`, { i: 0, typ: 3 })).status, 400);
 });
 
 test('Löschung über die Verbund-API entfernt auch die Trainingsrunden', async () => {

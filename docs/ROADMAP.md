@@ -41,7 +41,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
   - ✅ PR 4a – Minimierer: jede Runde des Markierungsverfahrens auf dem Server, Stufen 10/20/30, Demo-Aufgabe; „Unterscheide!“ vorerst Übung ohne Punkte
   - ✅ PR 4b – Mealy-Maschine: „Was kommt raus?“ wie ein Quiz, Bug-Jagd mit Test ohne Wertung und Reparatur auf dem Server, Demo-Automat
   - ✅ PR 4c – Training wie der Algo-Quest-Trainingsplatz: Akzeptor-Arena und „Unterscheide!“ (1 Punkt je richtiger Antwort, höchstens 30 je Tag), Rekorde und Abzeichen serverseitig; Chomsky-Sortierer folgt mit PR 5
-- [ ] PR 5 – Welten B–D: Parallelwelten, Keller-Labor, Überliste, Ableitungs-Rallye, Grammatik-Tester, Turing-Labor, Chomsky-Sortierer (Training); Test „keine Lösung in ausgelieferten Dateien“; Abzeichen serverseitig
+- ✅ PR 5 – Welten B–D (1.9.0): Überliste, Parallelwelten, Keller-Labor (5a), Ableitungs-Rallye, Grammatik-Tester, Turing-Labor, Chomsky-Sortierer als Training (5b); je Modul eine eigene Demo-Aufgabe; Test „keine Lösung in ausgelieferten Dateien“ für alle Module; Abzeichen serverseitig
 
 ## Grund- und Leistungskurs (Vertrag v1.2)
 - ✅ Niveaus nach KC 2017 (gA + eA / nur eA / Zusatz) für Level, Boss-Level, Module, Merkblätter; Niveau-Übersicht `/niveaus` (= `#/themen?teil=niveaus`), Manifest v1.2 (`kurs`, `niveaus`, `urls.niveaus`), Etiketten in der App, Niveau im Kopf aller Materialien, Abschnitt in der Einheitsplanung

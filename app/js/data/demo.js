@@ -84,3 +84,104 @@ DEMO.push(
   { modul: 'mealy', art: 'vorhersage', id: 'demo:mealy:vorhersage', titel: 'Demo: Paritäts-Melder – Was kommt raus?', daten: PARITAET },
   { modul: 'mealy', art: 'bugjagd', id: 'demo:mealy', titel: 'Demo: Paritäts-Melder – Bug-Jagd', daten: PARITAET },
 );
+
+// Überliste-Demo: ein eigener „Kontostand“-Automat (Bilanz bis ±2, danach sättigt er)
+DEMO.push({
+  modul: 'ueberliste', id: 'demo:ueberliste', titel: 'Demo: Der Kontostand',
+  daten: {
+    id: 'demo-kontostand', stufe: 1, titel: 'Der Kontostand',
+    kontext: 'Auf ein Konto wird eingezahlt (+) und abgehoben (-), immer derselbe Betrag. Der Automat behauptet zu erkennen, ob der Kontostand am Ende wieder 0 ist.',
+    sprache: 'L = Wörter über {+, -} mit gleich vielen + wie -',
+    automat: { alphabet: ['+', '-'], start: 'S0', accepting: ['S0'],
+      delta: { M2: { '+': 'M1', '-': 'M2' }, M1: { '+': 'S0', '-': 'M2' }, S0: { '+': 'P1', '-': 'M1' }, P1: { '+': 'P2', '-': 'S0' }, P2: { '+': 'P2', '-': 'P1' } } },
+    praefix: '+', fortsetzung: '-',
+    pruefe: (w) => count(w, '+') === count(w, '-'),
+    tipps: [
+      'Der Automat hat nur fünf Zustände – der Kontostand kann aber beliebig groß werden.',
+      'Lies +, ++, +++ … und lass dir den Zustand nach jedem Präfix zeigen. Wann bleibt er gleich?',
+      'Konkret: Probiere +++--- (dreimal einzahlen, dreimal abheben).',
+    ],
+  },
+});
+
+// Parallelwelten-Demo: ein eigener NEA mit ε-Übergängen (ODER-Baustein), für Rätsel und Teilmengenkonstruktion
+const ODER = {
+  id: 'demo-oder', titel: 'Beginnt mit 1 oder endet auf 0',
+  kontext: 'Zwei ε-Übergänge teilen die Figur gleich am Anfang: Eine prüft „beginnt mit 1“ (S1, S2), die andere „endet auf 0“ (S3, S4).',
+  automat: { alphabet: ['0', '1'], start: 'S0', accepting: ['S2', 'S4'],
+    delta: { S0: { ε: ['S1', 'S3'] }, S1: { 1: 'S2' }, S2: { '0, 1': 'S2' }, S3: { '0, 1': 'S3', 0: 'S4' }, S4: {} } },
+  beispiele: { ja: ['1', '10', '0', '110', '0010'], nein: ['ε', '01', '011', '0111'] },
+  pruefe: (w) => w[0] === '1' || w.at(-1) === '0',
+  raetsel: ['ε', '1', '0', '10', '01'],
+  teilmengen: true,
+};
+DEMO.push(
+  { modul: 'parallelwelten', art: 'raetsel', id: 'demo:parallelwelten:raetsel', titel: 'Demo: Beginnt mit 1 oder endet auf 0 – Wo stehen die Figuren?', daten: ODER },
+  { modul: 'parallelwelten', art: 'teilmengen', id: 'demo:parallelwelten', titel: 'Demo: Beginnt mit 1 oder endet auf 0 – Teilmengenkonstruktion', daten: ODER },
+);
+
+// Keller-Demo: ein eigener Kellerautomat aⁿ c bⁿ (n ≥ 0) für Simulator, Tabellen-Trainer und Rückwärts
+const ACB = {
+  id: 'demo-acb', titel: 'aⁿ c bⁿ (n ≥ 0)',
+  kontext: 'Einige a, dann genau ein c als Mitte, dann genauso viele b wie a. L = {aⁿcbⁿ | n ≥ 0}, z. B. c, acb, aacbb.',
+  automat: { inputAlphabet: ['a', 'b', 'c'], stackAlphabet: ['#', 'A'], states: ['S0', 'S1', 'S2'], start: 'S0', accepting: ['S2'],
+    transitions: ['S0 -> S0 : (#, a) : A#', 'S0 -> S0 : (A, a) : AA', 'S0 -> S1 : (#, c) : #', 'S0 -> S1 : (A, c) : A', 'S1 -> S1 : (A, b) : ε', 'S1 -> S2 : (#, ε) : #'] },
+  pruefe: (w) => { const s = w.join(''); const m = /^(a*)c(b*)$/.exec(s); return !!m && m[1].length === m[2].length; },
+  beispiele: { ja: ['c', 'acb', 'aacbb'], nein: ['ε', 'ab', 'acbb', 'aacb', 'cb'] },
+  keller: 'Für jedes a liegt ein A im Keller. Das c wechselt nur den Zustand. Jedes b entfernt ein A; liegt danach wieder # oben, waren es gleich viele.',
+  sim: ['aacbb', 'acbb', 'c'], tabelle: ['acb', 'aacb'], rueckwaerts: ['aacbb'],
+};
+DEMO.push(
+  { modul: 'keller', art: 'tabelle', id: 'demo:keller:tabelle', titel: 'Demo: aⁿ c bⁿ – Tabellen-Trainer', daten: ACB },
+  { modul: 'keller', art: 'rueckwaerts', id: 'demo:keller:rueckwaerts', titel: 'Demo: aⁿ c bⁿ – Rückwärts', daten: ACB },
+);
+
+// Rallye-Demo: eine eigene kleine Grammatik (Binärzahlen ohne führende Null)
+DEMO.push({
+  modul: 'rallye', id: 'demo:rallye', titel: 'Demo: Binärzahlen ohne führende Null',
+  daten: {
+    id: 'demo-binaer', stufe: 1, titel: 'Binärzahlen ohne führende Null',
+    kontext: 'Die Grammatik erzeugt alle Binärzahlen ohne führende Null: 0 allein oder eine 1 mit beliebigen weiteren Ziffern.',
+    grammatik: 'S → 1A | 0\nA → 0A | 1A | ε', ziel: '101',
+  },
+});
+
+// Grammatik-Demo: eine eigene rechtsreguläre Challenge
+DEMO.push({
+  modul: 'grammatik', id: 'demo:grammatik', titel: 'Demo: Beginnt mit a',
+  daten: {
+    id: 'demo-beginnt-a', stufe: 2, titel: 'Beginnt mit a',
+    aufgabe: 'Entwirf eine rechtsreguläre Grammatik für alle Wörter über Σ = {a, b}, die mit a beginnen.',
+    alphabet: ['a', 'b'], regulaer: true, maxLen: 8,
+    pruefe: (w) => w[0] === 'a',
+    beispiele: { ja: ['a', 'ab', 'aba', 'abbb'], nein: ['ε', 'b', 'ba', 'bab'] },
+    tipp: 'Die erste Regel legt das a fest; danach darf ein zweites Nichtterminal beliebig viele a und b erzeugen – und mit ε aufhören.',
+    musterloesung: 'S → aA\nA → aA | bA | ε',
+  },
+});
+
+// Turing-Demo: Challenge am Fleißigen Biber (2 Zustände) – eine Regel fehlt
+DEMO.push({
+  modul: 'turing', id: 'demo:turing', titel: 'Demo: Fleißiger Biber – die fehlende Regel',
+  daten: {
+    id: 'demo-biber', stufe: 1, titel: 'Fleißiger Biber: die fehlende Regel', programm: 'biber-2',
+    fehlt: { from: 'B', read: '□' },
+    aufgabe: 'Beim Fleißigen Biber mit zwei Zuständen fehlt die Regel für B, wenn ein leeres Feld (□) gelesen wird. Die fertige Maschine schreibt auf leerem Band vier Einsen und hält.',
+    tests: [''],
+  },
+});
+
+// Chomsky-Sortierer im Gastmodus: eigene Demo-Karten (nicht die Karten des Servers aus inhalte/sortierer.js), genau
+// eine Zehnerrunde (4 × Typ 3, 3 × Typ 2, 3 × Typ 0/1). Format wie dort: id, text, typ, warum.
+export const DEMO_SORTIERER = [
+  { id: 'demo-beginnt-0', text: 'Wörter über {0, 1}, die mit 0 beginnen', typ: 3, warum: 'Nur das erste Zeichen entscheidet – danach bleibt der Automat in einem Endzustand.' },
+  { id: 'demo-kein-bb', text: 'Wörter über {a, b}, in denen nie zwei b direkt hintereinander stehen', typ: 3, warum: 'Der Automat merkt sich nur, ob das letzte Zeichen ein b war; ein zweites b führt in den Fehlerzustand.' },
+  { id: 'demo-b-mod-3', text: 'Wörter über {a, b}, deren Anzahl an b durch 3 teilbar ist', typ: 3, warum: 'Zählen modulo 3: drei Zustände für die Reste 0, 1 und 2 genügen.' },
+  { id: 'demo-uhrzeit', text: 'Uhrzeiten im Format hh:mm von 00:00 bis 23:59', typ: 3, warum: 'Es gibt nur 1440 Uhrzeiten – eine endliche Sprache ist immer regulär.' },
+  { id: 'demo-ancbn', text: 'aⁿcbⁿ (n ≥ 0): a-Block, ein c, gleich langer b-Block', typ: 2, warum: 'Jedes a kommt auf den Keller, jedes b nimmt eines herunter – unbeschränktes Zählen schafft kein DEA.' },
+  { id: 'demo-anban', text: 'aⁿbaⁿ (n ≥ 0): vor und nach dem b gleich viele a', typ: 2, warum: 'Die a vor dem b werden im Keller gezählt und danach abgebaut – ein Vergleich, also kontextfrei.' },
+  { id: 'demo-mehr-a', text: 'Wörter über {a, b} mit mehr a als b', typ: 2, warum: 'Die Differenz der Anzahlen kann beliebig groß werden – der Keller führt sie mit, ein DEA nicht.' },
+  { id: 'demo-anbnan', text: 'aⁿbⁿaⁿ (n ≥ 1)', typ: 0, warum: 'Drei gleich lange Blöcke brauchen zwei Vergleiche – der Keller ist nach dem ersten leer.' },
+  { id: 'demo-ijk', text: 'aⁱbʲcᵏ mit i < j < k', typ: 0, warum: 'b muss mit a und c verglichen werden – zwei Vergleiche mit demselben Block schafft kein Kellerautomat.' },
+  { id: 'demo-w-raute-w', text: 'w#w: ein Wort über {a, b}, ein #, dann dasselbe Wort noch einmal', typ: 0, warum: 'Der Keller gibt das Wort nur rückwärts heraus – für die Kopie in gleicher Reihenfolge braucht es ein Band.' },
+];

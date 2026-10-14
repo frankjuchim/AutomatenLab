@@ -7,11 +7,14 @@ import { dfa, runDFA } from '../js/engine/dfa.js';
 import { enumerateWords } from '../js/engine/tokenize.js';
 import { parseGrammar, derive, derivationToTree, languageUpTo, isRightRegular, tokenizeWord } from '../js/engine/grammar.js';
 import { tm, runTM, countOnes, tmToGraph } from '../js/engine/turing.js';
-import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../js/data/ueberliste.js';
-import { RALLYE_AUFGABEN } from '../js/data/rallye.js';
-import { GRAMMATIK_CHALLENGES } from '../js/data/grammatik.js';
-import { SORTIERER_KARTEN, FAECHER } from '../js/data/sortierer.js';
-import { TURING_PROGRAMME, TURING_CHALLENGES } from '../js/data/turing.js';
+import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../../inhalte/ueberliste.js';
+import { RALLYE_AUFGABEN } from '../../inhalte/rallye.js';
+import { GRAMMATIK_CHALLENGES } from '../../inhalte/grammatik.js';
+import { FAECHER } from '../js/data/sortierer.js';
+import { SORTIERER_KARTEN } from '../../inhalte/sortierer.js';
+import { DEMO_SORTIERER } from '../js/data/demo.js';
+import { TURING_PROGRAMME } from '../js/data/turing.js';
+import { TURING_CHALLENGES } from '../../inhalte/turing.js';
 import { QUIZ_WELTEN, QUIZ_DS } from '../../inhalte/quiz.js';
 import { MODULES } from '../js/modules/manifest.js';
 import { BADGES } from '../js/data/badges.js';
@@ -28,7 +31,7 @@ test('Überliste: jeder Automat zählt bis zur Kapazität richtig und irrt sich 
     // es gibt ein Wort, bei dem er sich irrt (Präfix^(c+1) Fortsetzung^(c+1))
     const bad = [...Array(c + 1).fill(s.praefix), ...Array(c + 1).fill(s.fortsetzung)];
     assert.notEqual(runDFA(A, bad).accepted, !!s.pruefe(bad), `${s.id}: müsste sich bei ${bad.join('')} irren`);
-    assert.ok(s.tipps.length >= 3 && s.punkte > 0);
+    assert.ok(s.tipps.length >= 3 && [1, 2, 3].includes(s.stufe));
   }
   // Zustandsanzahl wächst mit der Stufe innerhalb derselben Sprache
   const anbn = UEBERLISTE_STUFEN.filter((s) => s.sprache.includes('aⁿbⁿ')).map((s) => dfa(bauAutomat(s)).states.length);
@@ -103,10 +106,12 @@ test('Grammatik-Tester: Musterlösungen stimmen mit Prädikaten überein, Beispi
   assert.deepEqual(languageUpTo(parseGrammar('S → SS | ε'), 4).words, [[]]);
 });
 
-test('Sortierer: ≥ 24 Karten, alle Fächer vertreten, Begründungen vorhanden', () => {
+test('Sortierer: ≥ 24 Karten, alle Fächer vertreten, Begründungen vorhanden; Demo-Karten eigene', () => {
   assert.ok(SORTIERER_KARTEN.length >= 24);
   const ids = new Set();
-  for (const k of SORTIERER_KARTEN) {
+  const texte = new Set(SORTIERER_KARTEN.map((k) => k.text));
+  for (const k of DEMO_SORTIERER) assert.ok(!texte.has(k.text) && !SORTIERER_KARTEN.some((x) => x.id === k.id), `Demo-Karte ${k.id} stammt aus dem Kartensatz`);
+  for (const k of [...SORTIERER_KARTEN, ...DEMO_SORTIERER]) {
     assert.ok(!ids.has(k.id), `doppelte id ${k.id}`); ids.add(k.id);
     assert.ok(FAECHER[k.typ], `${k.id}: unbekannter Typ ${k.typ}`);
     assert.ok(k.warum && k.warum.length > 20, `${k.id}: Begründung fehlt`);

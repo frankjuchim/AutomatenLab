@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD, turingC, turingP, sortiererD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -51,10 +51,18 @@ async function ladeAufgaben(secret) {
     lade(path.join(ENGINE, 'pruefer.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'arena.js')),
-    lade(path.join(ENGINE, 'training.js'))
+    lade(path.join(ENGINE, 'training.js')),
+    lade(path.join(INHALTE, 'ueberliste.js')),
+    lade(path.join(INHALTE, 'parallelwelten.js')),
+    lade(path.join(INHALTE, 'keller.js')),
+    lade(path.join(INHALTE, 'rallye.js')),
+    lade(path.join(INHALTE, 'grammatik.js')),
+    lade(path.join(INHALTE, 'turing.js')),
+    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'turing.js')),
+    lade(path.join(INHALTE, 'sortierer.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -241,10 +249,199 @@ async function ladeAufgaben(secret) {
     liste.push({ id: `mealy:${x.id}`, typ: MEALY_BUG, modul: 'mealy', nr: i + 1, titel: `${x.titel}: Bug-Jagd`, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [6], daten: x, fehlerhaft, okBeispiele, tipps: [] });
   });
 
+  /* ---------- Überliste den Automaten: Wort finden, bei dem der (sichtbare) Automat irrt; Bonus wie ein Quiz ---------- */
+  const UEBERLISTE = {
+    modul: 'ueberliste',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, kontext: x.kontext, sprache: x.sprache, automat: a.automat, praefix: x.praefix, fortsetzung: x.fortsetzung, tippsAnzahl: a.tipps.length };
+    },
+    /** antwort: { wort } – Testen ist erlaubt und kostet nichts; gelöst, sobald der Automat irrt. */
+    pruefe(a, antwort) {
+      return pruefeUeberliste(a.automat, a.daten.pruefe, antwort);
+    },
+    loesungsteil(a) {
+      return { beispiel: ueberlisteBeispiel(a.automat, a.daten.pruefe, a.daten.praefix, a.daten.fortsetzung) };
+    },
+    abzeichen({ a, zeilen, katalog }) {
+      const neu = ['ueberliste-erster'];
+      const z = zeilen.find((r) => r.aufgabe_id === a.id);
+      if (z && z.tipps === 0 && a.nr >= 3 && z.status === 'geloest') neu.push('ueberliste-ohne-tipp');
+      const geloest = new Set(zeilen.filter((r) => r.status === 'geloest' || r.nachgeloest).map((r) => r.aufgabe_id));
+      if (katalog.filter((x) => x.typ === UEBERLISTE).every((x) => geloest.has(x.id))) neu.push('ueberliste-alle');
+      return neu;
+    }
+  };
+  ueberlisteD.UEBERLISTE_STUFEN.forEach((x, i) => {
+    const automat = ueberlisteD.bauAutomat(x);
+    dfa(automat);
+    liste.push({ id: `ueberliste:${x.id}`, typ: UEBERLISTE, modul: 'ueberliste', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [7], daten: x, automat, tipps: x.tipps });
+  });
+  const BONUS = { ...QUIZ, modul: 'ueberliste', abzeichen: () => [] };
+  liste.push({ id: 'ueberliste:bonus', typ: BONUS, modul: 'ueberliste', nr: ueberlisteD.UEBERLISTE_STUFEN.length + 1, titel: 'Bonus: Warum hilft ein Zustand mehr nicht?', art: 'bonus', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [7],
+    daten: { titel: 'Bonus: Warum hilft ein Zustand mehr nicht?', fragen: ueberlisteD.UEBERLISTE_BONUS.map((q) => ({ typ: 'mc', frage: q.frage, optionen: q.optionen })) }, tipps: [] });
+
+  /* ---------- Parallelwelten: „Wo stehen die Figuren?“ (wie ein Quiz) und Teilmengenkonstruktion (Zeile für Zeile) ---------- */
+  const pwOeffentlich = (a) => {
+    const x = a.daten;
+    return { id: x.id, nr: a.nr, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, worte: x.raetsel, teilmengen: !!x.teilmengen };
+  };
+  const PW_RAETSEL = {
+    modul: 'parallelwelten',
+    oeffentlich: pwOeffentlich,
+    /** antwort: { wort: Index, zustaende: [...] } – gewertet wird der erste Versuch je Wort. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeNeaRaetsel(a.daten.automat, a.daten.raetsel, z.daten.stand, antwort);
+      return { ok: erg.richtig, fertig: z.offen && erg.fertig, zaehltFehler: false, anteil: z.offen && erg.fertig ? erg.anteil : undefined, daten: z.offen ? { stand: erg.stand } : undefined, rueckmeldung: erg.rueckmeldung };
+    },
+    loesungsteil(a, z) {
+      const st = z.daten.stand ?? {};
+      return { ergebnis: { ersterVersuch: Object.values(st.antworten ?? {}).reduce((s, x) => s + x, 0), von: a.daten.raetsel.length } };
+    },
+    abzeichen({ zeilen }) {
+      let richtig = 0;
+      for (const r of zeilen) if (r.aufgabe_id.endsWith(':raetsel')) { try { richtig += Object.values(JSON.parse(r.daten).stand?.antworten ?? {}).reduce((s, x) => s + x, 0); } catch { /* leer */ } }
+      return richtig >= 5 ? ['parallelwelten-figuren'] : [];
+    }
+  };
+  const PW_TEILMENGEN = {
+    modul: 'parallelwelten',
+    oeffentlich: pwOeffentlich,
+    /** antwort: { menge: [...], ziele: { a: [...] } } – eine Zeile; falsche Zeile = Fehlversuch. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeTeilmengenZeile(a.daten.automat, z.daten.stand, antwort);
+      return { ...erg, daten: { stand: erg.stand } };
+    },
+    loesungsteil(a) {
+      return teilmengenLoesung(a.daten.automat);
+    },
+    abzeichen({ erg }) {
+      return erg && erg.ok ? ['parallelwelten-teilmengen'] : [];
+    }
+  };
+  pwD.PARALLELWELTEN.forEach((x, i) => {
+    liste.push({ id: `parallelwelten:${x.id}:raetsel`, typ: PW_RAETSEL, modul: 'parallelwelten', nr: i + 1, titel: `${x.titel}: Wo stehen die Figuren?`, art: 'raetsel', stufe: 1, punkte: PUNKTE_STUFE[1], levels: [8], daten: x, tipps: [] });
+    if (x.teilmengen) liste.push({ id: `parallelwelten:${x.id}`, typ: PW_TEILMENGEN, modul: 'parallelwelten', nr: i + 1, titel: `${x.titel}: Teilmengenkonstruktion`, art: 'teilmengen', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [8], daten: x, tipps: [] });
+  });
+
+  /* ---------- Keller-Labor: Tabellen-Trainer (je Automat alle Wörter) und Rückwärts (Wort aus der Folge) ---------- */
+  const kellerOeffentlich = (a) => {
+    const x = a.daten;
+    return { id: x.id, nr: a.nr, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, keller: x.keller, sim: x.sim, worte: x.tabelle };
+  };
+  const KELLER_TABELLE = {
+    modul: 'keller',
+    oeffentlich: kellerOeffentlich,
+    /** antwort: { wort: Index, zeilen, akzeptiert } – vollständige Tabelle; falsch = Fehlversuch. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeKellerTabelle(a.daten.automat, a.daten.tabelle, z.daten.stand, antwort);
+      return { ...erg, daten: { stand: erg.stand } };
+    },
+    loesungsteil(a) {
+      return kellerTabellenLoesung(a.daten.automat, a.daten.tabelle);
+    },
+    abzeichen({ zeilen }) {
+      const n = zeilen.filter((r) => r.aufgabe_id.startsWith('keller:') && (r.status === 'geloest' || r.nachgeloest)).length;
+      return ['keller-tabelle', ...(n >= 10 ? ['keller-profi'] : [])];
+    }
+  };
+  const KELLER_RUECKWAERTS = {
+    modul: 'keller',
+    // ohne Beispiele und Simulator-Wörter: dort kann das gesuchte Wort stehen
+    oeffentlich: (a) => { const { beispiele, sim, ...rest } = kellerOeffentlich(a); return { ...rest, folge: a.folge }; },
+    /** antwort: { wort } – passt es zur Folge der Konfigurationen? */
+    pruefe(a, antwort) {
+      return pruefeKellerRueckwaerts(a.daten.automat, a.folge, antwort);
+    },
+    loesungsteil(a) {
+      return kellerRueckwaertsLoesung(a.daten.automat, a.daten.rueckwaerts[0]);
+    },
+    abzeichen({ zeilen }) {
+      const n = zeilen.filter((r) => r.aufgabe_id.startsWith('keller:') && (r.status === 'geloest' || r.nachgeloest)).length;
+      return ['keller-rueckwaerts', ...(n >= 10 ? ['keller-profi'] : [])];
+    }
+  };
+  kellerD.KELLER_AUTOMATEN.forEach((x, i) => {
+    liste.push({ id: `keller:${x.id}:tabelle`, typ: KELLER_TABELLE, modul: 'keller', nr: i + 1, titel: `${x.titel}: Tabellen-Trainer`, art: 'tabelle', stufe: 1, punkte: PUNKTE_STUFE[1], levels: [9, 10], daten: x, tipps: [] });
+    liste.push({ id: `keller:${x.id}:rueckwaerts`, typ: KELLER_RUECKWAERTS, modul: 'keller', nr: i + 1, titel: `${x.titel}: Rückwärts`, art: 'rueckwaerts', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [9, 10], daten: x, folge: kellerFolge(x.automat, x.rueckwaerts[0]), tipps: [] });
+  });
+
+  /* ---------- Ableitungs-Rallye: Linksableitung bis zum Zielwort (Baum-Modus: zwei verschiedene Ableitungen) ---------- */
+  const RALLYE = {
+    modul: 'rallye',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, kontext: x.kontext, grammatik: x.grammatik, ziel: x.ziel, sep: x.sep ?? null, modus: x.modus ?? 'ableiten' };
+    },
+    /** antwort: { regeln: [[lhs, index], …] } bzw. { baeume: [regeln1, regeln2] } */
+    pruefe(a, antwort) {
+      return pruefeRallye(a.daten.grammatik, a.daten.ziel, a.daten.modus ?? 'ableiten', antwort);
+    },
+    loesungsteil(a) {
+      return rallyeLoesung(a.daten.grammatik, a.daten.ziel, a.daten.sep ?? '');
+    },
+    abzeichen({ a, alleGeloest }) {
+      return ['rallye-erste', ...((a.daten.modus === 'baum') ? ['rallye-mehrdeutig'] : []), ...(alleGeloest ? ['rallye-alle'] : [])];
+    }
+  };
+  rallyeD.RALLYE_AUFGABEN.forEach((x, i) => {
+    liste.push({ id: `rallye:${x.id}`, typ: RALLYE, modul: 'rallye', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [11, 13], daten: x, tipps: [] });
+  });
+
+  /* ---------- Grammatik-Tester: eigene Grammatik → Vergleich der Sprache bis maxLen (ggf. rechtsregulär) ---------- */
+  const GRAMMATIK = {
+    modul: 'grammatik',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, alphabet: x.alphabet, beispiele: x.beispiele, maxLen: x.maxLen ?? 8, regulaer: !!x.regulaer, tippsAnzahl: a.tipps.length };
+    },
+    /** antwort: { grammatik: Text, start? } */
+    pruefe(a, antwort) {
+      return pruefeGrammatikChallenge(a.daten, antwort);
+    },
+    loesungsteil(a) {
+      return { musterloesung: a.daten.musterloesung };
+    },
+    abzeichen({ alleGeloest }) {
+      return ['grammatik-erste', ...(alleGeloest ? ['grammatik-alle'] : [])];
+    }
+  };
+  grammatikD.GRAMMATIK_CHALLENGES.forEach((x, i) => {
+    liste.push({ id: `grammatik:${x.id}`, typ: GRAMMATIK, modul: 'grammatik', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [12, 13, 15], daten: x, tipps: x.tipp ? [x.tipp] : [] });
+  });
+
+  /* ---------- Turing-Labor: fehlende Regel ergänzen (Prüfung mit Testeingaben gegen die Referenz) ---------- */
+  const TURING = {
+    modul: 'turing',
+    oeffentlich(a) {
+      const x = a.daten; const p = a.programm;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, programm: x.programm, programmTitel: p.titel, kontext: p.kontext,
+        maschine: turingOhneRegel(p.maschine, x.fehlt), fehlt: x.fehlt, zustaende: a.zustaende, bandalphabet: a.bandalphabet, tests: x.tests };
+    },
+    /** antwort: { to, write, move } */
+    pruefe(a, antwort) {
+      return pruefeTuringRegel(a.programm.maschine, a.daten.fehlt, a.daten.tests, antwort);
+    },
+    loesungsteil(a) {
+      const [to, write, move] = a.programm.maschine.delta[a.daten.fehlt.from][a.daten.fehlt.read];
+      return { regel: { to, write, move } };
+    },
+    abzeichen() {
+      return ['turing-regel'];
+    }
+  };
+  const { tm } = await lade(path.join(ENGINE, 'turing.js'));
+  turingC.TURING_CHALLENGES.forEach((x, i) => {
+    const programm = turingP.TURING_PROGRAMME.find((p) => p.id === x.programm);
+    const T = tm(programm.maschine);
+    liste.push({ id: `turing:${x.id}`, typ: TURING, modul: 'turing', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [16], daten: x, programm, zustaende: T.states, bandalphabet: T.tapeAlphabet, tipps: [] });
+  });
+
   const map = new Map(liste.map((a) => [a.id, a]));
-  // Training (src/training.js): Arena-Automaten (öffentlich) und Minimierer-Automaten für „Unterscheide!“
-  const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })) };
-  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
+
+  // Training (src/training.js): Arena-Automaten (öffentlich), Minimierer-Automaten für „Unterscheide!“, Sortierer-Karten
+  const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })), sortierer: sortiererD.SORTIERER_KARTEN };
+  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
 }
 
 module.exports = { ladeAufgaben, PUNKTE_STUFE };

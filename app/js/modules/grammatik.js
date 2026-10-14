@@ -1,42 +1,40 @@
 // Grammatik-Tester (#/grammatik): eigene Grammatik in Abi-Notation eingeben, prüfen, klassifizieren,
 // Wörter erzeugen, Wörter ableiten, als Automat anzeigen (rechtsregulär), zwei Grammatiken vergleichen.
 // Challenges „Entwirf eine Grammatik für …“ mit automatischer Prüfung gegen ein Referenzprädikat.
-// Deep-Links: #/grammatik?challenge=n (n = 1 …), #/grammatik?modus=frei
+// Deep-Links: #/grammatik?challenge=n (n = 1 …), #/grammatik?modus=frei, #/grammatik?demo=1 (Demo-Challenge)
+// Challenges prüft die Quelle (Server bzw. Demo) – Prädikat, Tipp und Musterlösung kennt nur sie; Punkte vergibt nur der
+// Server. Der freie Modus (Klassifikation, Wörter erzeugen, Automat, Vergleich) läuft vollständig im Browser.
 
 import { h, clear, quote } from '../core/dom.js';
-import { GRAMMATIK_CHALLENGES } from '../data/grammatik.js';
 import { parseGrammar, derive, derivationToString, isRightRegular, shortestWords, randomWord, rightRegularToNFA, languageUpTo } from '../engine/grammar.js';
 import { nfa, subsetConstruction } from '../engine/nfa.js';
 import { renameStates, normalizeDFA } from '../engine/dfa.js';
 import { enumerateWords, makeRng } from '../engine/tokenize.js';
 import { GraphView } from '../components/graph-view.js';
 
-const CHALLENGES = GRAMMATIK_CHALLENGES.map((c, i) => ({ ...c, nr: i + 1, maxLen: c.maxLen ?? 8 }));
 const BEISPIEL = 'S → aSb | ab';
-
-/** Vergleicht die Sprache der Grammatik mit einem Prädikat über Σ bis Länge maxLen. */
-export function pruefeGrammatik(g, c) {
-  const fremd = g.terminals.filter((t) => !c.alphabet.includes(t));
-  if (fremd.length) return { ok: false, grund: 'alphabet', fremd };
-  const lang = languageUpTo(g, c.maxLen, { maxNodes: 60000 });
-  const have = new Set(lang.words.map((w) => w.join('\u0001')));
-  let zuviel = null; let fehlt = null;
-  for (const w of lang.words) if (!c.pruefe(w)) { zuviel = w; break; }
-  for (const w of enumerateWords(c.alphabet, c.maxLen)) if (c.pruefe(w) && !have.has(w.join('\u0001'))) { fehlt = w; break; }
-  if (zuviel || fehlt) return { ok: false, grund: 'sprache', zuviel, fehlt, complete: lang.complete };
-  if (c.regulaer) { const rr = isRightRegular(g); if (!rr.regular) return { ok: false, grund: 'regulaer', violations: rr.violations }; }
-  return { ok: true, complete: lang.complete, count: lang.words.length };
-}
 
 export default {
   title: 'Grammatik-Tester',
   mount(el, ctx) {
+    const q = ctx.quelle; // Server (angemeldet) oder Demo (Gastmodus)
     const p = ctx.params;
-    const n = Number(p.get('challenge'));
-    if (n >= 1 && n <= CHALLENGES.length) return editor(CHALLENGES[n - 1]);
     if (p.get('modus') === 'frei') return editor(null);
-    showList();
-    return null;
+    let aktiv = true;
+    let aufraeumen = null;
+    let CHALLENGES = [];
+    const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
+    clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    (async () => {
+      CHALLENGES = await q.liste('grammatik');
+      if (!aktiv) return;
+      const n = Number(p.get('challenge'));
+      const e = q.demo ? CHALLENGES[0] : CHALLENGES.find((x) => x.nr === n);
+      if (!e) { showList(); return; }
+      const d = await q.aufgabe(e.id);
+      if (aktiv) aufraeumen = editor({ ...d.aufgabe, aufgabeId: e.id, nr: e.nr ?? 0, zustand: d.zustand, loesung: d.loesung ?? null });
+    })().catch(fehler);
+    return () => { aktiv = false; aufraeumen?.(); };
 
     function showList() {
       ctx.setSubtitle('Grammatik eingeben – Regeln prüfen, Wörter erzeugen, Wörter ableiten, Automat ableiten.');
@@ -46,19 +44,21 @@ export default {
           h('p', null, 'Eigene Grammatik in Abi-Notation (S → aSb | ab). Klassifikation rechtsregulär/kontextfrei, Wörter erzeugen und prüfen, Vergleich zweier Grammatiken – ideal zur Selbstkontrolle.'),
           h('a', { class: 'btn btn-primary', href: ctx.link('grammatik', { modus: 'frei' }) }, 'Freien Modus öffnen')),
         h('section', { class: 'stufe-section' },
-          h('div', { class: 'stufe-head' }, h('h2', null, 'Challenges: Entwirf eine Grammatik für …'), h('span', { class: 'muted' }, `${CHALLENGES.filter((c) => ctx.progress.isSolved('grammatik', c.id)).length} von ${CHALLENGES.length} gelöst`)),
+          h('div', { class: 'stufe-head' }, h('h2', null, 'Challenges: Entwirf eine Grammatik für …'), h('span', { class: 'muted' }, `${CHALLENGES.filter((c) => ctx.progress.isSolved('grammatik', c.schluessel)).length} von ${CHALLENGES.length} gelöst`)),
           h('p', { class: 'muted' }, 'Geprüft wird die erzeugte Sprache (alle Wörter bis zu einer Länge) – jede richtige Grammatik zählt.'),
           h('ol', { class: 'challenge-grid' }, CHALLENGES.map((c) => {
-            const solved = ctx.progress.isSolved('grammatik', c.id);
-            return h('li', null, h('a', { class: ['challenge-card', solved && 'is-solved', c.regulaer ? 'stufe-2' : 'stufe-3'], href: ctx.link('grammatik', { challenge: c.nr }) },
-              h('span', { class: 'case-nr' }, `Challenge ${c.nr}${c.regulaer ? ' · rechtsregulär' : ''}`),
+            const solved = ctx.progress.isSolved('grammatik', c.schluessel);
+            return h('li', null, h('a', { class: ['challenge-card', solved && 'is-solved', `stufe-${c.stufe}`], href: ctx.link('grammatik', { challenge: c.nr }) },
+              h('span', { class: 'case-nr' }, `Challenge ${c.nr}`),
               h('span', { class: 'case-title' }, c.titel),
               h('span', { class: 'case-state' }, solved ? 'gelöst' : `${c.punkte} Punkte`)));
           }))));
     }
 
     function editor(c) {
-      ctx.setSubtitle(c ? `Challenge ${c.nr}: ${c.titel}` : 'Freier Modus');
+      ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
+      let zustand = c?.zustand ?? null;
+      let loesung = c?.loesung ?? null;
       const draftKey = `grammatik:${c ? c.id : 'frei'}`;
       let g = null; let attempts = 0; let parseTimer = null; let saveTimer = null;
       const gvs = [];
@@ -192,24 +192,25 @@ export default {
 
       // ── Challenge-Prüfung ──
       const checkResult = h('div', { class: 'check-result', 'aria-live': 'polite' });
-      function checkChallenge() {
+      async function checkChallenge() {
         if (!g?.ok) { clear(checkResult, h('p', { class: 'notice notice-error' }, 'Die Grammatik hat noch Fehler (siehe oben).')); return; }
         attempts++;
-        const res = pruefeGrammatik(g, c);
+        let r;
+        try { r = await q.pruefen(c.aufgabeId, { grammatik: ta.value, start: startSel.value || undefined }); } catch (e) { clear(checkResult, h('p', { class: 'notice notice-error' }, e.message)); return; }
+        zustand = r.zustand ?? zustand;
+        if (r.loesung) loesung = r.loesung;
+        const res = r.rueckmeldung;
         const sep = c.alphabet.some((t) => t.length > 1) ? ' ' : '';
         const show = (w) => quote(w.length ? w.join(sep) : '');
-        if (res.ok) {
-          const { first } = ctx.progress.solve('grammatik', c.id, c.punkte);
-          ctx.progress.award('grammatik-erste');
-          if (CHALLENGES.every((x) => ctx.progress.isSolved('grammatik', x.id))) ctx.progress.award('grammatik-alle');
-          if (first) ctx.toast(`+${c.punkte} Punkte`, { type: 'success' });
-          const next = CHALLENGES[c.nr];
+        if (res.richtig) {
+          if (r.punkteErhalten) ctx.toast(`+${r.punkteErhalten} Punkte`, { type: 'success' });
+          const next = q.demo ? null : CHALLENGES.find((x) => x.nr === c.nr + 1);
           clear(checkResult, h('div', { class: 'notice notice-success' },
-            h('p', null, h('strong', null, 'Richtig! '), `Deine Grammatik erzeugt genau die gesuchten Wörter (geprüft bis Länge ${c.maxLen}: ${res.count} Wörter)${c.regulaer ? ' und ist rechtsregulär' : ''}.`),
+            h('p', null, h('strong', null, 'Richtig! '), `Deine Grammatik erzeugt genau die gesuchten Wörter (geprüft bis Länge ${res.maxLen}: ${res.anzahl} Wörter)${res.regulaer ? ' und ist rechtsregulär' : ''}.`),
             h('div', { class: 'start-actions' },
               next ? h('a', { class: 'btn btn-primary', href: ctx.link('grammatik', { challenge: next.nr }) }, `Weiter zu Challenge ${next.nr}`) : null,
-              h('button', { type: 'button', class: 'btn', onclick: () => showSolution() }, 'Musterlösung vergleichen'),
-              h('a', { class: 'btn btn-ghost', href: ctx.link('grammatik') }, 'Alle Challenges'))));
+              loesung ? h('button', { type: 'button', class: 'btn', onclick: () => showSolution() }, 'Musterlösung vergleichen') : null,
+              q.demo ? h('a', { class: 'btn btn-ghost', href: ctx.link('gast') }, 'Weitere Demo-Aufgaben') : h('a', { class: 'btn btn-ghost', href: ctx.link('grammatik') }, 'Alle Challenges'))));
           return;
         }
         let body;
@@ -217,13 +218,32 @@ export default {
         else if (res.grund === 'regulaer') body = h('div', null, h('p', null, 'Die Sprache stimmt – aber die Grammatik ist noch nicht rechtsregulär. Diese Regeln stören:'), h('ul', null, res.violations.slice(0, 5).map((v) => h('li', null, h('code', { class: 'word' }, v.rule), ` – ${v.reason}`))));
         else body = h('p', null, res.zuviel ? `Deine Grammatik erzeugt ${show(res.zuviel)} – das gehört nicht zur Sprache.` : `Deine Grammatik erzeugt ${show(res.fehlt)} nicht – das gehört aber zur Sprache.`);
         clear(checkResult, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. ')), body,
-          h('p', { class: 'muted' }, `Versuch ${attempts}.`),
-          attempts >= 3 ? h('p', null, h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => showSolution() }, 'Musterlösung zeigen')) : null));
+          h('p', { class: 'muted' }, !q.demo && zustand?.status === 'offen' ? `Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : `Versuch ${attempts}.`),
+          attempts >= 3 ? h('p', null, h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => aufdecken() }, 'Musterlösung zeigen')) : null));
+      }
+      /** „Musterlösung zeigen“: danach gibt es für diese Challenge keine Punkte mehr. */
+      async function aufdecken() {
+        if (!loesung) {
+          if (!q.demo && zustand?.status === 'offen' && !window.confirm('Wenn du die Musterlösung ansiehst, bekommst du für diese Challenge keine Punkte mehr. Trotzdem anzeigen?')) return;
+          try { const r = await q.aufdecken(c.aufgabeId); zustand = r.zustand; loesung = r.loesung; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+        }
+        showSolution();
       }
       function showSolution() {
-        clear(checkResult, h('div', { class: 'notice' }, h('p', null, h('strong', null, 'Eine mögliche Lösung: ')), h('pre', { class: 'word grammar-pre' }, c.musterloesung), h('p', { class: 'muted' }, 'Es gibt viele richtige Grammatiken – geprüft wird nur die Sprache.'),
-          h('button', { type: 'button', class: 'btn btn-small', onclick: () => { ta.value = c.musterloesung; parse(); } }, 'In den Editor übernehmen')));
+        clear(checkResult, h('div', { class: 'notice' }, h('p', null, h('strong', null, 'Eine mögliche Lösung: ')), h('pre', { class: 'word grammar-pre' }, loesung.musterloesung), h('p', { class: 'muted' }, 'Es gibt viele richtige Grammatiken – geprüft wird nur die Sprache.'),
+          h('button', { type: 'button', class: 'btn btn-small', onclick: () => { ta.value = loesung.musterloesung; parse(); } }, 'In den Editor übernehmen')));
       }
+      /** Tipp von der Quelle (kostet Punkte, Vertrag §9). */
+      const tippBox = h('div', { class: 'tipp' });
+      function zeigeTipp() {
+        const t = zustand?.tipps ?? [];
+        clear(tippBox, t.length ? h('p', null, h('strong', null, 'Tipp: '), t[0])
+          : c.tippsAnzahl ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: async () => {
+            try { zustand = (await q.tipp(c.aufgabeId)).zustand; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+            zeigeTipp();
+          } }, q.demo || zustand?.status !== 'offen' ? 'Tipp anzeigen' : 'Tipp anzeigen (kostet Punkte)') : null);
+      }
+      if (c) zeigeTipp();
 
       const taskPanel = c ? h('div', { class: 'bench-task panel' },
         h('p', { class: 'task-text' }, c.aufgabe),
@@ -232,7 +252,7 @@ export default {
           h('div', { class: 'examples' },
             h('p', null, h('span', { class: 'ex-label ex-yes' }, 'gehört dazu'), ' ', c.beispiele.ja.map((w) => h('code', { class: 'word' }, w))),
             h('p', null, h('span', { class: 'ex-label ex-no' }, 'gehört nicht dazu'), ' ', c.beispiele.nein.map((w) => h('code', { class: 'word' }, w)))),
-          c.tipp ? h('details', { class: 'tipp' }, h('summary', null, 'Tipp anzeigen'), h('p', null, c.tipp)) : null)) : null;
+          tippBox)) : null;
 
       const notation = h('details', { class: 'tipp notation-help' }, h('summary', null, 'Schreibweise'),
         h('ul', null,
@@ -248,7 +268,7 @@ export default {
               h('label', { for: 'gr-ta' }, 'Produktionsregeln P'), h(ta, { id: 'gr-ta' }),
               h('div', { class: 'input-row gr-start' }, h('label', { for: 'gr-start' }, 'Startsymbol'), h(startSel, { id: 'gr-start' })),
               notation, info, classBox,
-              c ? h('div', { class: 'check-row' }, h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => checkChallenge() }, 'Prüfen'), ctx.progress.isSolved('grammatik', c.id) ? h('span', { class: 'muted' }, 'Schon gelöst.') : null) : null,
+              c ? h('div', { class: 'check-row' }, h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => checkChallenge() }, 'Prüfen'), zustand && zustand.status !== 'offen' && !q.demo ? h('span', { class: 'muted' }, zustand.status === 'geloest' ? 'Schon gelöst.' : 'Musterlösung angesehen – Punkte gibt es hier nicht mehr.') : null) : null,
               checkResult)),
           h('div', { class: 'bench-right' },
             h('div', { class: 'panel' }, h('h3', null, 'Wörter erzeugen'), h('div', { class: 'editor-actions' }, genBtn, rndBtn), genOut),
@@ -256,7 +276,8 @@ export default {
             h('div', { class: 'panel' }, h('h3', null, 'Grammatik → Automat'), h('p', { class: 'muted' }, 'Bei rechtsregulären Grammatiken: Nichtterminal = Zustand, Regel = Kante.'), h('p', null, autoBtn), autoBox),
             h('div', { class: 'panel' }, h('h3', null, 'Vergleichen'), h('p', { class: 'muted' }, 'Erzeugen zwei Grammatiken dieselben Wörter? Hilft beim Selbstkontrollieren eigener Lösungen.'),
               cmpTa, h('div', { class: 'editor-actions' }, cmpLen, cmpBtn), cmpOut))),
-        c ? h('nav', { class: 'case-nav', 'aria-label': 'Challenges' },
+        c && q.demo ? h('p', { class: 'notice gast-hinweis' }, h('strong', null, 'Demo. '), 'Eine eigene Challenge zum Ausprobieren – ohne Punkte. Die elf Challenges gibt es nach der Anmeldung.')
+          : c ? h('nav', { class: 'case-nav', 'aria-label': 'Challenges' },
           c.nr > 1 ? h('a', { class: 'btn btn-ghost', href: ctx.link('grammatik', { challenge: c.nr - 1 }) }, `‹ Challenge ${c.nr - 1}`) : h('span'),
           h('a', { class: 'btn btn-ghost', href: ctx.link('grammatik') }, 'Alle Challenges'),
           c.nr < CHALLENGES.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('grammatik', { challenge: c.nr + 1 }) }, `Challenge ${c.nr + 1} ›`) : h('span'))

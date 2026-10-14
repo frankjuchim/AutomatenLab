@@ -1,15 +1,16 @@
 // Parallelwelten (#/parallelwelten, DS08): NEA-Simulator mit „Spielfiguren“ (Menge aktiver Zustände),
 // ε-Abschluss als eigener Schritt, Rätsel „Wo stehen die Figuren?“ und Teilmengenkonstruktion.
-// Deep-Links: #/parallelwelten?aufgabe=n (oder ?automat=<id>) &modus=sim|spiel|teilmengen  &wort=… (sim)
+// Deep-Links: #/parallelwelten?aufgabe=n (oder ?automat=<id>) &modus=sim|spiel|teilmengen  &wort=… (sim),
+//             #/parallelwelten?demo=1[&modus=…] (Demo-NEA im Gastmodus)
+// Rätsel und Teilmengenkonstruktion prüft die Quelle (Server bzw. Demo); Punkte vergibt nur der Server. Der NEA ist
+// Gegenstand der Aufgabe – Simulation und Anzeigen rechnet die Engine im Browser.
 
 import { h, clear, quote } from '../core/dom.js';
-import { PARALLELWELTEN } from '../data/parallelwelten.js';
-import { nfa, runNFA, epsilonClosure, moveSet, stepSet, subsetConstruction, setName } from '../engine/nfa.js';
+import { nfa, runNFA, epsilonClosure, moveSet, stepSet, setName } from '../engine/nfa.js';
 import { tokenize, wordToString, EPS } from '../engine/tokenize.js';
 import { GraphView } from '../components/graph-view.js';
 import { WordTape } from '../components/word-tape.js';
 
-const AUFGABEN = PARALLELWELTEN.map((a, i) => ({ ...a, nr: i + 1, N: nfa(a.automat) }));
 const MODI = { sim: 'Simulieren', spiel: 'Wo stehen die Figuren?', teilmengen: 'Teilmengenkonstruktion' };
 const SVG = 'http://www.w3.org/2000/svg';
 const hasEps = (N) => N.states.some((s) => N.delta[s]?.[EPS]?.length);
@@ -66,17 +67,36 @@ export function nfaFrames(N, tokens) {
 export default {
   title: 'Parallelwelten',
   mount(el, ctx) {
+    const q = ctx.quelle; // Server (angemeldet) oder Demo (Gastmodus)
     const p = ctx.params;
-    const n = Number(p.get('aufgabe'));
-    const a = (n >= 1 && n <= AUFGABEN.length ? AUFGABEN[n - 1] : null) ?? AUFGABEN.find((x) => x.id === p.get('automat')) ?? null;
-    let modus = MODI[p.get('modus')] ? p.get('modus') : 'sim';
-    if (!a) { overview(); return null; }
-    if (modus === 'teilmengen' && !a.teilmengen) modus = 'sim';
-    ctx.setSubtitle(`${MODI[modus]} · ${a.titel}`);
-    const head = [modeTabs(a, modus), taskPanel(a)];
-    if (modus === 'spiel') return spiel(a, head);
-    if (modus === 'teilmengen') return teilmengen(a, head);
-    return sim(a, head, p.get('wort'));
+    let aktiv = true;
+    let aufraeumen = null;
+    let GRUPPEN = []; // [{ nr, schluessel, titel, r: Rätsel-Eintrag, t: Teilmengen-Eintrag? }]
+    const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
+    clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    (async () => {
+      const liste = await q.liste('parallelwelten');
+      if (!aktiv) return;
+      const byNr = new Map();
+      for (const e of liste) {
+        const nr = e.nr ?? 0;
+        if (!byNr.has(nr)) byNr.set(nr, { nr, schluessel: (e.schluessel ?? '').split(':')[0], titel: e.titel.replace(/^Demo: /, '').replace(/(: | – )(Wo stehen die Figuren\?|Teilmengenkonstruktion)$/, '') });
+        byNr.get(nr)[e.art === 'teilmengen' ? 't' : 'r'] = e;
+      }
+      GRUPPEN = [...byNr.values()].sort((x, y) => x.nr - y.nr);
+      const n = Number(p.get('aufgabe'));
+      const g = q.demo ? GRUPPEN[0] : (GRUPPEN.find((x) => x.nr === n) ?? GRUPPEN.find((x) => x.schluessel === p.get('automat')) ?? null);
+      if (!g) { overview(); return; }
+      let modus = MODI[p.get('modus')] ? p.get('modus') : 'sim';
+      if (modus === 'teilmengen' && !g.t) modus = 'sim';
+      const d = await q.aufgabe(modus === 'teilmengen' ? g.t.id : g.r.id);
+      if (!aktiv) return;
+      const x = { ...d.aufgabe, aufgabeId: d.id, nr: g.nr, gruppe: g, N: nfa(d.aufgabe.automat), raetsel: d.aufgabe.worte, zustand: d.zustand, loesung: d.loesung ?? null };
+      ctx.setSubtitle(q.demo ? `${MODI[modus]} · Demo: ${g.titel} (ohne Punkte)` : `${MODI[modus]} · ${g.titel}`);
+      const head = [modeTabs(x, modus), taskPanel(x)];
+      aufraeumen = modus === 'spiel' ? spiel(x, head) : modus === 'teilmengen' ? teilmengen(x, head) : sim(x, head, p.get('wort'));
+    })().catch(fehler);
+    return () => { aktiv = false; aufraeumen?.(); };
 
     // ───────────────────────── Übersicht ─────────────────────────
     function overview() {
@@ -85,23 +105,24 @@ export default {
         h('div', { class: 'panel me-intro' },
           h('p', { class: 'lead' }, 'Ein nichtdeterministischer endlicher Automat (NEA) kann von einem Zustand mit demselben Zeichen in mehrere Zustände übergehen – oder in keinen. Stell dir vor, auf jedem aktiven Zustand steht eine Spielfigur.'),
           h('p', null, 'Ein Wort wird akzeptiert, wenn nach dem Lesen mindestens eine Figur in einem Endzustand steht. ε-Übergänge darf eine Figur nehmen, ohne ein Zeichen zu lesen. ε ist kein Zeichen des Eingabealphabets.')),
-        h('ol', { class: 'case-grid' }, AUFGABEN.map((x) => {
-          const r = x.raetsel.filter((w) => ctx.progress.isSolved('parallelwelten-r', `${x.id}:${w}`)).length;
-          const done = r === x.raetsel.length;
-          return h('li', null, h('a', { class: ['case-card', done && 'is-solved'], href: ctx.link('parallelwelten', { aufgabe: x.nr }) },
-            h('span', { class: 'case-nr' }, `NEA ${x.nr} · ${x.N.states.length} Zustände${hasEps(x.N) ? ' · mit ε' : ''}`),
-            h('span', { class: 'case-title' }, x.titel),
-            h('span', { class: 'case-state' }, `Rätsel ${r}/${x.raetsel.length}${ctx.progress.isSolved('parallelwelten', x.id) ? ' · Teilmengen gelöst' : ''}`)));
+        h('ol', { class: 'case-grid' }, GRUPPEN.map((g) => {
+          const r = ctx.progress.isSolved('parallelwelten', g.r.schluessel);
+          const t = g.t ? ctx.progress.isSolved('parallelwelten', g.t.schluessel) : null;
+          return h('li', null, h('a', { class: ['case-card', r && t !== false && 'is-solved'], href: ctx.link('parallelwelten', { aufgabe: g.nr }) },
+            h('span', { class: 'case-nr' }, `NEA ${g.nr}`),
+            h('span', { class: 'case-title' }, g.titel),
+            h('span', { class: 'case-state' }, `Rätsel ${r ? '✓' : `${g.r.punkte} P.`}${g.t ? ` · Teilmengen ${t ? '✓' : `${g.t.punkte} P.`}` : ''}`)));
         })));
     }
 
     function modeTabs(x, active) {
-      return h('nav', { class: 'mode-tabs', 'aria-label': 'Modus' }, Object.entries(MODI).filter(([k]) => k !== 'teilmengen' || x.teilmengen).map(([k, label]) =>
-        h('a', { href: ctx.link('parallelwelten', { aufgabe: x.nr, modus: k }), 'aria-current': k === active ? 'page' : null }, label)));
+      return h('nav', { class: 'mode-tabs', 'aria-label': 'Modus' }, Object.entries(MODI).filter(([k]) => k !== 'teilmengen' || x.gruppe.t).map(([k, label]) =>
+        h('a', { href: ctx.link('parallelwelten', q.demo ? { demo: 1, modus: k } : { aufgabe: x.nr, modus: k }), 'aria-current': k === active ? 'page' : null }, label)));
     }
 
     function taskPanel(x) {
       return h('div', { class: 'panel task-panel' },
+        q.demo ? h('p', { class: 'notice gast-hinweis' }, h('strong', null, 'Demo. '), 'Ein eigener NEA zum Ausprobieren – ohne Punkte. Die sechs NEAs gibt es nach der Anmeldung.') : null,
         h('p', { class: 'task-text' }, x.kontext),
         h('p', { class: 'sigma' }, `Σ = {${x.N.alphabet.join(', ')}} · Startzustand ${x.N.start} · Endzustände ${x.N.accepting.join(', ')}`),
         h('p', { class: 'eps-note' }, hasEps(x.N)
@@ -110,9 +131,10 @@ export default {
     }
 
     function caseNav(x, mod) {
-      const next = AUFGABEN[x.nr];
-      const prev = AUFGABEN[x.nr - 2];
-      const m = (y) => (mod === 'teilmengen' && !y.teilmengen ? 'sim' : mod);
+      if (q.demo) return h('nav', { class: 'case-nav', 'aria-label': 'NEAs' }, h('a', { class: 'btn btn-ghost', href: ctx.link('gast') }, 'Weitere Demo-Aufgaben'));
+      const next = GRUPPEN.find((y) => y.nr === x.nr + 1);
+      const prev = GRUPPEN.find((y) => y.nr === x.nr - 1);
+      const m = (y) => (mod === 'teilmengen' && !y.t ? 'sim' : mod);
       return h('nav', { class: 'case-nav', 'aria-label': 'NEAs' },
         prev ? h('a', { class: 'btn btn-ghost', href: ctx.link('parallelwelten', { aufgabe: prev.nr, modus: m(prev) }) }, `‹ NEA ${prev.nr}`) : h('span'),
         h('a', { class: 'btn btn-ghost', href: ctx.link('parallelwelten') }, 'Alle NEAs'),
@@ -217,10 +239,9 @@ export default {
       function item() {
         if (idx >= x.raetsel.length) return done();
         const w = x.raetsel[idx];
-        const r = runNFA(N, w);
-        const target = r.sets.at(-1);
+        const r = runNFA(N, w === 'ε' ? '' : w); // nur für das Band – geprüft wird von der Quelle
         const chosen = new Set();
-        let tries = 0; let over = false;
+        let tries = 0; let over = false; let busy = false;
         const tapeBox = h('div');
         const tape = new WordTape(tapeBox, { size: 'l', label: 'Eingabewort' });
         tape.set(r.tokens); tape.setHead(-1);
@@ -231,7 +252,7 @@ export default {
         }));
         const fb = h('div', { 'aria-live': 'polite', class: 'pw-fb' });
         const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', hidden: true, onclick: () => { idx++; item(); } }, idx + 1 < x.raetsel.length ? 'Nächstes Rätsel' : 'Auswertung');
-        const simLink = h('a', { class: 'btn', hidden: true, href: ctx.link('parallelwelten', { aufgabe: x.nr, modus: 'sim', wort: w }) }, 'Lauf Schritt für Schritt ansehen');
+        const simLink = h('a', { class: 'btn', hidden: true, href: ctx.link('parallelwelten', q.demo ? { demo: 1, modus: 'sim', wort: w } : { aufgabe: x.nr, modus: 'sim', wort: w }) }, 'Lauf Schritt für Schritt ansehen');
         const show = () => {
           for (const [s, c] of chipEls) c.setAttribute('aria-pressed', String(chosen.has(s)));
           ready.then(() => { gv.highlight({ active: [...chosen] }); placeFigures(gv, [...chosen]); });
@@ -239,29 +260,31 @@ export default {
         };
         toggle = (s) => { if (over) return; if (chosen.has(s)) chosen.delete(s); else chosen.add(s); show(); };
         const sel = h('code', { class: 'pw-sel' });
-        const check = () => {
-          if (over) return;
+        const check = async () => {
+          if (over || busy) return;
+          busy = true;
+          const mine = N.states.filter((st) => chosen.has(st));
+          let res;
+          try { res = await q.pruefen(x.aufgabeId, { wort: idx, zustaende: mine }); } catch (e) { busy = false; clear(fb, h('p', { class: 'notice notice-error' }, e.message)); return; }
+          busy = false;
           tries++;
-          const mine = N.states.filter((s) => chosen.has(s));
-          const ok = mine.length === target.length && mine.every((s, i) => s === target[i]);
-          if (ok) {
+          if (res.punkteErhalten) ctx.toast(`+${res.punkteErhalten} Punkte`, { type: 'success' });
+          const rm = res.rueckmeldung;
+          if (rm.richtig) {
             over = true; if (tries === 1) firstTry++;
-            const { first } = ctx.progress.solve('parallelwelten-r', `${x.id}:${w}`, 10);
-            if (ctx.progress.solvedIds('parallelwelten-r').length >= 5) ctx.progress.award('parallelwelten-figuren');
-            clear(fb, h('div', { class: 'notice notice-success' }, h('p', null, h('strong', null, 'Richtig! '), `Nach ${w === 'ε' ? 'dem leeren Wort' : quote(w)} stehen die Figuren auf ${fmt(target)}. ${target.some((s) => N.accepting.includes(s)) ? 'Mindestens eine steht in einem Endzustand → akzeptiert.' : 'Keine steht in einem Endzustand → abgelehnt.'}`),
-              first ? h('p', { class: 'points-note' }, '+10 Punkte') : null));
+            clear(fb, h('div', { class: 'notice notice-success' }, h('p', null, h('strong', null, 'Richtig! '), `Nach ${w === 'ε' ? 'dem leeren Wort' : quote(w)} stehen die Figuren auf ${fmt(rm.loesung)}. ${rm.akzeptiert ? 'Mindestens eine steht in einem Endzustand → akzeptiert.' : 'Keine steht in einem Endzustand → abgelehnt.'}`)));
             nextBtn.hidden = false; simLink.hidden = false; nextBtn.focus({ preventScroll: true });
           } else {
-            const missing = target.filter((s) => !chosen.has(s)); const extra = mine.filter((s) => !target.includes(s));
             const parts = [];
-            if (extra.length) parts.push(`In ${extra.join(', ')} steht keine Figur.`);
-            if (missing.length) parts.push(tries >= 2 ? `Es fehlt eine Figur in ${missing.join(', ')}.` : `Es ${missing.length === 1 ? 'fehlt eine Figur' : `fehlen ${missing.length} Figuren`}.`);
-            if (tries >= 3) { over = true; parts.push(`Richtig wäre ${fmt(target)}.`); nextBtn.hidden = false; simLink.hidden = false; }
+            if (rm.zuViel.length) parts.push(`In ${rm.zuViel.join(', ')} steht keine Figur.`);
+            if (rm.fehlendAnzahl) parts.push(rm.fehlend ? `Es fehlt eine Figur in ${rm.fehlend.join(', ')}.` : `Es ${rm.fehlendAnzahl === 1 ? 'fehlt eine Figur' : `fehlen ${rm.fehlendAnzahl} Figuren`}.`);
+            if (rm.loesung) { over = true; parts.push(`Richtig wäre ${fmt(rm.loesung)}.`); nextBtn.hidden = false; simLink.hidden = false; }
             clear(fb, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. '), parts.join(' ')),
               hasEps(N) ? h('p', { class: 'muted' }, 'Denk an den ε-Abschluss: Figuren dürfen ohne Lesen über ε-Kanten weiterziehen.') : null));
           }
         };
         clear(right, h('p', { class: 'case-nr' }, `Rätsel ${idx + 1} von ${x.raetsel.length}`),
+          idx === 0 && !q.demo && x.zustand?.status === 'offen' ? h('p', { class: 'muted' }, `Gewertet wird dein erster Versuch je Wort (bis zu ${x.zustand.maxPunkte} Punkte).`) : null,
           h('h2', { class: 'me-h2' }, 'Wo stehen die Figuren nach diesem Wort?'), tapeBox,
           h('p', { class: 'muted pw-hint' }, 'Tippe im Graphen oder hier auf die Zustände, in denen nach dem Lesen eine Figur steht. Keine Figur mehr? Dann wähle keinen Zustand.'),
           chipRow, h('p', null, 'Deine Auswahl: ', sel),
@@ -271,11 +294,12 @@ export default {
       function done() {
         toggle = () => {};
         ready.then(() => { gv.clearHighlight(); placeFigures(gv, []); });
+        const next = GRUPPEN.find((y) => y.nr === x.nr + 1);
         clear(right, h('h2', null, 'Alle Rätsel gelöst'),
           h('p', { class: 'result-big' }, h('span', { class: 'num' }, String(firstTry)), ` von ${x.raetsel.length} im ersten Versuch`),
           h('div', { class: 'start-actions' },
-            x.teilmengen ? h('a', { class: 'btn btn-primary', href: ctx.link('parallelwelten', { aufgabe: x.nr, modus: 'teilmengen' }) }, 'Weiter: Teilmengenkonstruktion') : null,
-            AUFGABEN[x.nr] ? h('a', { class: 'btn', href: ctx.link('parallelwelten', { aufgabe: x.nr + 1, modus: 'spiel' }) }, `Rätsel zu NEA ${x.nr + 1}`) : null));
+            x.gruppe.t ? h('a', { class: 'btn btn-primary', href: ctx.link('parallelwelten', q.demo ? { demo: 1, modus: 'teilmengen' } : { aufgabe: x.nr, modus: 'teilmengen' }) }, 'Weiter: Teilmengenkonstruktion') : null,
+            next && !q.demo ? h('a', { class: 'btn', href: ctx.link('parallelwelten', { aufgabe: next.nr, modus: 'spiel' }) }, `Rätsel zu NEA ${next.nr}`) : null));
       }
       clear(el, ...headEls, h('div', { class: 'two-col' }, left, right), caseNav(x, 'spiel'));
       item();
@@ -285,7 +309,8 @@ export default {
     // ───────────────────────── Teilmengenkonstruktion ─────────────────────────
     function teilmengen(x, headEls) {
       const N = x.N;
-      const S = subsetConstruction(N);
+      let zustand = x.zustand;
+      let loesung = x.loesung;
       const key = (set) => set.join(',');
       const rows = [{ set: epsilonClosure(N, N.starts), done: false }];
       const known = new Set([key(rows[0].set)]);
@@ -326,34 +351,45 @@ export default {
         clear(work, h('h2', { class: 'me-h2' }, `Zeile ${rows.indexOf(r) + 1}: ${fmt(r.set)}`), ...groups,
           h('p', { class: 'muted' }, 'Kein Zustand gewählt = ∅ (Fehlerzustand, wird nicht gezeichnet).'),
           h('div', { class: 'start-actions' },
-            h('button', { type: 'button', class: 'btn btn-primary', onclick: () => {
-              const wrong = N.alphabet.filter((a) => key(stepSet(N, r.set, a)) !== key(N.states.filter((s) => picks[a].has(s))));
-              if (!wrong.length) accept(false);
+            h('button', { type: 'button', class: 'btn btn-primary', onclick: async () => {
+              const ziele = Object.fromEntries(N.alphabet.map((a) => [a, N.states.filter((s) => picks[a].has(s))]));
+              let res;
+              try { res = await q.pruefen(x.aufgabeId, { menge: r.set, ziele }); } catch (e) { clear(fb, h('p', { class: 'notice notice-error' }, e.message)); return; }
+              zustand = res.zustand ?? zustand;
+              if (res.loesung) loesung = res.loesung;
+              if (res.punkteErhalten) ctx.toast(`+${res.punkteErhalten} Punkte`, { type: 'success' });
+              const rm = res.rueckmeldung;
+              if (rm.richtig) accept(false);
               else {
-                const a = wrong[0];
-                const moved = moveSet(N, r.set, a);
-                clear(fb, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. '), `Prüfe die Spalte „${wrong.join('“, „')}“.`),
-                  h('p', null, `Tipp zu „${a}“: Figuren aus ${fmt(r.set)} ziehen mit „${a}“ nach ${fmt(moved)}${hasEps(N) ? ', danach kommt der ε-Abschluss dazu' : ''}.`)));
+                const a = rm.falsch[0];
+                clear(fb, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. '), `Prüfe die Spalte „${rm.falsch.join('“, „')}“.`),
+                  h('p', null, `Tipp zu „${a}“: Figuren aus ${fmt(r.set)} ziehen mit „${a}“ nach ${fmt(N.states.filter((s) => rm.gelesen[a].includes(s)))}${hasEps(N) ? ', danach kommt der ε-Abschluss dazu' : ''}.`),
+                  !q.demo && zustand?.status === 'offen' ? h('p', { class: 'muted' }, `Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.`) : null));
               }
             } }, 'Zeile prüfen'),
-            h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => accept(true) }, 'Zeile aufdecken')), fb);
+            h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => aufdecken() }, 'Zeile aufdecken')), fb);
+        /** „Zeile aufdecken“ holt die Lösung von der Quelle – danach gibt es für diese Teilmengenkonstruktion keine Punkte mehr. */
+        async function aufdecken() {
+          if (!loesung) {
+            if (!q.demo && zustand?.status === 'offen' && !window.confirm('Wenn du eine Zeile aufdeckst, bekommst du für diese Teilmengenkonstruktion keine Punkte mehr. Trotzdem aufdecken?')) return;
+            try { const res = await q.aufdecken(x.aufgabeId); zustand = res.zustand; loesung = res.loesung; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+          }
+          accept(true);
+        }
       }
 
-      function finish() {
+      async function finish() {
         clear(work);
         work.closest('.panel').hidden = true;
         ready.then(() => { gv.clearHighlight(); placeFigures(gv, []); });
-        if (!revealed) {
-          const { first } = ctx.progress.solve('parallelwelten', x.id, 30);
-          ctx.progress.award('parallelwelten-teilmengen');
-          if (first) ctx.toast('+30 Punkte', { type: 'success' });
-        }
-        const D = S.dfa;
+        if (!loesung) { try { loesung = (await q.aufgabe(x.aufgabeId)).loesung ?? null; } catch { /* Anzeige ohne DEA */ } }
+        if (!loesung) return;
+        const D = loesung.dea;
         const box = h('div', { class: 'pw-result-graph' });
         clear(resultSlot, h('section', { class: 'panel pw-done' },
           h('h2', null, 'Fertig: der DEA'),
           h('p', null, `Der NEA hat ${N.states.length} Zustände, der DEA aus der Teilmengenkonstruktion hat ${D.states.length}${D.implicitError ? ' (plus Fehlerzustand ∅)' : ''}.${D.states.length > N.states.length * 1.5 ? ' Das ist die Größenexplosion: Im schlimmsten Fall braucht der DEA 2ⁿ Zustände.' : ''}`),
-          revealed ? h('p', { class: 'muted' }, `${revealed} ${revealed === 1 ? 'Zeile wurde' : 'Zeilen wurden'} aufgedeckt – für Punkte alle Zeilen selbst ausfüllen.`) : null,
+          revealed ? h('p', { class: 'muted' }, `${revealed} ${revealed === 1 ? 'Zeile wurde' : 'Zeilen wurden'} aufgedeckt – Punkte gibt es nur, wenn alle Zeilen selbst ausgefüllt werden.`) : null,
           h('p', { class: 'muted' }, 'Endzustände des DEA sind alle Mengen, die einen Endzustand des NEA enthalten.'),
           box));
         if (D.states.length > 5) box.classList.add('is-dense');

@@ -1,12 +1,12 @@
-// Training-Engine (Arena, „Unterscheide!“): Runden passen zu den Automaten, Auswertung wie in der App.
+// Training-Engine (Arena, „Unterscheide!“, Sortierer): Runden passen zu den Automaten, Auswertung wie in der App.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ARENA_AUTOMATEN, ARENA_LEVELS } from '../js/data/arena.js';
-import { DEMO } from '../js/data/demo.js';
+import { DEMO, DEMO_SORTIERER } from '../js/data/demo.js';
 import { dfa, runDFA } from '../js/engine/dfa.js';
 import { makeRng } from '../js/engine/tokenize.js';
 import * as MK from '../js/engine/markierung.js';
-import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde, arenaPunkte, ARENA_LAENGE, WOERTER_PRO_AUTOMAT } from '../js/engine/training.js';
+import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde, arenaPunkte, ARENA_LAENGE, WOERTER_PRO_AUTOMAT, erzeugeSortiererRunde, pruefeSortiererKarte, werteSortiererRunde, SORTIERER_RUNDE } from '../js/engine/training.js';
 
 test('Arena-Runde: Automaten der Stufe, je vier Wörter, Länge passend, ausgewogen, richtige Lösung', () => {
   for (const stufe of [1, 2, 3]) {
@@ -54,4 +54,17 @@ test('Unterscheide!-Runde: Paare und Auswertung passen zum Markierungsverfahren 
   const schlecht = werteUnterscheideRunde(aufgaben, items, items.map(() => ({ aequivalent: true })));
   assert.equal(schlecht.richtig, items.filter((it) => it.aequivalent).length);
   assert.equal(werteUnterscheideRunde(aufgaben, items, [null]).richtig, 0);
+});
+
+test('Sortierer-Runde: 4 + 3 + 3 Karten bzw. alle, Prüfung und Auswertung (Demo-Karten)', () => {
+  assert.equal(DEMO_SORTIERER.length, SORTIERER_RUNDE);
+  const r = erzeugeSortiererRunde(DEMO_SORTIERER, { rng: makeRng(5) });
+  assert.equal(r.length, 10);
+  assert.deepEqual([3, 2, 0].map((t) => r.filter((k) => k.typ === t).length), [4, 3, 3]);
+  assert.equal(erzeugeSortiererRunde(DEMO_SORTIERER, { alle: true, rng: makeRng(5) }).length, DEMO_SORTIERER.length);
+  assert.deepEqual(pruefeSortiererKarte(r[0], r[0].typ), { richtig: true, typ: r[0].typ, warum: r[0].warum });
+  assert.throws(() => pruefeSortiererKarte(r[0], 1), /Fach/);
+  const e = werteSortiererRunde(r, [r[0].typ, r[1].typ === 3 ? 2 : 3, null]);
+  assert.deepEqual([e.richtig, e.falsch, e.ergebnisse[2].offen], [1, 1, true]);
+  assert.throws(() => werteSortiererRunde(r, new Array(11).fill(3)), /passen nicht/);
 });

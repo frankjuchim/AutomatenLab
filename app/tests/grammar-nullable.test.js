@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseGrammar, derive, languageUpTo, shortestWords, derivationToString, nullableBudget } from '../js/engine/grammar.js';
 import { enumerateWords, makeRng } from '../js/engine/tokenize.js';
-import { pruefeGrammatik } from '../js/modules/grammatik.js';
+import { pruefeGrammatikChallenge } from '../js/engine/pruefer.js';
 
 /** Earley-Erkenner mit Aycock-Horspool-Behandlung löschbarer Nichtterminale. */
 function earley(g, w) {
@@ -116,8 +116,7 @@ test('ε-Regeln: kürzeste Wörter, Sackgassen-Erkennung, Challenge-Prüfung', (
   assert.equal(derive(k, '((()))', { from: form }).member, false);
   // Challenge „Klammerausdrücke“ mit einer ungewöhnlichen, aber richtigen Grammatik
   const c = { alphabet: ['(', ')'], maxLen: 8, pruefe: (w) => { let d = 0; for (const x of w) { d += x === '(' ? 1 : -1; if (d < 0) return false; } return d === 0; } };
-  const res = pruefeGrammatik(g, c);
+  const res = pruefeGrammatikChallenge(c, { grammatik: 'S → (S)SSSSS | ε' });
   assert.equal(res.ok, true, JSON.stringify(res));
-  assert.equal(res.complete, true);
   assert.equal(nullableBudget(parseGrammar('S → aSb | ab'), 10), 0);
 });

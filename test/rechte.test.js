@@ -27,6 +27,8 @@ test('Matrix: erwarteter Status je Route und Rolle', async () => {
     ['post', '/api/training/arena/neu', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
     ['post', '/api/training/unterscheide/neu', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
     ['post', '/api/training/runde/999999/ende', { gast: 401, schueler: 404, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
+    ['post', '/api/training/sortierer/neu', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
+    ['post', '/api/training/runde/999999/antwort', { gast: 401, schueler: 404, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
     ['get', '/api/lehrer/kurse', { gast: 401, schueler: 403, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
     ['post', '/api/sitzung/beenden', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
     ['get', '/api/verbund/kurse/k%3A17/uebersicht', { gast: 401, schueler: 401, lehrkraft: 401, fremdeLehrkraft: 401, superadmin: 401 }],

@@ -8,6 +8,9 @@
 //   pruefe(w)   Prädikat (Wort als Symbol-Array) – Test gegen alle Wörter bis Länge ~8
 //   raetsel     Wörter für „Wo stehen die Figuren?“ (kurz halten: 2–6 Zeichen)
 //   teilmengen  true → Vertiefung Teilmengenkonstruktion anbieten (nur kleine Alphabete!)
+//
+// Liegt in inhalte/ (nur Server, Vertrag InfoLabs §9): Die App bekommt NEA, Beispiele und Rätselwörter über die Aufgaben-
+// API (Gegenstand der Aufgabe); Rätsel und Teilmengenkonstruktion prüft und punktet der Server.
 
 export const PARALLELWELTEN = [
   {

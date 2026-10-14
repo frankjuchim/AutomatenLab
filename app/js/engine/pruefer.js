@@ -5,6 +5,10 @@ import { dfa, runDFA, normalizeDFA, equivalent, minimizeDFA } from './dfa.js';
 import * as MK from './markierung.js';
 import { mealy, runMealy, mealyEquivalent } from './mealy.js';
 import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
+import { nfa, runNFA, epsilonClosure, subsetConstruction } from './nfa.js';
+import { pda, runPDA, successors, initialConfig, runToTable, matchesConfigSequence } from './pda.js';
+import { parseGrammar, derive, symbolsToString, tokenizeWord, languageUpTo, isRightRegular } from './grammar.js';
+import { tm, runTM, BLANK, MOVES } from './turing.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -218,4 +222,258 @@ export function pruefeMealyReparatur(referenz, fehlerhaft, ausgaben) {
 export function mealyLoesung(referenz, fehler) {
   const R = mealy(referenz);
   return { fehler: fehler.map((f) => ({ von: f.von, zeichen: f.zeichen, falsch: f.ausgabe, richtig: R.delta[f.von][f.zeichen].out === '' ? 'ε' : R.delta[f.von][f.zeichen].out })) };
+}
+
+/* ───────────── Überliste den Automaten ───────────── */
+
+/** Testwort dem (sichtbaren) Automaten vorlegen und mit der Wahrheit (Prädikat) vergleichen. ok = überlistet. */
+export function pruefeUeberliste(automat, pruefe, antwort) {
+  const A = dfa(automat);
+  const tk = tokenizeWort(antwort?.wort ?? '', A.alphabet);
+  if (!tk.ok) throw ungueltig400(tk.message);
+  if (tk.tokens.length > 200) throw ungueltig400('Das Wort ist zu lang (höchstens 200 Zeichen).');
+  const akzeptiert = runDFA(A, tk.tokens).accepted;
+  const gehoertDazu = !!pruefe(tk.tokens);
+  const ueberlistet = akzeptiert !== gehoertDazu;
+  return { ok: ueberlistet, zaehltFehler: false, rueckmeldung: { wort: tk.tokens, akzeptiert, gehoertDazu, ueberlistet } };
+}
+
+/** Lösungsteil: ein Wort, bei dem sich der Automat irrt (Form präfixⁿ fortsetzungᵐ, kürzestes zuerst). */
+export function ueberlisteBeispiel(automat, pruefe, praefix, fortsetzung) {
+  const A = dfa(automat);
+  for (let laenge = 1; laenge <= 2 * A.states.length + 6; laenge++) {
+    for (let n = laenge; n >= 0; n--) {
+      const w = [...Array(n).fill(praefix), ...Array(laenge - n).fill(fortsetzung)];
+      if (runDFA(A, w).accepted !== !!pruefe(w)) return w;
+    }
+  }
+  return null;
+}
+
+/* ───────────── Parallelwelten (NEA) ───────────── */
+
+/** Zustandsmenge aus der Antwort lesen: nur Zustände des NEA, in Zustandsreihenfolge. */
+function leseMenge(N, liste) {
+  if (!Array.isArray(liste) || liste.some((x) => typeof x !== 'string' || !N.states.includes(x))) throw ungueltig400('Unbekannter Zustand.');
+  return N.states.filter((x) => liste.includes(x));
+}
+const gleicheMenge = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/**
+ * „Wo stehen die Figuren?“: Menge aktiver Zustände nach Wort Nr. i. Gewertet wird der erste Versuch je Wort; nach dem
+ * zweiten Versuch werden fehlende Zustände genannt, nach dem dritten die Lösung. stand = { antworten, versuche }.
+ */
+export function pruefeNeaRaetsel(automat, worte, stand0, antwort) {
+  const i = Number.isInteger(antwort?.wort) ? antwort.wort : -1;
+  if (typeof worte[i] !== 'string') throw ungueltig400('Dieses Rätsel gibt es nicht.');
+  const N = nfa(automat);
+  const mine = leseMenge(N, antwort.zustaende);
+  const soll = runNFA(N, worte[i] === 'ε' ? '' : worte[i]).sets.at(-1);
+  const richtig = gleicheMenge(mine, soll);
+  const stand = { antworten: { ...(stand0?.antworten ?? {}) }, versuche: { ...(stand0?.versuche ?? {}) }, erledigt: { ...(stand0?.erledigt ?? {}) } };
+  const k = String(i);
+  if (!(k in stand.antworten)) stand.antworten[k] = richtig ? 1 : 0;
+  stand.versuche[k] = (stand.versuche[k] ?? 0) + 1;
+  const v = stand.versuche[k];
+  if (richtig || v >= 3) stand.erledigt[k] = true;
+  const fertig = worte.every((_, j) => stand.erledigt[j]);
+  const summe = Object.values(stand.antworten).reduce((a, b) => a + b, 0);
+  const fehlend = soll.filter((x) => !mine.includes(x));
+  return { richtig, fertig, anteil: summe / worte.length, stand,
+    rueckmeldung: { wort: i, richtig, versuche: v, zuViel: mine.filter((x) => !soll.includes(x)), fehlendAnzahl: fehlend.length,
+      ...(v >= 2 && !richtig ? { fehlend } : {}), ...(richtig || v >= 3 ? { loesung: soll, akzeptiert: soll.some((x) => N.accepting.includes(x)) } : {}),
+      fertig, ersterVersuch: summe, von: worte.length } };
+}
+
+/**
+ * Teilmengenkonstruktion Zeile für Zeile: antwort = { menge: [...], ziele: { a: [...] } } – eine Zeile der Tabelle.
+ * stand = { fertig: ["S0,S1", …] } (richtig ausgefüllte Zeilen). Falsche Zeile = Fehlversuch.
+ */
+export function pruefeTeilmengenZeile(automat, stand0, antwort) {
+  const N = nfa(automat);
+  const { table } = subsetConstruction(N);
+  const menge = leseMenge(N, antwort?.menge);
+  const zeile = table.find((r) => gleicheMenge(r.set, menge));
+  if (!zeile) throw ungueltig400('Diese Zustandsmenge kommt in der Teilmengenkonstruktion nicht vor.');
+  const falsch = [];
+  for (const a of N.alphabet) if (!gleicheMenge(leseMenge(N, antwort.ziele?.[a] ?? []), zeile.targets[a])) falsch.push(a);
+  const stand = { fertig: [...new Set(stand0?.fertig ?? [])] };
+  const key = menge.join(',');
+  if (!falsch.length && !stand.fertig.includes(key)) stand.fertig.push(key);
+  const alle = table.every((r) => stand.fertig.includes(r.set.join(',')));
+  return { ok: !falsch.length && alle, fertig: !falsch.length && alle, zaehltFehler: falsch.length > 0, stand,
+    rueckmeldung: { richtig: !falsch.length, falsch, ...(falsch.length ? { gelesen: Object.fromEntries(falsch.map((a) => [a, [...new Set(menge.flatMap((x) => N.delta[x]?.[a] ?? []))]])) } : {}), erledigt: stand.fertig.length, von: table.length, fertig: alle } };
+}
+
+/** Teilmengenkonstruktion: Lösungsteil – alle Zeilen und der DEA. */
+export function teilmengenLoesung(automat) {
+  const N = nfa(automat);
+  const { table, dfa: D } = subsetConstruction(N);
+  return { zeilen: table.map((r) => ({ menge: r.set, ziele: r.targets, endzustand: r.accepting })), dea: D, start: epsilonClosure(N, N.starts) };
+}
+
+/* ───────────── Keller-Labor (Kellerautomaten) ───────────── */
+
+/** Rückwärts-Aufgabe: Folge der Konfigurationen (Zustand, Keller) eines akzeptierenden Laufs – ohne das Eingabewort. */
+export function kellerFolge(automat, wort) {
+  const run = runPDA(pda(automat), wort).run;
+  return run.map((r) => ({ state: r.config.state, stack: r.config.stack }));
+}
+
+/**
+ * Tabellen-Trainer: vollständige Abi-Tabelle zu Wort Nr. i prüfen. antwort = { wort, zeilen: [{ zustand, keller,
+ * oberstes, eingabe }], akzeptiert }. Gültig ist jeder Lauf nach den Übergängen (beim NKA genügt ein akzeptierender);
+ * akzeptiert → letzte Zeile: Eingabe gelesen, Endzustand; nicht akzeptiert → Lauf endet ohne weiteren Übergang.
+ * stand = { erledigt: { i: true } }. Eine falsche Tabelle ist ein Fehlversuch.
+ */
+export function pruefeKellerTabelle(automat, worte, stand0, antwort) {
+  const i = Number.isInteger(antwort?.wort) ? antwort.wort : -1;
+  if (typeof worte[i] !== 'string') throw ungueltig400('Dieses Wort gibt es nicht.');
+  if (!Array.isArray(antwort.zeilen) || !antwort.zeilen.length || antwort.zeilen.length > 200) throw ungueltig400('Die Tabelle fehlt.');
+  if (typeof antwort.akzeptiert !== 'boolean') throw ungueltig400('Bitte entscheide: Wird die Eingabe akzeptiert?');
+  const P = pda(automat);
+  const tokens = tokenizeWort(worte[i], P.inputAlphabet).tokens;
+  const keller = (txt) => { const t = String(txt ?? '').replace(/\s+/g, ''); if (isEpsilon(t)) return []; const tk = tokenizeWort(t, P.stackAlphabet); return tk.ok ? tk.tokens : null; };
+  const gleich = (a, b) => a && a.length === b.length && a.every((x, k) => x === b[k]);
+  let fehler = null;
+  let cur = initialConfig(P);
+  const z0 = antwort.zeilen[0];
+  if (z0?.zustand !== cur.state || !gleich(keller(z0?.keller), cur.stack)) fehler = { zeile: 0, grund: 'start' };
+  for (let k = 1; !fehler && k < antwort.zeilen.length; k++) {
+    const z = antwort.zeilen[k];
+    const st = keller(z?.keller);
+    const hit = successors(P, cur, tokens).find((x) => x.t.top === z?.oberstes && x.t.input === z?.eingabe && x.config.state === z?.zustand && gleich(st, x.config.stack));
+    if (!hit) fehler = { zeile: k, grund: 'uebergang' };
+    else cur = hit.config;
+  }
+  const akzeptiert = runPDA(P, tokens).accepted;
+  if (!fehler && antwort.akzeptiert !== akzeptiert) fehler = { grund: 'akzeptanz' };
+  if (!fehler && akzeptiert && !(cur.pos === tokens.length && P.accepting.includes(cur.state))) fehler = { grund: 'unvollstaendig' };
+  if (!fehler && !akzeptiert && successors(P, cur, tokens).length) fehler = { grund: 'unvollstaendig' };
+  const stand = { erledigt: { ...(stand0?.erledigt ?? {}) } };
+  if (!fehler) stand.erledigt[String(i)] = true;
+  const fertig = worte.every((_, j) => stand.erledigt[j]);
+  return { ok: !fehler && fertig, fertig: !fehler && fertig, zaehltFehler: !!fehler, stand,
+    rueckmeldung: { wort: i, richtig: !fehler, ...(fehler ? { fehler } : {}), erledigt: Object.keys(stand.erledigt).length, von: worte.length, fertig } };
+}
+
+/** Tabellen-Trainer: Lösungsteil – je Wort eine Tabelle (akzeptierender bzw. längster Lauf) und die Entscheidung. */
+export function kellerTabellenLoesung(automat, worte) {
+  const P = pda(automat);
+  return { tabellen: worte.map((w) => {
+    const r = runPDA(P, w);
+    if (r.accepted) return { wort: w, akzeptiert: true, zeilen: r.table };
+    // abgelehnt: längsten Lauf weiterführen, bis kein Übergang mehr möglich ist (wie im Abitur dokumentiert)
+    const run = [...r.longest];
+    for (let k = 0; k < 100; k++) { const next = successors(P, run.at(-1).config, r.tokens)[0]; if (!next) break; run.push({ config: next.config, t: next.t }); }
+    return { wort: w, akzeptiert: false, zeilen: runToTable(run) };
+  }) };
+}
+
+/** Rückwärts: passt das Wort zur Folge? → ok, at (bis zu welchem Schritt es passt). Falsch = Fehlversuch. */
+export function pruefeKellerRueckwaerts(automat, folge, antwort) {
+  const P = pda(automat);
+  const tk = tokenizeWort(antwort?.wort ?? '', P.inputAlphabet);
+  if (!tk.ok) throw ungueltig400(tk.message);
+  const r = matchesConfigSequence(P, tk.tokens, folge);
+  return r.ok ? { ok: true, rueckmeldung: { richtig: true, wort: tk.tokens, zeilen: runToTable(folge.map((c, k) => ({ config: c, t: k ? r.transitions[k - 1] : null }))) } }
+    : { ok: false, rueckmeldung: { richtig: false, at: r.at } };
+}
+
+/** Rückwärts: Lösungsteil – ein passendes Eingabewort mit Tabelle. */
+export function kellerRueckwaertsLoesung(automat, wort) {
+  const r = runPDA(pda(automat), wort);
+  return { wort, zeilen: r.table };
+}
+
+/* ───────────── Ableitungs-Rallye ───────────── */
+
+/** Linksableitung nachspielen: regeln = [[linke Seite, Index der Alternative], …] → Satzform am Ende (oder Fehler). */
+function linksableitung(g, regeln) {
+  if (!Array.isArray(regeln) || regeln.length > 400) throw ungueltig400('Die Ableitung fehlt.');
+  let form = [{ t: 'N', v: g.start }];
+  for (let k = 0; k < regeln.length; k++) {
+    const [lhs, idx] = Array.isArray(regeln[k]) ? regeln[k] : [];
+    const pos = form.findIndex((x) => x.t === 'N');
+    const r = g.byLhs.get(lhs)?.[idx];
+    if (pos < 0 || !r || form[pos].v !== lhs) return { fehler: k };
+    form = [...form.slice(0, pos), ...r.rhs, ...form.slice(pos + 1)];
+  }
+  return { form };
+}
+
+/**
+ * Rallye prüfen. Modus „ableiten“: antwort = { regeln } – Linksableitung bis zum Zielwort.
+ * Modus „baum“: antwort = { baeume: [regeln1, regeln2] } – zwei verschiedene Linksableitungen (= Bäume) des Zielworts.
+ */
+export function pruefeRallye(grammatik, ziel, modus, antwort) {
+  const g = parseGrammar(grammatik);
+  const w = tokenizeWord(g, ziel).tokens;
+  const trifft = (regeln) => { const r = linksableitung(g, regeln); return !r.fehler && r.form.length === w.length && r.form.every((x, k) => x.t === 'T' && x.v === w[k]); };
+  if (modus === 'baum') {
+    const b = antwort?.baeume;
+    if (!Array.isArray(b) || b.length !== 2) throw ungueltig400('Es fehlen die zwei Ableitungen.');
+    const ok = trifft(b[0]) && trifft(b[1]) && JSON.stringify(b[0]) !== JSON.stringify(b[1]);
+    return { ok, rueckmeldung: { richtig: ok } };
+  }
+  const ok = trifft(antwort?.regeln);
+  return { ok, rueckmeldung: { richtig: ok, schritte: Array.isArray(antwort?.regeln) ? antwort.regeln.length : 0 } };
+}
+
+/** Rallye: Lösungsteil – eine kürzeste Ableitung als Folge von Satzformen. */
+export function rallyeLoesung(grammatik, ziel, sep = '') {
+  const g = parseGrammar(grammatik);
+  const r = derive(g, ziel);
+  return { ableitung: r.derivation ? r.derivation.map((d) => symbolsToString(d.form, sep)) : null, schritte: r.derivation ? r.derivation.length - 1 : null };
+}
+
+/* ───────────── Grammatik-Tester ───────────── */
+
+/**
+ * Grammatik gegen die Zielsprache: alle Wörter über Σ bis maxLen mit dem Prädikat vergleichen; bei regulaer zusätzlich
+ * rechtsreguläre Form verlangt. c = { alphabet, maxLen, regulaer, pruefe }. antwort = { grammatik: Text, start? }.
+ */
+export function pruefeGrammatikChallenge(c, antwort) {
+  const text = antwort?.grammatik;
+  if (typeof text !== 'string' || !text.trim() || text.length > 4000) throw ungueltig400('Die Grammatik fehlt.');
+  let g = parseGrammar(text);
+  const start = antwort.start;
+  if (g.ok && typeof start === 'string' && g.nonterminals.includes(start) && start !== g.start) g = parseGrammar(`${text}\nStart: ${start}`);
+  if (!g.ok) throw ungueltig400(`Die Grammatik hat Fehler: ${g.errors.join(' ')}`);
+  const maxLen = c.maxLen ?? 8;
+  const fremd = g.terminals.filter((t) => !c.alphabet.includes(t));
+  if (fremd.length) return { ok: false, rueckmeldung: { richtig: false, grund: 'alphabet', fremd } };
+  const lang = languageUpTo(g, maxLen, { maxNodes: 60000 });
+  const have = new Set(lang.words.map((w) => w.join('\u0001')));
+  let zuviel = null; let fehlt = null;
+  for (const w of lang.words) if (!c.pruefe(w)) { zuviel = w; break; }
+  if (!zuviel) for (const w of enumerateWords(c.alphabet, maxLen)) if (c.pruefe(w) && !have.has(w.join('\u0001'))) { fehlt = w; break; }
+  if (zuviel || fehlt) return { ok: false, rueckmeldung: { richtig: false, grund: 'sprache', zuviel, fehlt, vollstaendig: lang.complete } };
+  if (c.regulaer) { const rr = isRightRegular(g); if (!rr.regular) return { ok: false, rueckmeldung: { richtig: false, grund: 'regulaer', violations: rr.violations.slice(0, 6) } }; }
+  return { ok: true, rueckmeldung: { richtig: true, anzahl: lang.words.length, maxLen, regulaer: !!c.regulaer } };
+}
+
+/* ───────────── Turing-Labor ───────────── */
+
+/** Maschine ohne die fehlende Regel (für die Challenge „Tabelle vervollständigen“). */
+export function turingOhneRegel(spec, { from, read }) {
+  const delta = Object.fromEntries(Object.entries(spec.delta).map(([z, row]) => [z, { ...row }]));
+  delete delta[from][read];
+  return { ...spec, delta };
+}
+
+/** Ergänzte Regel { to, write, move } gegen die Referenzmaschine auf den Testeingaben prüfen. Falsch = Fehlversuch. */
+export function pruefeTuringRegel(maschine, fehlt, tests, regel) {
+  const ref = tm(maschine);
+  if (!regel || !ref.states.includes(regel.to) || !ref.tapeAlphabet.includes(regel.write) || !MOVES.includes(regel.move)) throw ungueltig400('Fülle alle drei Felder der fehlenden Regel aus.');
+  const spec = turingOhneRegel(maschine, fehlt);
+  spec.delta[fehlt.from][fehlt.read] = [regel.to, regel.write, regel.move];
+  const T = tm(spec);
+  for (const w of tests) {
+    const soll = runTM(ref, w, { maxSteps: 3000 });
+    const ist = runTM(T, w, { maxSteps: 3000 });
+    if (!ist.halted) return { ok: false, rueckmeldung: { richtig: false, wort: w, endlos: true } };
+    if (ist.accepted !== soll.accepted || ist.output.join('') !== soll.output.join('')) return { ok: false, rueckmeldung: { richtig: false, wort: w, band: ist.output.join('') || BLANK, erwartet: soll.output.join('') } };
+  }
+  return { ok: true, rueckmeldung: { richtig: true, tests } };
 }

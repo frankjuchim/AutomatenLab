@@ -75,6 +75,7 @@ function apiRoutes(app, h) {
   // Training (Arena, „Unterscheide!“): Runde vom Server, Antworten am Ende, 1 Punkt je richtiger Antwort, Tageshöchstwert
   api.get('/training', darfUeben, (req, res) => res.json(svc.training.info(req.konto.sub)));
   api.post('/training/:modul/neu', darfUeben, begrenzt, (req, res) => res.json(svc.training.neu(req.konto.sub, req.params.modul, req.body)));
+  api.post('/training/runde/:id/antwort', darfUeben, begrenzt, (req, res) => res.json(svc.training.antwort(req.konto.sub, req.params.id, req.body)));
   api.post('/training/runde/:id/ende', darfUeben, begrenzt, (req, res) => res.json(svc.training.ende(req.konto.sub, req.params.id, req.body)));
 
   app.use('/api', api);

@@ -1,46 +1,37 @@
 // Turing-Labor (#/turing): Turingmaschinen-Simulator mit Band, Schreib-Lese-Kopf, Zustandsgraph („gelesen / geschrieben, Bewegung“),
 // Übergangstabelle, Schritt/Play/Tempo. Programme: Binär + 1, aⁿbⁿcⁿ, unärer Addierer, Fleißige Biber.
-// Challenge „Vervollständige die Übergangstabelle“. Deep-Links: #/turing?programm=<id>, #/turing?challenge=n
+// Challenge „Vervollständige die Übergangstabelle“. Deep-Links: #/turing?programm=<id>, #/turing?challenge=n,
+// #/turing?demo=1 (Demo-Challenge). Die Challenges prüft die Quelle (Server bzw. Demo): Welche Regel fehlt, kennt nur sie.
 
 import { h, clear, quote, reducedMotion } from '../core/dom.js';
-import { TURING_PROGRAMME, TURING_CHALLENGES } from '../data/turing.js';
+import { TURING_PROGRAMME } from '../data/turing.js';
 import { tm, runTM, tmToGraph, tmTable, countOnes, tapeContent, BLANK, MOVES } from '../engine/turing.js';
 import { GraphView } from '../components/graph-view.js';
 import { TmTape } from '../components/tm-tape.js';
 
 const PROGRAMME = TURING_PROGRAMME.map((p) => ({ ...p, T: tm(p.maschine) }));
-const CHALLENGES = TURING_CHALLENGES.map((c, i) => ({ ...c, nr: i + 1, prog: PROGRAMME.find((p) => p.id === c.programm) }));
 const TEMPI = [{ ms: 900, label: 'langsam' }, { ms: 450, label: 'normal' }, { ms: 160, label: 'schnell' }, { ms: 40, label: 'turbo' }];
 const MAX_STEPS = 3000;
-
-/** Fehlende Regel entfernen (für die Challenge). */
-export function ohneRegel(spec, { from, read }) {
-  const delta = Object.fromEntries(Object.entries(spec.delta).map(([s, row]) => [s, { ...row }]));
-  delete delta[from][read];
-  return { ...spec, delta };
-}
-
-/** Prüft eine ergänzte Regel gegen die Referenzmaschine auf den Testeingaben. */
-export function pruefeRegel(c, regel) {
-  const spec = ohneRegel(c.prog.maschine, c.fehlt);
-  spec.delta[c.fehlt.from][c.fehlt.read] = [regel.to, regel.write, regel.move];
-  let T;
-  try { T = tm(spec); } catch (e) { return { ok: false, grund: e.message }; }
-  for (const w of c.tests) {
-    const ref = runTM(c.prog.T, w, { maxSteps: MAX_STEPS });
-    const mine = runTM(T, w, { maxSteps: MAX_STEPS });
-    if (!mine.halted) return { ok: false, grund: `Bei Eingabe ${quote(w)} hält die Maschine nicht (Endlosschleife).`, wort: w };
-    if (mine.accepted !== ref.accepted || mine.output.join('') !== ref.output.join('')) return { ok: false, grund: `Bei Eingabe ${quote(w)} steht am Ende „${mine.output.join('') || BLANK}“ auf dem Band – erwartet „${ref.output.join('')}“.`, wort: w };
-  }
-  return { ok: true };
-}
 
 export default {
   title: 'Turing-Labor',
   mount(el, ctx) {
     const p = ctx.params;
+    const q = ctx.quelle; // Challenges: Server (angemeldet) oder Demo (Gastmodus)
     const cn = Number(p.get('challenge'));
-    if (cn >= 1 && cn <= CHALLENGES.length) return challenge(CHALLENGES[cn - 1]);
+    if (q.demo || cn >= 1) {
+      let aktiv = true; let aufraeumen = null; let LISTE = [];
+      clear(el, h('p', { class: 'muted' }, 'Lade …'));
+      (async () => {
+        LISTE = await q.liste('turing');
+        const e = q.demo ? LISTE[0] : LISTE.find((x) => x.nr === cn);
+        if (!aktiv) return;
+        if (!e) { aufraeumen = lab(PROGRAMME[0]); return; }
+        const d = await q.aufgabe(e.id);
+        if (aktiv) aufraeumen = challenge({ ...d.aufgabe, aufgabeId: e.id, nr: e.nr ?? 0, anzahl: LISTE.length, zustand: d.zustand, loesung: d.loesung ?? null });
+      })().catch((e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); });
+      return () => { aktiv = false; aufraeumen?.(); };
+    }
     const prog = PROGRAMME.find((x) => x.id === p.get('programm')) ?? PROGRAMME[0];
     return lab(prog);
 
@@ -162,15 +153,14 @@ export default {
     }
 
     function challenge(c) {
-      ctx.setSubtitle(`Challenge ${c.nr}: ${c.titel}`);
-      const T = c.prog.T;
-      const spec = ohneRegel(c.prog.maschine, c.fehlt);
-      const partial = tm(spec);
+      ctx.setSubtitle(q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`);
+      const partial = tm(c.maschine);
+      let zustand = c.zustand; let loesung = c.loesung;
       const graphBox = h('div', { class: 'tm-graph panel' });
       const gv = new GraphView(graphBox, { label: 'Unvollständiger Zustandsgraph' });
       gv.render(tmToGraph(partial));
-      const toSel = h('select', { class: 'delta-select', 'aria-label': 'Folgezustand' }, h('option', { value: '' }, '?'), T.states.map((s) => h('option', { value: s }, s)));
-      const writeSel = h('select', { class: 'delta-select', 'aria-label': 'geschrieben' }, h('option', { value: '' }, '?'), T.tapeAlphabet.map((s) => h('option', { value: s }, s)));
+      const toSel = h('select', { class: 'delta-select', 'aria-label': 'Folgezustand' }, h('option', { value: '' }, '?'), c.zustaende.map((s) => h('option', { value: s }, s)));
+      const writeSel = h('select', { class: 'delta-select', 'aria-label': 'geschrieben' }, h('option', { value: '' }, '?'), c.bandalphabet.map((s) => h('option', { value: s }, s)));
       const moveSel = h('select', { class: 'delta-select', 'aria-label': 'Bewegung' }, h('option', { value: '' }, '?'), MOVES.map((m) => h('option', { value: m }, m)));
       const result = h('div', { class: 'check-result', 'aria-live': 'polite' });
       let attempts = 0;
@@ -179,26 +169,42 @@ export default {
         h('thead', null, h('tr', null, ['Zustand', 'gelesen', 'Folgezustand', 'geschrieben', 'Bewegung'].map((t) => h('th', null, t)))),
         h('tbody', null, rows.map((r) => h('tr', null, h('td', null, r.from), h('td', null, r.read), h('td', null, r.to), h('td', null, r.write), h('td', null, r.move))),
           h('tr', { class: 'is-missing' }, h('td', null, c.fehlt.from), h('td', null, c.fehlt.read), h('td', null, toSel), h('td', null, writeSel), h('td', null, moveSel))));
-      function check() {
+      const next = () => (q.demo ? null : (c.nr < c.anzahl ? c.nr + 1 : null));
+      async function check() {
         if (!toSel.value || !writeSel.value || !moveSel.value) { clear(result, h('p', { class: 'notice notice-warn' }, 'Fülle alle drei Felder der fehlenden Regel aus.')); return; }
         attempts++;
-        const res = pruefeRegel(c, { to: toSel.value, write: writeSel.value, move: moveSel.value });
-        if (res.ok) {
-          const { first } = ctx.progress.solve('turing', c.id, c.punkte);
-          ctx.progress.award('turing-regel');
-          if (first) ctx.toast(`+${c.punkte} Punkte`, { type: 'success' });
-          const next = CHALLENGES[c.nr];
+        let r;
+        try { r = await q.pruefen(c.aufgabeId, { to: toSel.value, write: writeSel.value, move: moveSel.value }); } catch (e) { clear(result, h('p', { class: 'notice notice-error' }, e.message)); return; }
+        zustand = r.zustand ?? zustand;
+        if (r.loesung) loesung = r.loesung;
+        const rm = r.rueckmeldung;
+        if (rm.richtig) {
+          if (r.punkteErhalten) ctx.toast(`+${r.punkteErhalten} Punkte`, { type: 'success' });
           clear(result, h('div', { class: 'notice notice-success' },
-            h('p', null, h('strong', null, 'Richtig! '), `Die Regel (${c.fehlt.from}, ${c.fehlt.read}) → (${toSel.value}, ${writeSel.value}, ${moveSel.value}) macht die Maschine wieder korrekt – geprüft mit ${c.tests.map((w) => quote(w)).join(', ')}.`),
+            h('p', null, h('strong', null, 'Richtig! '), `Die Regel (${c.fehlt.from}, ${c.fehlt.read}) → (${toSel.value}, ${writeSel.value}, ${moveSel.value}) macht die Maschine wieder korrekt – geprüft mit ${rm.tests.map((w) => quote(w)).join(', ')}.`),
             h('div', { class: 'start-actions' },
               h('a', { class: 'btn btn-primary', href: ctx.link('turing', { programm: c.programm }) }, 'Im Simulator ansehen'),
-              next ? h('a', { class: 'btn', href: ctx.link('turing', { challenge: next.nr }) }, `Challenge ${next.nr}`) : null)));
+              next() ? h('a', { class: 'btn', href: ctx.link('turing', { challenge: next() }) }, `Challenge ${next()}`) : null)));
         } else {
-          clear(result, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. '), res.grund), h('p', { class: 'muted' }, `Versuch ${attempts}.`)));
+          const grund = rm.endlos ? `Bei Eingabe ${quote(rm.wort)} hält die Maschine nicht (Endlosschleife).` : `Bei Eingabe ${quote(rm.wort)} steht am Ende „${rm.band}“ auf dem Band – erwartet „${rm.erwartet}“.`;
+          clear(result, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. '), grund),
+            h('p', { class: 'muted' }, !q.demo && zustand?.status === 'offen' ? `Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : `Versuch ${attempts}.`),
+            attempts >= 3 ? h('p', null, h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => aufdecken() }, 'Lösung zeigen')) : null));
         }
       }
+      /** „Lösung zeigen“: danach gibt es für diese Challenge keine Punkte mehr. */
+      async function aufdecken() {
+        if (!loesung) {
+          if (!q.demo && zustand?.status === 'offen' && !window.confirm('Wenn du die Lösung ansiehst, bekommst du für diese Challenge keine Punkte mehr. Trotzdem anzeigen?')) return;
+          try { const r = await q.aufdecken(c.aufgabeId); zustand = r.zustand; loesung = r.loesung; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+        }
+        const rg = loesung.regel;
+        toSel.value = rg.to; writeSel.value = rg.write; moveSel.value = rg.move;
+        clear(result, h('div', { class: 'notice' }, h('p', null, h('strong', null, 'Lösung: '), `(${c.fehlt.from}, ${c.fehlt.read}) → (${rg.to}, ${rg.write}, ${rg.move}). Prüfe sie – selbst geprüft zählt als gelöst.`)));
+      }
       clear(el,
-        h('div', { class: 'panel tm-intro' }, h('h2', null, c.prog.titel), h('p', { class: 'task-text' }, c.aufgabe), h('p', { class: 'muted' }, c.prog.kontext)),
+        h('div', { class: 'panel tm-intro' }, h('h2', null, c.programmTitel), h('p', { class: 'task-text' }, c.aufgabe), h('p', { class: 'muted' }, c.kontext),
+          q.demo ? h('p', { class: 'notice gast-hinweis' }, h('strong', null, 'Demo. '), 'Eine eigene Challenge zum Ausprobieren – ohne Punkte.') : null),
         h('div', { class: 'tm-layout' },
           h('div', { class: 'panel' }, h('div', { class: 'table-scroll' }, table),
             h('div', { class: 'check-row' }, h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => check() }, 'Prüfen'), h('span', { class: 'muted' }, 'Geprüft wird mit Testeingaben gegen die korrekte Maschine.')),
@@ -206,7 +212,7 @@ export default {
           h('div', { class: 'tm-right' }, graphBox)),
         h('nav', { class: 'case-nav' },
           h('a', { class: 'btn btn-ghost', href: ctx.link('turing') }, '‹ Zum Simulator'),
-          c.nr < CHALLENGES.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('turing', { challenge: c.nr + 1 }) }, `Challenge ${c.nr + 1} ›`) : h('span')));
+          next() ? h('a', { class: 'btn btn-ghost', href: ctx.link('turing', { challenge: next() }) }, `Challenge ${next()} ›`) : h('span')));
       return () => gv.destroy();
     }
 
