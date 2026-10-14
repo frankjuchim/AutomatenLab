@@ -181,22 +181,31 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
       };
     });
     // Fallen-Profil (wie Algo Quest): je Falle die Fehlversuche und „Lösung angesehen“ in Aufgaben mit dieser Falle,
-    // betroffen = Schüler mit mindestens einem Fehlversuch oder einer angesehenen Lösung dort
+    // beim Level-Quiz die im ersten Durchgang falsch beantworteten Fragen mit dieser Falle (fragenFallen);
+    // betroffen = Schüler mit mindestens einem davon
     const fallen = (aufgaben?.fallen ?? []).map((f) => {
       const mit = liste.filter((a) => (a.fallen || []).includes(f.p));
-      let fehlversuche = 0; let angesehen = 0; let betroffen = 0;
+      let fehlversuche = 0; let angesehen = 0; let quizFalsch = 0; let betroffen = 0;
       for (const s of subs) {
         let trifft = false;
         for (const a of mit) {
           const r = fp.get(s).get(a.id);
           if (!r) continue;
+          if (a.fragenFallen) {
+            let antworten = {};
+            try { antworten = JSON.parse(r.daten || '{}').antworten || {}; } catch { /* leer */ }
+            for (const [i, wert] of Object.entries(antworten)) {
+              if (wert < 1 && (a.fragenFallen[Number(i)] || []).includes(f.p)) { quizFalsch++; trifft = true; }
+            }
+            continue;
+          }
           fehlversuche += r.fehlversuche;
           if (r.status === 'angesehen') angesehen++;
           if (r.fehlversuche > 0 || r.status === 'angesehen') trifft = true;
         }
         if (trifft) betroffen++;
       }
-      return { p: f.p, titel: f.titel, text: f.text, aufgaben: mit.length, fehlversuche, angesehen, schueler: betroffen, schuelerGesamt: subs.length };
+      return { p: f.p, titel: f.titel, text: f.text, aufgaben: mit.length, fehlversuche, quizFalsch, angesehen, schueler: betroffen, schuelerGesamt: subs.length };
     });
     return { kurs: { id: kurs.id, name: kurs.name, kursart }, schueler: subs.length, matrix, fallen, aufgaben: aufgabenStat };
   }
@@ -217,8 +226,8 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     }
     if (art === 'fallen') {
       const a = kursAuswertung(kurs);
-      return csv([['Falle', 'Titel', 'Aufgaben', 'Fehlversuche', 'Lösung angesehen', 'betroffene Schüler', 'Schüler im Kurs'],
-        ...a.fallen.map((f) => [f.p, f.titel, f.aufgaben, f.fehlversuche, f.angesehen, f.schueler, f.schuelerGesamt])]);
+      return csv([['Falle', 'Titel', 'Aufgaben', 'Fehlversuche', 'falsch im Level-Quiz', 'Lösung angesehen', 'betroffene Schüler', 'Schüler im Kurs'],
+        ...a.fallen.map((f) => [f.p, f.titel, f.aufgaben, f.fehlversuche, f.quizFalsch, f.angesehen, f.schueler, f.schuelerGesamt])]);
     }
     if (art === 'aufgaben') {
       const a = kursAuswertung(kurs);

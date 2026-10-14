@@ -461,6 +461,13 @@ async function ladeAufgaben(secret) {
   for (const a of liste) {
     const art = a.modul === 'mealy' ? (a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd') : a.id === 'ueberliste:bonus' ? 'bonus' : a.art;
     a.fallen = fallenM.FALLEN_JE_TYP[`${a.modul}:${art}`] ?? fallenM.FALLEN_JE_TYP[a.modul] ?? [];
+    if (a.modul === 'quiz') {
+      // Level-Quiz: Fallen je Frage (inhalte/quiz.js QUIZ_FALLEN), die Aufgabe trägt alle Fallen ihrer Fragen
+      const [teil, schluessel] = a.id.slice('quiz:'.length).split('-');
+      a.fragenFallen = quiz.QUIZ_FALLEN?.[teil]?.[schluessel] ?? [];
+      const nr = (p) => Number(p.slice(1));
+      a.fallen = [...new Set(a.fragenFallen.flat())].sort((x, y) => nr(x) - nr(y));
+    }
   }
   const map = new Map(liste.map((a) => [a.id, a]));
 

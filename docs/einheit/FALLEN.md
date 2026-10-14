@@ -1,7 +1,7 @@
 # Fallen P1–P10 – Automaten und formale Sprachen
 
 Entwurf für AutomatenLab nach Vertrag §9 (Fallen-Liste P1–P10, gleiches Schema wie Algo Quest: Nummer, Kurztitel, Erläuterung).
-Stand: 14.10.2026. **Von Frank freigegeben am 14.10.2026.** Umgesetzt (1.14.0): Konstante `FALLEN` und Zuordnung je Aufgabentyp in `app/js/data/fallen.js`, Feld `fallen` an jeder Aufgabe (Katalog), Fallen-Profil des Kurses und Spalte „Fallen“ in der Aufgabenstatistik (Lehrkraft-Bereich, CSV). Noch offen: Fallen je Quizfrage und in den Materialien.
+Stand: 14.10.2026. **Von Frank freigegeben am 14.10.2026.** Umgesetzt (1.14.0): Konstante `FALLEN` und Zuordnung je Aufgabentyp in `app/js/data/fallen.js`, Feld `fallen` an jeder Aufgabe (Katalog), Fallen-Profil des Kurses und Spalte „Fallen“ in der Aufgabenstatistik (Lehrkraft-Bereich, CSV). Fallen je Quizfrage (1.15.0): `QUIZ_FALLEN` in `inhalte/quiz.js`. Noch offen: Fallen-Nummern in den Materialien.
 
 - **Grundlage Notation:** `docs/einheit/PLAN.md` Abschnitt 1 (Ergänzende Hinweise 2025), `docs/einheit/STYLEGUIDE.md`.
 - **Grundlage Fehlerbilder:** Quiz (`app/js/data/quiz.js`), Tipps in den Modul-Daten, Warnkästen „Darauf achten“ / „Typische Fehler“ in allen Lehrkraft-Handreichungen DS01–DS16 und Merkblättern M02–M12, Bewertungshinweise der Übungsklausur (`materials/content/abschluss/build_klausur.js`).
@@ -369,4 +369,4 @@ const FALLEN = [
 - Zu **P10** gibt es im Quiz keine Frage, die „beschreiben“, „begründen“ und „erläutern“ gegenüberstellt (bisher nur DS15 „zeichnen“). Eine Zuordnungsfrage in Welt D oder DS14 wäre naheliegend.
 - Zu **P3** fehlt eine Quizfrage zum Neuanfang (z. B. „Wohin führt b aus S3 bei ‚endet auf aba‘?“).
 - Zu **P8** fehlt eine Quizfrage zur Spalte „oberstes Kellersymbol“ (vor dem Schritt) und zur eigenen Zeile für den ε-Übergang.
-- Die Quizfragen haben noch kein Feld `fallen`. Wenn es ergänzt wird, lässt sich das Fallen-Profil schon im Gastmodus aus den Quizfehlern ableiten.
+- ~~Die Quizfragen haben noch kein Feld `fallen`.~~ Erledigt (1.15.0): Jede Frage hat ihre Fallen (`QUIZ_FALLEN`, leer bei Fragen ohne Abitur-Falle, z. B. Turingmaschine).
