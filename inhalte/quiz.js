@@ -344,3 +344,35 @@ export const QUIZ_DS = {
     wf('Ein ausreichend cleveres Programm könnte für jedes Programm und jede Eingabe entscheiden, ob es anhält.', false, ['Das Halteproblem ist unentscheidbar: Kein Algorithmus schafft es für alle Programme – für einzelne Programme kann man es trotzdem oft sehen.', 'Richtig, man muss das Programm nur lange genug laufen lassen.', 'Richtig, nur bei Programmen mit Schleifen ist es unmöglich.']),
   ] },
 };
+
+/**
+ * Fallen P1–P10 je Quizfrage (app/js/data/fallen.js, Liste freigegeben am 14.10.2026), in der Reihenfolge der Fragen.
+ * Leer = die Frage übt keine der zehn Abitur-Fallen (z. B. Turingmaschine, Halteproblem, Begriffe).
+ * Fließt ins Fallen-Profil der Lehrkraft ein: Eine im ersten Durchgang falsch beantwortete Frage zählt bei ihren Fallen.
+ */
+export const QUIZ_FALLEN = {
+  welt: {
+    A: [['P1'], [], ['P2'], ['P1'], ['P3'], ['P4'], ['P4'], ['P5'], ['P5'], ['P3']],
+    B: [['P6'], ['P6'], ['P2'], [], ['P7'], ['P2'], ['P7'], ['P8'], ['P2'], ['P6']],
+    C: [['P9'], ['P9'], ['P9'], ['P9'], ['P9'], ['P6'], ['P9'], ['P9'], ['P6'], []],
+    D: [[], [], [], [], [], ['P6'], [], ['P6'], ['P2']],
+  },
+  ds: {
+    1: [['P1'], [], ['P3']],
+    2: [['P10'], [], []],
+    3: [['P3'], [], ['P3']],
+    4: [['P3'], ['P1'], ['P10']],
+    5: [['P4'], ['P4'], ['P4']],
+    6: [['P5', 'P1'], ['P5'], ['P6']],
+    7: [['P6'], ['P6'], ['P6']],
+    8: [[], ['P2'], ['P2']],
+    9: [[], ['P7'], ['P8']],
+    10: [[], ['P10'], ['P6']],
+    11: [['P9'], ['P3'], ['P9']],
+    12: [['P9'], ['P9'], []],
+    13: [['P3'], ['P9'], []],
+    14: [['P6'], ['P6'], ['P6']],
+    15: [[], ['P10'], ['P6']],
+    16: [[], [], []],
+  },
+};

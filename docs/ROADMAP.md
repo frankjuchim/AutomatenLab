@@ -52,7 +52,8 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ PR 6 (1.10.0): Lehrkraft-Bereich im Aufbau wie Algo Quest – Navigation (Kurse · Aufgaben · Materialien · Themen · Portal), Meine Kurse, Kursseite mit Reitern Schüler · Beitritt · Auswertung (Lernstand-Matrix Level 1–16 × Schüler, Aufgabenstatistik, CSV) · Rangliste · Einstellungen (Kursart gA/eA); Aufgaben der Welten nach Level; Kursübersicht für das Portal mit echten Kennzahlen (Kursumfang je Kursart)
 - ✅ PR 6b (1.11.0): Aufgaben-Vorschau für Lehrkräfte (`&vorschau=1` mit eingesetzter Lösung, `&vorschau=ohne` zum Ausprobieren – nichts wird gespeichert), häufige falsche Antworten in der Aufgabenstatistik (Migration 6, Kurzform bei Quiz, Detektiv, Turing, Mealy-Vorhersage)
 - ✅ Fallen-Profil P1–P10 (1.14.0): Feld `fallen` je Aufgabentyp, Fallen-Profil des Kurses (Fehlversuche, Lösung angesehen, betroffene Schüler) wie Algo Quest, Spalte und CSV „Fallen“
-- [ ] Fallen je Quizfrage (Level-Quiz fließt dann ins Profil ein) und Fallen-Hinweise in den Materialien
+- ✅ Fallen je Quizfrage (1.15.0): alle 87 Fragen zugeordnet (`QUIZ_FALLEN` in `inhalte/quiz.js`), im ersten Durchgang falsch beantwortete Fragen zählen im Fallen-Profil
+- [ ] Fallen-Hinweise in den Materialien (Warnkästen mit Nummer P1–P10)
 - ✅ PR 7 (1.12.0): Kurs-Einstellungen – Level-Art je Kurs (Pflicht/Vertiefung/Bonus/Später, nur Anzeige: Deep-Links bleiben offen), Auftrag der Lehrkraft auf der Startseite, Grundkurs: eA-Level „freiwillig“; Datenschutzhinweise (`docs/DATENSCHUTZ.md`, `#/datenschutz`) auf dem Stand des Verbunds; Löschung über die Verbund-API vollständig getestet (jede Tabelle mit Konto-Bezug); Abnahme-Checkliste `docs/ABNAHME.md`
 
 ## Phase 6 – Materialien ↔ Plattform

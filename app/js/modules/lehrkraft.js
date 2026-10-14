@@ -253,16 +253,17 @@ export default {
     /** Fallen-Profil des Kurses (wie Algo Quest): Balken je Falle P1–P10 mit Fehlversuchen und betroffenen Schülern. */
     function fallenProfil(fallen) {
       if (!fallen?.length) return null;
-      const max = Math.max(1, ...fallen.map((f) => f.fehlversuche));
+      const fehler = (f) => f.fehlversuche + (f.quizFalsch ?? 0);
+      const max = Math.max(1, ...fallen.map(fehler));
       return h('div', { class: 'panel lk-karte' },
         h('h3', null, 'Fallen-Profil des Kurses'),
         h('p', { class: 'muted klein' }, 'Fehlversuche in Aufgaben, die diese typische Abitur-Falle üben (P1–P10, ',
-          h('a', { href: '#/lehrkraft?teil=aufgaben' }, 'Zuordnung bei den Aufgaben'), '). „Betrifft“ zählt Schülerinnen und Schüler mit mindestens einem Fehlversuch oder einer angesehenen Lösung dort. Das Level-Quiz fließt noch nicht ein.'),
+          h('a', { href: '#/lehrkraft?teil=aufgaben' }, 'Zuordnung bei den Aufgaben'), '), dazu im Level-Quiz die im ersten Durchgang falsch beantworteten Fragen zu dieser Falle. „Betrifft“ zählt Schülerinnen und Schüler mit mindestens einem Fehler oder einer angesehenen Lösung dort.'),
         h('ul', { class: 'lk-fallen' }, fallen.map((f) => h('li', { title: f.text },
           h('span', { class: 'lk-falle-kopf' }, h('strong', null, f.p), ' ', f.titel),
-          h('span', { class: 'lk-balken', role: 'img', 'aria-label': `${f.fehlversuche} Fehlversuche` },
-            h('span', { class: 'lk-balken-fuellung', style: { width: `${Math.round((100 * f.fehlversuche) / max)}%` } })),
-          h('span', { class: 'lk-falle-zahl' }, `${f.fehlversuche} Fehlversuche${f.angesehen ? ` · ${f.angesehen} × Lösung angesehen` : ''} · betrifft ${f.schueler} von ${f.schuelerGesamt}`)))));
+          h('span', { class: 'lk-balken', role: 'img', 'aria-label': `${fehler(f)} Fehler` },
+            h('span', { class: 'lk-balken-fuellung', style: { width: `${Math.round((100 * fehler(f)) / max)}%` } })),
+          h('span', { class: 'lk-falle-zahl' }, `${f.fehlversuche} Fehlversuche${f.quizFalsch ? ` · ${f.quizFalsch} falsch im Quiz` : ''}${f.angesehen ? ` · ${f.angesehen} × Lösung angesehen` : ''} · betrifft ${f.schueler} von ${f.schuelerGesamt}`)))));
     }
 
     /* 🏆 Rangliste */

@@ -198,3 +198,28 @@ test('Fallen-Profil: P1–P10, Fehlversuche je Falle, betroffene Schüler; Falle
   const c = (await lk.get('/api/lehrer/kurse/k%3A17/export.csv?art=fallen')).text;
   assert.ok(c.includes('P10;Operator verfehlt;'));
 });
+
+test('Fallen je Quizfrage: Zuordnung passt zu jeder Frage; falsche Antwort im ersten Durchgang zählt im Profil', async () => {
+  const quiz = await import('../inhalte/quiz.js');
+  const { FALLEN } = await import('../app/js/data/fallen.js');
+  const gueltig = new Set(FALLEN.map((f) => f.p));
+  for (const [teil, quelle] of [['welt', quiz.QUIZ_WELTEN], ['ds', quiz.QUIZ_DS]]) {
+    for (const [k, q] of Object.entries(quelle)) {
+      const l = quiz.QUIZ_FALLEN[teil][k];
+      assert.equal(l?.length, q.fragen.length, `${teil} ${k}: eine Fallen-Liste je Frage`);
+      for (const f of l) for (const p of f) assert.ok(gueltig.has(p), `${teil} ${k}: ${p}`);
+    }
+  }
+  const { app, lk } = await kursMitLernstand();
+  const mika = await H.angemeldet(app);
+  // Exit-Ticket DS05 (alle drei Fragen P4): Frage 1 falsch, Frage 2 richtig
+  const q = quiz.QUIZ_DS[5];
+  const auf = (await mika.get('/api/aufgaben/quiz%3Ads-5')).body;
+  assert.deepEqual((await lk.get('/api/katalog?modul=quiz')).body.aufgaben.find((x) => x.id === 'quiz:ds-5').fallen, ['P4']);
+  const wahl = (i, richtig) => auf.aufgabe.fragen[i].optionen.find((o) => (o.text === q.fragen[i].optionen[0]) === richtig).id;
+  await mika.post('/api/aufgaben/quiz%3Ads-5/pruefen').set(ORIGIN).send({ antwort: { frage: 0, wahl: wahl(0, false) } });
+  await mika.post('/api/aufgaben/quiz%3Ads-5/pruefen').set(ORIGIN).send({ antwort: { frage: 1, wahl: wahl(1, true) } });
+  const p4 = (await lk.get('/api/lehrer/kurse/k%3A17/auswertung')).body.fallen.find((f) => f.p === 'P4');
+  assert.deepEqual([p4.quizFalsch, p4.schueler], [1, 1]);
+  assert.ok((await lk.get('/api/lehrer/kurse/k%3A17/export.csv?art=fallen')).text.includes('falsch im Level-Quiz'));
+});

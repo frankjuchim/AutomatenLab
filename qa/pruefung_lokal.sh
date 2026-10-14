@@ -59,4 +59,4 @@ schritt "Alle Deep-Links als Gast"
 QA_GAST=1 node qa/qa-routes.mjs "$B/" | tail -3
 
 echo
-echo "PRÜFUNG GRÜN – $(git rev-parse --short HEAD) $(node -p "require('./package.json').version")"
+echo "PRÜFUNG GRÜN – $(git rev-parse --short HEAD) $(git show HEAD:package.json | node -p "JSON.parse(require('fs').readFileSync(0)).version")"

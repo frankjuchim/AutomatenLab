@@ -2,6 +2,16 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Fallen je Quizfrage (1.15.0)
+Alle 87 Fragen des Level-Quiz (Welt A–D, Exit-Tickets DS01–DS16) haben eine Fallen-Liste (`QUIZ_FALLEN` in
+`inhalte/quiz.js`, gleiche Reihenfolge wie die Fragen, Test prüft Länge und Nummern). Fragen ohne Bezug zu einer der zehn
+Abitur-Fallen bleiben leer (Turingmaschine, Halteproblem, Church-Turing, Begriffe wie Σ*). Weil das Quiz keine
+Fehlversuche kennt (gewertet wird der erste Durchgang), zählt im Fallen-Profil jede im ersten Durchgang nicht voll
+richtig beantwortete Frage bei ihren Fallen („falsch im Quiz“); die Daten dafür speichert der Server ohnehin.
+Die Liste der Fallen am Quiz (Katalog) ist die Vereinigung der Fragen. Zuordnung nach den Kurztexten der freigegebenen
+Liste; Grenzfälle: formale DEA-Definition und „Bestandteile“ → P1 (vollständig angeben, wie in der Liste unter
+„Verworfen“ als Unterpunkt vorgeschlagen), Bedeutung von Zustand oder Keller im Sachzusammenhang → P10.
+
 ## 2026-10-14 · Fallen-Profil und Videoreihe unter Materialien (1.14.0)
 **Fallen-Profil:** Frank hat `docs/einheit/FALLEN.md` freigegeben. Die Fallen hängen am Aufgabentyp (Spalte „Module“
 der Liste), nicht an jeder einzelnen Aufgabe – so bekommt jede neue Aufgabe ihre Fallen automatisch, und die Zuordnung
