@@ -145,7 +145,7 @@ test('Echtes Materialverzeichnis (materials/pdf): jede verzeichnete Datei existi
   const v = JSON.parse(fs.readFileSync(path.join(dir, 'verzeichnis.json'), 'utf8'));
   assert.ok(v.akten.length >= 20);
   assert.ok(v.akten.find((a) => a.id === 'level-1').dateien.some((d) => d.demo), 'Level 1 hat Demo-Dateien');
-  assert.equal(v.akten.flatMap((a) => a.dateien).filter((d) => d.demo).length, 4);
+  assert.equal(v.akten.flatMap((a) => a.dateien).filter((d) => d.demo).length, 5); // Level 1: Arbeitsblatt, Folien, Merkblatt, Handreichung, Erklärvideo V1
   for (const a of v.akten) {
     for (const d of a.dateien) {
       for (const s of ['schueler', 'lehrkraft', 'original']) if (d[s]) assert.ok(d[s].startsWith(s + '/') && fs.existsSync(path.join(dir, d[s])), d[s]);

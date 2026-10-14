@@ -73,3 +73,6 @@ Node ≥ 20 (`npm install` im Wurzelordner: docx, pptxgenjs, jszip, react, react
 
 ## Materialpaket als Release
 Ein Tag `v*` baut alle Materialien in GitHub Actions neu und hängt `Automaten_LK_<tag>.zip` (Lehrkräfte-Paket) und `Automaten_PDF_<tag>.zip` (PDFs der Plattform) an das Release (`.github/workflows/materialpaket.yml`). Ohne Tag: Actions → Materialpaket → Run workflow (Ergebnis als Artefakt, 7 Tage).
+
+## Erklärvideos unter Materialien
+`npm run materials:pdf` legt die Folien jedes Erklärvideos (V1–V9, Extra 1/2 aus `out/video`) beim passenden Level ab (Zuordnung `app/js/data/videos.js`, erstes Level): Schülerfassung, Lehrkraftfassung mit Sprechertext (Notizseiten) und Original. Neue Akten-Art `video`.

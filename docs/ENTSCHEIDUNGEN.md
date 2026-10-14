@@ -2,6 +2,18 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Fallen-Profil und Videoreihe unter Materialien (1.14.0)
+**Fallen-Profil:** Frank hat `docs/einheit/FALLEN.md` freigegeben. Die Fallen hängen am Aufgabentyp (Spalte „Module“
+der Liste), nicht an jeder einzelnen Aufgabe – so bekommt jede neue Aufgabe ihre Fallen automatisch, und die Zuordnung
+steht an einer Stelle (`FALLEN_JE_TYP` in `app/js/data/fallen.js`). Gezählt werden wie in Algo Quest die Fehlversuche
+in Aufgaben mit dieser Falle, dazu „Lösung angesehen“; „betrifft“ = Schüler mit Fehlversuch oder angesehener Lösung.
+Das Level-Quiz zählt keine Fehlversuche (erster Durchgang wird gewertet) und fließt erst ein, wenn jede Quizfrage
+eigene Fallen hat. Die Turingmaschine hat bewusst keine Falle (siehe „Verworfen“ in der Liste).
+**Videoreihe:** Aufnahmen gibt es noch nicht (weder im Repository noch im Google Drive). „Passend unter Materialien“
+heißt deshalb jetzt: Die Folien jedes Videos liegen beim Level, zu dem das Video gehört (`app/js/data/videos.js`) –
+Schülerfassung, Lehrkraftfassung mit Sprechertext (Notizseiten), Original. Level 1 ist die öffentliche Material-Demo,
+deshalb gehört auch Video V1 dazu. Die Aufnahmen kommen an dieselbe Stelle, sobald es sie gibt.
+
 ## 2026-10-14 · Lokale Prüfung statt GitHub Actions (Übergang)
 Seit dem 14.10. startet GitHub Actions für das private Repository keine Jobs mehr (vermutlich Minuten bzw. Ausgabenlimit).
 Frank: „Wir warten darauf nicht mehr.“ Freigabe zum Merge ist dann `bash qa/pruefung_lokal.sh` mit demselben Ablauf wie

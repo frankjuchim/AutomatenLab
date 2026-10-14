@@ -143,8 +143,9 @@ Aufgaben. Format, IDs, Punkte und API: `docs/AUFGABENFORMAT.md`.
   mit /“). Zuordnung nach KC 2017 in `app/js/data/niveaus.js` (Materialien: `materials/lib/niveau.js`, Test hält beide
   gleich). Nach dem Deploy im Portal unter Plattformen „Jetzt prüfen“, dann erscheint der Link auf der Karte.
 
-* **V3 – Fallen-Liste P1–P10:** Entwurf in `docs/einheit/FALLEN.md` (zur Freigabe durch Frank),
-  danach in Aufgaben (Feld `fallen`), Quiz, Material und Fallen-Profil verankert. Keine Vertragsänderung nötig.
+* **V3 – Fallen-Liste P1–P10:** umgesetzt (1.14.0). Liste in `docs/einheit/FALLEN.md` (freigegeben am 14.10.2026),
+  Konstante und Zuordnung in `app/js/data/fallen.js`, Feld `fallen` an jeder Aufgabe, Fallen-Profil im
+  Lehrkraft-Bereich. Keine Vertragsänderung nötig.
 * **V4 – Weltkennungen:** umgesetzt. Manifest und Kursübersicht führen `nr` 1–4 und das zusätzliche Feld
   `kennung` (`"A"` … `"D"`); neue Felder sind nach §7 erlaubt. Vorschlag zur Klarstellung in `VERTRAG.md` §7 (für die
   Portal-Session): „`welten[].kennung` (KANN): Anzeigekennung der Welt, falls sie von `nr` abweicht (z. B. `"A"`).“

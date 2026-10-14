@@ -172,3 +172,29 @@ test('Löschung über die Verbund-API vollständig: jede Tabelle mit Konto-Bezug
   assert.ok(Object.values(zaehle('s:1042')).every((n) => n === 0), JSON.stringify(zaehle('s:1042')));
   assert.deepEqual(zaehle('s:7'), vorher);
 });
+
+test('Fallen-Profil: P1–P10, Fehlversuche je Falle, betroffene Schüler; Fallen im Katalog und im CSV', async () => {
+  const { app, lk } = await kursMitLernstand();
+  const { FALLEN, FALLEN_JE_TYP } = await import('../app/js/data/fallen.js');
+  assert.deepEqual(FALLEN.map((f) => f.p), ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10']);
+  for (const l of Object.values(FALLEN_JE_TYP)) for (const p of l) assert.ok(FALLEN.some((f) => f.p === p), p);
+  // Mika: zwei Fehlversuche im Detektiv (P3, P10)
+  const { DETEKTIV_FAELLE } = await import('../inhalte/detektiv.js');
+  const mika = await H.angemeldet(app);
+  const auf = (await mika.get('/api/aufgaben/detektiv%3Afall-2')).body;
+  const falsch = auf.aufgabe.optionen.find((o) => o.text !== DETEKTIV_FAELLE[1].optionen[0].text);
+  for (let i = 0; i < 2; i++) await mika.post('/api/aufgaben/detektiv%3Afall-2/pruefen').set(ORIGIN).send({ antwort: { wahl: falsch.id } });
+  const a = (await lk.get('/api/lehrer/kurse/k%3A17/auswertung')).body;
+  const f = Object.fromEntries(a.fallen.map((x) => [x.p, x]));
+  assert.equal(a.fallen.length, 10);
+  assert.deepEqual([f.P10.fehlversuche, f.P10.schueler, f.P10.schuelerGesamt], [2, 1, 2]);
+  // Ada hat die Baukasten-Lösung angesehen (P1, P3): zählt bei „betrifft“
+  assert.equal(f.P1.angesehen, 1);
+  assert.equal(f.P3.schueler, 2);
+  assert.equal(f.P7.fehlversuche, 0);
+  assert.deepEqual(a.aufgaben.find((x) => x.id === 'detektiv:fall-2').fallen, ['P3', 'P10']);
+  const kat = (await lk.get('/api/katalog?modul=keller')).body.aufgaben;
+  assert.deepEqual(kat.find((x) => x.art === 'tabelle').fallen, ['P7', 'P8', 'P2']);
+  const c = (await lk.get('/api/lehrer/kurse/k%3A17/export.csv?art=fallen')).text;
+  assert.ok(c.includes('P10;Operator verfehlt;'));
+});

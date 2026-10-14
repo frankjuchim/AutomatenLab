@@ -822,3 +822,14 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .type-tag.type-freiwillig { color: var(--ink-2); font-weight: 600; }
 .type-tag.type-auftrag { color: #8A520B; }
 .module-videos { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0; }
+
+/* ───── Fallen-Profil (Lehrkraft-Bereich, P1–P10 wie Algo Quest) ───── */
+.lk-falle { display: inline-block; margin: 0 0.2rem 0.1rem 0; padding: 0 0.4rem; border-radius: 999px; font-size: 0.78rem; font-weight: 700;
+  background: var(--ocker-soft); color: #6E4207; border: 1px solid rgba(178, 106, 15, 0.35); white-space: nowrap; }
+.lk-fallen { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+.lk-fallen li { display: grid; grid-template-columns: minmax(12rem, 1.4fr) minmax(6rem, 1fr) auto; gap: 0.3rem 0.8rem; align-items: center; }
+.lk-falle-kopf { font-size: 0.95rem; }
+.lk-balken { display: block; height: 0.8rem; border-radius: 999px; background: var(--grid); overflow: hidden; }
+.lk-balken-fuellung { display: block; height: 100%; background: var(--ocker); border-radius: 999px; }
+.lk-falle-zahl { font-size: var(--fs-s); color: var(--ink-2); white-space: nowrap; }
+@media (max-width: 700px) { .lk-fallen li { grid-template-columns: 1fr; } .lk-falle-zahl { white-space: normal; } }

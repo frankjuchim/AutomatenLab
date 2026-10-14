@@ -169,6 +169,7 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         stufe: a.stufe,
         punkte: a.punkte,
         level,
+        fallen: a.fallen || [],
         welt: level != null ? levelInfo.get(level)?.welt ?? null : null,
         versucht: n,
         geloest: gel,
@@ -179,7 +180,25 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         falscheAntworten: falsche.get(a.id) ?? []
       };
     });
-    return { kurs: { id: kurs.id, name: kurs.name, kursart }, schueler: subs.length, matrix, aufgaben: aufgabenStat };
+    // Fallen-Profil (wie Algo Quest): je Falle die Fehlversuche und „Lösung angesehen“ in Aufgaben mit dieser Falle,
+    // betroffen = Schüler mit mindestens einem Fehlversuch oder einer angesehenen Lösung dort
+    const fallen = (aufgaben?.fallen ?? []).map((f) => {
+      const mit = liste.filter((a) => (a.fallen || []).includes(f.p));
+      let fehlversuche = 0; let angesehen = 0; let betroffen = 0;
+      for (const s of subs) {
+        let trifft = false;
+        for (const a of mit) {
+          const r = fp.get(s).get(a.id);
+          if (!r) continue;
+          fehlversuche += r.fehlversuche;
+          if (r.status === 'angesehen') angesehen++;
+          if (r.fehlversuche > 0 || r.status === 'angesehen') trifft = true;
+        }
+        if (trifft) betroffen++;
+      }
+      return { p: f.p, titel: f.titel, text: f.text, aufgaben: mit.length, fehlversuche, angesehen, schueler: betroffen, schuelerGesamt: subs.length };
+    });
+    return { kurs: { id: kurs.id, name: kurs.name, kursart }, schueler: subs.length, matrix, fallen, aufgaben: aufgabenStat };
   }
 
   /* ---------- CSV-Export (Semikolon, UTF-8 mit BOM – öffnet direkt in Excel/LibreOffice) ---------- */
@@ -196,10 +215,15 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
       const a = kursAuswertung(kurs);
       return csv([['Name', ...a.matrix.levels.map((l) => `Level ${l.nr} (%)`)], ...a.matrix.zeilen.map((z) => [z.name, ...z.werte.map((w) => prozent(w.anteil))])]);
     }
+    if (art === 'fallen') {
+      const a = kursAuswertung(kurs);
+      return csv([['Falle', 'Titel', 'Aufgaben', 'Fehlversuche', 'Lösung angesehen', 'betroffene Schüler', 'Schüler im Kurs'],
+        ...a.fallen.map((f) => [f.p, f.titel, f.aufgaben, f.fehlversuche, f.angesehen, f.schueler, f.schuelerGesamt])]);
+    }
     if (art === 'aufgaben') {
       const a = kursAuswertung(kurs);
-      return csv([['Aufgabe', 'ID', 'Modul', 'Welt', 'Level', 'Stufe', 'Punkte', 'versucht', 'gelöst', 'Lösungsquote (%)', 'Ø Fehlversuche', 'Ø Tipps', 'Lösung angesehen', 'häufige falsche Antworten'],
-        ...a.aufgaben.map((x) => [x.titel, x.id, x.modul, x.welt, x.level ?? '', x.stufe, x.punkte, x.versucht, x.geloest, prozent(x.quote), x.fehlversucheSchnitt ?? '', x.tippsSchnitt ?? '', x.angesehen, x.falscheAntworten.map((f) => `${f.antwort} (${f.anzahl}×)`).join(' | ')])]);
+      return csv([['Aufgabe', 'ID', 'Modul', 'Welt', 'Level', 'Stufe', 'Punkte', 'versucht', 'gelöst', 'Lösungsquote (%)', 'Ø Fehlversuche', 'Ø Tipps', 'Lösung angesehen', 'Fallen', 'häufige falsche Antworten'],
+        ...a.aufgaben.map((x) => [x.titel, x.id, x.modul, x.welt, x.level ?? '', x.stufe, x.punkte, x.versucht, x.geloest, prozent(x.quote), x.fehlversucheSchnitt ?? '', x.tippsSchnitt ?? '', x.angesehen, x.fallen.join(' '), x.falscheAntworten.map((f) => `${f.antwort} (${f.anzahl}×)`).join(' | ')])]);
     }
     if (art === 'uebersicht') {
       return csv([['Name', 'Punkte', 'davon Training', 'gelöst', 'Lösung angesehen', 'Abzeichen', 'Rang', 'zuletzt aktiv'],

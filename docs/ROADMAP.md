@@ -15,7 +15,7 @@ Jeder Punkt eignet sich als GitHub-Issue. Reihenfolge = Vorschlag. ✅ = erledig
 - ✅ AlgoQuest analysieren → `docs/ALGOQUEST_VERGLEICH.md`
 - ✅ Anschluss an den Verbund InfoLabs geplant (Vertrag v1.1) → `docs/VERBUND.md`; Entscheidungen in `docs/ENTSCHEIDUNGEN.md`
 - ✅ Entscheidungen V1 (Prüfung auf dem Server), V2 (Gastmodus nur Demo-Aufgaben), V4 (Weltkennung), Farben
-- [ ] V3: Fallen-Liste P1–P10 für Automaten und formale Sprachen (Entwurf → Freigabe durch Frank)
+- ✅ V3: Fallen-Liste P1–P10 für Automaten und formale Sprachen (freigegeben am 14.10.2026)
 
 Je Meilenstein ein Pull Request; jeder PR: `npm test` grün, `qa/qa-routes.mjs` gegen den gebauten Container grün,
 Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während des Unterrichts.
@@ -51,12 +51,14 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 ## Phase 5 – Lehrkraft-Bereich
 - ✅ PR 6 (1.10.0): Lehrkraft-Bereich im Aufbau wie Algo Quest – Navigation (Kurse · Aufgaben · Materialien · Themen · Portal), Meine Kurse, Kursseite mit Reitern Schüler · Beitritt · Auswertung (Lernstand-Matrix Level 1–16 × Schüler, Aufgabenstatistik, CSV) · Rangliste · Einstellungen (Kursart gA/eA); Aufgaben der Welten nach Level; Kursübersicht für das Portal mit echten Kennzahlen (Kursumfang je Kursart)
 - ✅ PR 6b (1.11.0): Aufgaben-Vorschau für Lehrkräfte (`&vorschau=1` mit eingesetzter Lösung, `&vorschau=ohne` zum Ausprobieren – nichts wird gespeichert), häufige falsche Antworten in der Aufgabenstatistik (Migration 6, Kurzform bei Quiz, Detektiv, Turing, Mealy-Vorhersage)
-- [ ] Fallen-Profil P1–P10 in der Auswertung – wartet auf Franks Freigabe von `docs/einheit/FALLEN.md` (V3)
+- ✅ Fallen-Profil P1–P10 (1.14.0): Feld `fallen` je Aufgabentyp, Fallen-Profil des Kurses (Fehlversuche, Lösung angesehen, betroffene Schüler) wie Algo Quest, Spalte und CSV „Fallen“
+- [ ] Fallen je Quizfrage (Level-Quiz fließt dann ins Profil ein) und Fallen-Hinweise in den Materialien
 - ✅ PR 7 (1.12.0): Kurs-Einstellungen – Level-Art je Kurs (Pflicht/Vertiefung/Bonus/Später, nur Anzeige: Deep-Links bleiben offen), Auftrag der Lehrkraft auf der Startseite, Grundkurs: eA-Level „freiwillig“; Datenschutzhinweise (`docs/DATENSCHUTZ.md`, `#/datenschutz`) auf dem Stand des Verbunds; Löschung über die Verbund-API vollständig getestet (jede Tabelle mit Konto-Bezug); Abnahme-Checkliste `docs/ABNAHME.md`
 
 ## Phase 6 – Materialien ↔ Plattform
 - ✅ Erklärvideos in der App (1.13.0): Knopf „▶ Erklärvideo“ auf der Modulseite und Link je Level auf der Themenseite – erscheinen, sobald in `app/js/data/videos.js` eine Adresse steht (nur verlinkt, nie eingebettet)
-- [ ] Video-Adressen eintragen und Video-QR-Codes auf den Merkblättern – wartet auf den Upload der Videos
+- ✅ Videoreihe unter Materialien (1.14.0): Folien jedes Erklärvideos (Schülerfassung, Lehrkraftfassung mit Sprechertext, Original) beim passenden Level auf der Material- und Themenseite
+- [ ] Aufnahmen der Videos ablegen bzw. Adressen in `app/js/data/videos.js` eintragen, Video-QR-Codes auf die Merkblätter – wartet auf die Aufnahmen
 - ✅ Release-Workflow (`.github/workflows/materialpaket.yml`): baut bei jedem Tag `v*` alle Materialien neu und hängt Lehrkräfte-Paket und PDFs als ZIP an das Release (Repo privat); manuell startbar als Artefakt
 - ✅ Materialien als Download (`#/material`): Schüler-PDF ohne Lösungen, Lehrkraft-PDF mit Lösungen/Notizen/Klausuren, Originale (docx/pptx, ZIP je Akte) nur für den Admin
 

@@ -2,7 +2,9 @@
 //   schueler/   PDFs ohne Lösungen: Arbeitsblätter, Merkblätter, Folien-Handout (ohne Notizen, ohne Lösungsfolien),
 //               Boss-Level-Aufgaben, Lernlandkarte, Abi-Spickzettel
 //   lehrkraft/  PDFs nur für Lehrkräfte: Lehrkraft-Handreichungen (Verlauf, Lösungen), Folien mit Notizseiten,
-//               Erwartungshorizonte, Übungsklausuren, Einheitsplanung, Videoplanung
+//               Erwartungshorizonte, Übungsklausuren, Einheitsplanung, Videoplanung, Erklärvideo-Folien mit Sprechertext
+// Erklärvideos: die Folien jedes Videos der Reihe (out/video) liegen beim passenden Level (app/js/data/videos.js);
+// die Aufnahmen selbst kommen später an dieselbe Stelle.
 //   original/   die docx/pptx-Originale (Download nur für den Admin)
 //   verzeichnis.json  Akten (je Level, Boss-Level, Klausuren, Einheit) mit allen Dateien – der Server liefert NUR
 //                     Dateien aus, die hier verzeichnet sind (Whitelist, Vertrag InfoLabs §9).
@@ -15,12 +17,14 @@ import { fileURLToPath } from 'node:url';
 import { WORLDS, LEVELS } from '../../app/js/data/worlds.js';
 import { LEVEL_NIVEAU, BOSS_NIVEAU, MERKBLAETTER } from '../../app/js/data/niveaus.js';
 import { GAST_MATERIAL } from '../../app/js/data/gast.js';
+import { ERKLAERVIDEOS } from '../../app/js/data/videos.js';
 
 const MAT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(MAT, 'out');
 const ZIEL = path.join(MAT, 'pdf');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'al-pdf-'));
 const dateien = fs.readdirSync(OUT);
+const videoMeta = fs.existsSync(path.join(OUT, 'video', 'video_meta.json')) ? JSON.parse(fs.readFileSync(path.join(OUT, 'video', 'video_meta.json'), 'utf8')) : [];
 const finde = (re) => dateien.find((f) => re.test(f)) || null;
 const ds = (n) => 'DS' + String(n).padStart(2, '0');
 
@@ -40,6 +44,12 @@ for (const w of WORLDS) {
       if (mb) liste.push(datei(`Merkblatt ${m.id}: ${m.titel}`, 'merkblatt', mb, { schueler: true }));
     }
     if (lk) liste.push(datei('Lehrkraft-Handreichung mit Lösungen', 'loesung', lk, { lehrkraft: true }));
+    for (const v of ERKLAERVIDEOS.filter((x) => x.level[0] === n)) {
+      const m = videoMeta.find((x) => x.id === v.id);
+      if (m && fs.existsSync(path.join(OUT, 'video', `${m.file}_Folien.pptx`))) {
+        liste.push(datei(`Erklärvideo ${v.id}: ${v.titel}`, 'video', `video/${m.file}_Folien.pptx`, { schueler: true, lehrkraft: 'notizen' }));
+      }
+    }
     akten.push({ id: `level-${n}`, titel: `Level ${n}: ${LEVELS[n]}`, welt: w.id, level: n, niveau: LEVEL_NIVEAU[n], dateien: liste });
   }
   if (BOSS_NIVEAU[w.id]) {

@@ -38,7 +38,7 @@ export default {
           h('span', { class: 'material-knoepfe' },
             d.gesperrt ? h('span', { class: 'material-gesperrt' }, h('span', { 'aria-hidden': 'true' }, '🔒 '), 'nach Anmeldung') : null,
             knopf(d, 'schueler', lk ? 'Schülerfassung' : 'PDF', 'btn-primary'),
-            knopf(d, 'lehrkraft', d.art === 'folien' ? 'mit Notizen' : 'Lehrkraftfassung', ''),
+            knopf(d, 'lehrkraft', d.art === 'folien' ? 'mit Notizen' : d.art === 'video' ? 'mit Sprechertext' : 'Lehrkraftfassung', ''),
             knopf(d, 'original', 'Original', 'btn-ghost'))))));
       const gruppen = [...WORLDS.map((w) => ({ titel: `Welt ${w.id}: ${w.title}`, akten: m.akten.filter((a) => a.welt === w.id) })),
         { titel: lk ? 'Klausuren und ganze Einheit' : 'Zur ganzen Einheit', akten: m.akten.filter((a) => !a.welt) }].filter((g) => g.akten.length);
