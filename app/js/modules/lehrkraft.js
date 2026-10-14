@@ -26,6 +26,26 @@ const KURSART = { eA: 'Leistungskurs (eA)', gA: 'Grundkurs (gA)' };
 const MODUL_TITEL = Object.fromEntries(MODULES.map((m) => [m.route, m.title]));
 const STUFE = { 1: 'Basis', 2: 'Standard', 3: 'Profi' };
 
+/** Deep-Link einer Katalog-Aufgabe (Parameter wie in app/README.md) – für die Vorschau mit &vorschau=1. */
+export function aufgabenLink(a) {
+  const k = a.schluessel ?? a.id.split(':')[1];
+  const p = {
+    quiz: () => (/^welt-/.test(k) ? { welt: k.slice(5) } : { ds: k.replace(/^ds-?0*/, '') }),
+    detektiv: () => ({ fall: a.nr }),
+    baukasten: () => ({ aufgabe: k }),
+    minimierer: () => ({ aufgabe: a.nr }),
+    mealy: () => ({ aufgabe: a.nr, modus: a.art === 'vorhersage' ? 'vorhersage' : 'bugjagd' }),
+    ueberliste: () => ({ stufe: a.id === 'ueberliste:bonus' ? 'bonus' : a.nr }),
+    parallelwelten: () => ({ aufgabe: a.nr, modus: a.art === 'raetsel' ? 'spiel' : 'teilmengen' }),
+    keller: () => ({ aufgabe: a.nr, modus: a.art === 'rueckwaerts' ? 'rueckwaerts' : 'tabelle' }),
+    rallye: () => ({ aufgabe: a.nr }),
+    grammatik: () => ({ challenge: a.nr }),
+    turing: () => ({ challenge: a.nr }),
+  }[a.modul];
+  const q = new URLSearchParams({ ...(p ? p() : {}), vorschau: '1' });
+  return `#/${a.modul}?${q}`;
+}
+
 const zeit = (iso) => {
   if (!iso) return '–';
   const d = new Date(iso);
@@ -200,7 +220,8 @@ export default {
         h('td', { class: 'zahl' }, prozent(x.quote)),
         h('td', { class: 'zahl' }, x.fehlversucheSchnitt == null ? '–' : String(x.fehlversucheSchnitt).replace('.', ',')),
         h('td', { class: 'zahl' }, x.tippsSchnitt == null ? '–' : String(x.tippsSchnitt).replace('.', ',')),
-        h('td', { class: 'zahl' }, String(x.angesehen)))));
+        h('td', { class: 'zahl' }, String(x.angesehen)),
+        h('td', { class: 'lk-falsch' }, x.falscheAntworten.length ? h('ul', null, x.falscheAntworten.map((f) => h('li', null, f.antwort, h('span', { class: 'muted' }, ` (${f.anzahl}×)`)))) : '–'))));
       const filter = h('div', { class: 'chip-row', role: 'group', 'aria-label': 'Welt filtern' }, [['', 'Alle Welten'], ...WORLDS.map((w) => [w.id, `Welt ${w.id}`])].map(([k, text]) =>
         h('button', { type: 'button', class: 'chip', 'aria-pressed': String(k === welt), onclick: (e) => {
           welt = k; e.currentTarget.parentElement.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b === e.currentTarget))); zeichneStat();
@@ -219,7 +240,7 @@ export default {
           h('h3', null, 'Aufgabenstatistik'),
           filter,
           h('div', { class: 'tabelle-scroll' }, h('table', { class: 'lk-tabelle' },
-            h('thead', null, h('tr', null, ['Aufgabe', 'Level', 'Stufe', 'versucht', 'Lösungsquote', 'Ø Fehlversuche', 'Ø Tipps', 'angesehen'].map((k) => h('th', { scope: 'col' }, k)))),
+            h('thead', null, h('tr', null, ['Aufgabe', 'Level', 'Stufe', 'versucht', 'Lösungsquote', 'Ø Fehlversuche', 'Ø Tipps', 'angesehen', 'häufige falsche Antworten'].map((k) => h('th', { scope: 'col' }, k)))),
             statBody)),
           h('p', { class: 'muted klein' }, '„versucht“ = mindestens einmal geprüft oder einen Tipp geholt; „angesehen“ = „Lösung zeigen“ benutzt (0 Punkte).')),
       ];
@@ -277,7 +298,7 @@ export default {
       const module = (n) => MODULES.filter((m) => m.load && m.levels.includes(n));
       seite(
         h('h2', null, '📖 Aufgaben der Welten'),
-        h('p', { class: 'lead' }, 'Alle Aufgaben mit Prüfung auf dem Server, nach Level. Zum Ausprobieren öffnen Sie das Modul; „Lösung zeigen“ wirkt nur auf Ihr eigenes Konto. Lösungen, Erwartungshorizonte und Folien mit Notizen stehen unter „📂 Materialien“.'),
+        h('p', { class: 'lead' }, 'Alle Aufgaben mit Prüfung auf dem Server, nach Level. „Vorschau mit Lösung“ öffnet die Aufgabe so, wie Ihre Schülerinnen und Schüler sie sehen – nichts wird gespeichert, „Lösung zeigen“ ist jederzeit möglich (auch beim Quiz über die Antworten). Erwartungshorizonte und Folien mit Notizen stehen unter „📂 Materialien“.'),
         h('p', { class: 'lk-sprung' }, 'Welten: ', WORLDS.map((w, i) => [i ? ' · ' : '', h('a', { href: `#/lehrkraft?teil=aufgaben`, onclick: (e) => { e.preventDefault(); el.querySelector(`#lk-welt-${w.id}`)?.scrollIntoView({ behavior: 'smooth' }); } }, `Welt ${w.id}`)])),
         WORLDS.map((w) => h('section', { class: 'lk-welt-abschnitt', id: `lk-welt-${w.id}` },
           h('h3', null, `Welt ${w.id} – ${w.title}`),
@@ -287,9 +308,10 @@ export default {
               h('h4', null, `Level ${n}: ${LEVELS[n]} `, h('span', { class: ['niveau-pille', `niveau-${LEVEL_NIVEAU[n] === 'eA' ? 'ea' : LEVEL_NIVEAU[n]}`] }, NIVEAUS[LEVEL_NIVEAU[n]].kurz)),
               h('p', { class: 'muted klein' }, 'Module: ', module(n).map((m, i) => [i ? ', ' : '', h('a', { href: ctx.link(m.route) }, m.title)])),
               liste.length
-                ? tabelle(['Aufgabe', 'Modul', 'Stufe', 'Punkte'], liste.map((a) => h('tr', null,
+                ? tabelle(['Aufgabe', 'Modul', 'Stufe', 'Punkte', ''], liste.map((a) => h('tr', null,
                   h('td', null, a.titel), h('td', null, h('a', { href: ctx.link(a.modul) }, MODUL_TITEL[a.modul] ?? a.modul)),
-                  h('td', null, STUFE[a.stufe] ?? String(a.stufe)), h('td', { class: 'zahl' }, String(a.punkte)))))
+                  h('td', null, STUFE[a.stufe] ?? String(a.stufe)), h('td', { class: 'zahl' }, String(a.punkte)),
+                  h('td', null, h('a', { class: 'btn btn-small', href: aufgabenLink(a) }, 'Vorschau mit Lösung')))))
                 : h('p', { class: 'muted' }, 'Keine Aufgaben mit Punkten (Simulatoren, Training oder Material).'));
           }))));
     }

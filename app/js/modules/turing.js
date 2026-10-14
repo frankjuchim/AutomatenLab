@@ -156,6 +156,8 @@ export default {
       ctx.setSubtitle(q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`);
       const partial = tm(c.maschine);
       let zustand = c.zustand; let loesung = c.loesung;
+      // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
+      if (q.vorschau && loesung) setTimeout(() => { if (el.isConnected) aufdecken(); }, 0);
       const graphBox = h('div', { class: 'tm-graph panel' });
       const gv = new GraphView(graphBox, { label: 'Unvollständiger Zustandsgraph' });
       gv.render(tmToGraph(partial));

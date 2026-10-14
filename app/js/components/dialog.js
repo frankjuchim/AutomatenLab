@@ -1,4 +1,4 @@
-// Modaler Dialog (natives <dialog>): Fokusfalle, Esc schließt, Fokus kehrt zurück.
+// Modaler Dialog (natives <dialog>): Fokusfalle, Esc schließt, Fokus kehrt zurück; ein Routenwechsel schließt ihn.
 //   const dlg = openDialog({ title: 'Zeig mir warum', body: element, onClose: () => … });
 //   dlg.close();
 
@@ -15,12 +15,14 @@ export function openDialog({ title, body, onClose, wide = true }) {
   let closed = false;
   const close = () => {
     if (closed) return; closed = true;
+    window.removeEventListener('hashchange', close);
     try { dlg.close(); } catch { /* ignore */ }
     dlg.remove();
     onClose?.();
     if (opener && document.contains(opener)) opener.focus();
   };
   closeBtn.addEventListener('click', close);
+  window.addEventListener('hashchange', close); // sonst bliebe er über der nächsten Seite stehen (z. B. „Zurück“ im Browser)
   dlg.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
   dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); }); // Klick auf den Hintergrund
   if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');

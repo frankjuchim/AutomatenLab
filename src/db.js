@@ -116,6 +116,19 @@ const MIGRATIONEN = [
   DROP TABLE training;
   ALTER TABLE training_neu RENAME TO training;
   CREATE INDEX idx_training_sub ON training(sub, tag);
+  `,
+  `
+  -- Häufige falsche Antworten für die Aufgabenstatistik der Lehrkraft (wie Algo Quest): nur Kurzform aus festen
+  -- Auswahlen bzw. kurzen Eingaben (Quiz-Option, Detektiv-Beschreibung, Turing-Regel, Mealy-Ausgabe), nie Freitext
+  CREATE TABLE falsche_antworten (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    sub        TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    aufgabe_id TEXT NOT NULL,
+    antwort    TEXT NOT NULL,
+    at         TEXT NOT NULL
+  );
+  CREATE INDEX idx_falsche_aufgabe ON falsche_antworten(aufgabe_id);
+  CREATE INDEX idx_falsche_sub ON falsche_antworten(sub);
   `
 ];
 

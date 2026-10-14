@@ -1,5 +1,6 @@
 'use strict';
-// Lehrkraft-Bereich (Aufbau wie Algo Quest): Schülerliste, Lernstand-Matrix, Aufgabenstatistik, CSV, Kursart;
+// Lehrkraft-Bereich (Aufbau wie Algo Quest): Schülerliste, Lernstand-Matrix, Aufgabenstatistik, CSV, Kursart,
+// Aufgaben-Vorschau ohne Speichern, häufige falsche Antworten;
 // Kursübersicht für das Portal mit echten Kennzahlen (nur Kursumfang je Kursart).
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -74,4 +75,45 @@ test('Kursart: speichern, ungültig 400; Portal-Kennzahlen nur über den Kursumf
   assert.ok(mika.punkte > 0 && mika.geloest === 1 && mika.anteil > 0 && mika.anteil < 1);
   assert.ok(u.welten.find((w) => w.kennung === 'A').anteil > 0);
   assert.equal(u.welten.find((w) => w.kennung === 'C').anteil, 0);
+});
+
+test('Vorschau für Lehrkräfte: prüfen, Tipp, Lösung zeigen – ohne Speichern; Schüler 403', async () => {
+  const { app, lk } = await kursMitLernstand();
+  const { BAUKASTEN_CHALLENGES } = await import('../inhalte/baukasten.js');
+  const c = BAUKASTEN_CHALLENGES[1];
+  const id = encodeURIComponent(`baukasten:${c.id}`);
+  const vor = (aktion, body = {}) => lk.post(`/api/lehrer/vorschau/${id}/${aktion}`).set(ORIGIN).send(body);
+  const zeilen = () => app.locals.db.prepare("SELECT COUNT(*) AS n FROM fortschritt WHERE sub = 'l:5'").get().n;
+  const a = (await vor('abrufen')).body;
+  assert.equal(a.vorschau, true);
+  assert.equal(a.zustand.status, 'offen');
+  assert.equal(a.loesung, undefined);
+  const p = (await vor('pruefen', { antwort: { automat: { ...c.referenz, accepting: [] } }, stand: a.stand })).body; // akzeptiert nichts
+  assert.equal(p.ok, false);
+  assert.equal(p.stand.fehlversuche, 1);
+  const d = (await vor('aufdecken', { stand: p.stand })).body;
+  assert.equal(d.zustand.status, 'angesehen');
+  assert.ok(d.loesung.musterloesung);
+  const ok = (await vor('pruefen', { antwort: { automat: c.referenz }, stand: d.stand })).body;
+  assert.equal(ok.ok, true);
+  assert.equal(zeilen(), 0, 'nichts gespeichert');
+  assert.equal((await vor('quatsch')).status, 404);
+  const schueler = await H.angemeldet(app);
+  assert.equal((await schueler.post(`/api/lehrer/vorschau/${id}/abrufen`).set(ORIGIN).send({})).status, 403);
+});
+
+test('Häufige falsche Antworten: Kurzform je Aufgabe, nur Kursmitglieder, gelöscht mit dem Konto', async () => {
+  const { app, lk } = await kursMitLernstand();
+  const { DETEKTIV_FAELLE } = await import('../inhalte/detektiv.js');
+  const mika = await H.angemeldet(app);
+  const id = 'detektiv:fall-1';
+  const auf = (await mika.get(`/api/aufgaben/${encodeURIComponent(id)}`)).body;
+  const falsch = auf.aufgabe.optionen.find((o) => o.text !== DETEKTIV_FAELLE[0].optionen[0].text);
+  for (let i = 0; i < 2; i++) await mika.post(`/api/aufgaben/${encodeURIComponent(id)}/pruefen`).set(ORIGIN).send({ antwort: { wahl: falsch.id } });
+  const stat = (await lk.get('/api/lehrer/kurse/k%3A17/auswertung')).body.aufgaben.find((x) => x.id === id);
+  assert.deepEqual(stat.falscheAntworten, [{ antwort: falsch.text, anzahl: 2 }]);
+  assert.ok((await lk.get('/api/lehrer/kurse/k%3A17/export.csv?art=aufgaben')).text.includes(`(2×)`));
+  const t = H.verbundToken(app.now, 'loeschen');
+  await request(app).post('/api/verbund/loeschen').set('Authorization', `Bearer ${t}`).send({ sub: 's:1042' });
+  assert.equal(app.locals.db.prepare('SELECT COUNT(*) AS n FROM falsche_antworten').get().n, 0);
 });

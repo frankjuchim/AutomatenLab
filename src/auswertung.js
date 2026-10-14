@@ -119,6 +119,16 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         })
       }))
     };
+    // häufige falsche Antworten der Kursmitglieder je Aufgabe (höchstens drei, wie Algo Quest)
+    const falsche = new Map();
+    if (subs.length) {
+      const zeilen = db.prepare(`SELECT aufgabe_id, antwort, COUNT(*) AS n FROM falsche_antworten WHERE sub IN (${subs.map(() => '?').join(',')}) GROUP BY aufgabe_id, antwort ORDER BY n DESC, antwort`).all(...subs);
+      for (const z of zeilen) {
+        const l = falsche.get(z.aufgabe_id) ?? [];
+        if (l.length < 3) l.push({ antwort: z.antwort, anzahl: z.n });
+        falsche.set(z.aufgabe_id, l);
+      }
+    }
     const aufgabenStat = liste.map((a) => {
       const rows = subs.map((s) => fp.get(s).get(a.id)).filter(Boolean);
       const n = rows.length;
@@ -137,7 +147,8 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         angesehen: rows.filter((r) => r.status === 'angesehen').length,
         quote: n ? Math.round((100 * gel) / n) / 100 : null,
         fehlversucheSchnitt: n ? Math.round((10 * rows.reduce((s, r) => s + r.fehlversuche, 0)) / n) / 10 : null,
-        tippsSchnitt: n ? Math.round((10 * rows.reduce((s, r) => s + r.tipps, 0)) / n) / 10 : null
+        tippsSchnitt: n ? Math.round((10 * rows.reduce((s, r) => s + r.tipps, 0)) / n) / 10 : null,
+        falscheAntworten: falsche.get(a.id) ?? []
       };
     });
     return { kurs: { id: kurs.id, name: kurs.name, kursart }, schueler: subs.length, matrix, aufgaben: aufgabenStat };
@@ -159,8 +170,8 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     }
     if (art === 'aufgaben') {
       const a = kursAuswertung(kurs);
-      return csv([['Aufgabe', 'ID', 'Modul', 'Welt', 'Level', 'Stufe', 'Punkte', 'versucht', 'gelöst', 'Lösungsquote (%)', 'Ø Fehlversuche', 'Ø Tipps', 'Lösung angesehen'],
-        ...a.aufgaben.map((x) => [x.titel, x.id, x.modul, x.welt, x.level ?? '', x.stufe, x.punkte, x.versucht, x.geloest, prozent(x.quote), x.fehlversucheSchnitt ?? '', x.tippsSchnitt ?? '', x.angesehen])]);
+      return csv([['Aufgabe', 'ID', 'Modul', 'Welt', 'Level', 'Stufe', 'Punkte', 'versucht', 'gelöst', 'Lösungsquote (%)', 'Ø Fehlversuche', 'Ø Tipps', 'Lösung angesehen', 'häufige falsche Antworten'],
+        ...a.aufgaben.map((x) => [x.titel, x.id, x.modul, x.welt, x.level ?? '', x.stufe, x.punkte, x.versucht, x.geloest, prozent(x.quote), x.fehlversucheSchnitt ?? '', x.tippsSchnitt ?? '', x.angesehen, x.falscheAntworten.map((f) => `${f.antwort} (${f.anzahl}×)`).join(' | ')])]);
     }
     if (art === 'uebersicht') {
       return csv([['Name', 'Punkte', 'davon Training', 'gelöst', 'Lösung angesehen', 'Abzeichen', 'Rang', 'zuletzt aktiv'],

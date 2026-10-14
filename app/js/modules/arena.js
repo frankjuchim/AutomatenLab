@@ -31,7 +31,7 @@ export default {
     let aktiv = true;
     // Training: Server (angemeldet) oder lokal im Browser (Gast, Demo) – gleiche Runden, lokal ohne Punkte
     let T = null;
-    const training = async () => (T ??= (ctx.quelle.demo || !(await sitzung()).konto) ? lokalesTraining({ arena: ARENA_AUTOMATEN }) : ctx.quelle.training);
+    const training = async () => (T ??= (ctx.quelle.demo || ctx.quelle.vorschau || !(await sitzung()).konto) ? lokalesTraining({ arena: ARENA_AUTOMATEN }) : ctx.quelle.training);
     const BY_ID = new Map(AUTOMATEN.map((a) => [a.id, a]));
 
     ctx.setSubtitle('Lies das Wort, verfolge den Graphen und entscheide schnell.');

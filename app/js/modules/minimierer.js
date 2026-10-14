@@ -87,6 +87,8 @@ export default {
       const S = T.states;
       let zustand = x.zustand;
       let loesung = x.loesung;
+      // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
+      if (q.vorschau && loesung) setTimeout(() => { if (aktiv) aufdecken(); }, 0);
       let confirmed = new Map(); // key → Runde
       let pending = new Set();
       let round = 0;
@@ -299,7 +301,7 @@ export default {
     function unterscheide(only, alle) {
       ctx.setSubtitle(only ? (q.demo ? `Unterscheide! – Demo: ${only.titel}` : `Unterscheide! – Aufgabe ${only.nr}: ${only.titel}`) : 'Unterscheide! – gemischte Runde');
       const pool = only ? [only] : alle;
-      const T = q.demo ? lokalesTraining({ minimierer: pool.map((x) => ({ id: x.id, automat: x.automat })) }) : q.training;
+      const T = q.demo || q.vorschau ? lokalesTraining({ minimierer: pool.map((x) => ({ id: x.id, automat: x.automat })) }) : q.training;
       let round = [];
       let runde = null;
       let antworten = [];

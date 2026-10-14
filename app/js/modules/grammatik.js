@@ -59,6 +59,8 @@ export default {
       ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
       let zustand = c?.zustand ?? null;
       let loesung = c?.loesung ?? null;
+      // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
+      if (q.vorschau && loesung) setTimeout(() => { if (aktiv) aufdecken(); }, 0);
       const draftKey = `grammatik:${c ? c.id : 'frei'}`;
       let g = null; let attempts = 0; let parseTimer = null; let saveTimer = null;
       const gvs = [];

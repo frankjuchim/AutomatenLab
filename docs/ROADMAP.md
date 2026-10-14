@@ -50,7 +50,8 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 
 ## Phase 5 – Lehrkraft-Bereich
 - ✅ PR 6 (1.10.0): Lehrkraft-Bereich im Aufbau wie Algo Quest – Navigation (Kurse · Aufgaben · Materialien · Themen · Portal), Meine Kurse, Kursseite mit Reitern Schüler · Beitritt · Auswertung (Lernstand-Matrix Level 1–16 × Schüler, Aufgabenstatistik, CSV) · Rangliste · Einstellungen (Kursart gA/eA); Aufgaben der Welten nach Level; Kursübersicht für das Portal mit echten Kennzahlen (Kursumfang je Kursart)
-- [ ] PR 6b: Aufgaben-Vorschau mit Lösungen (nur lesend, ohne eigenen Lernstand), Fallen-Profil (nach V3), häufige falsche Antworten (braucht eigene Tabelle)
+- ✅ PR 6b (1.11.0): Aufgaben-Vorschau für Lehrkräfte (`&vorschau=1` mit eingesetzter Lösung, `&vorschau=ohne` zum Ausprobieren – nichts wird gespeichert), häufige falsche Antworten in der Aufgabenstatistik (Migration 6, Kurzform bei Quiz, Detektiv, Turing, Mealy-Vorhersage)
+- [ ] Fallen-Profil P1–P10 in der Auswertung – wartet auf Franks Freigabe von `docs/einheit/FALLEN.md` (V3)
 - [ ] PR 7: Kurs-Einstellungen (Freischaltung Pflicht/Vertiefung/Bonus, Aufträge auf der Startseite), Datenschutzhinweise der Plattform, Löschung über die Verbund-API vollständig getestet, Doku, Abnahme
 
 ## Phase 6 – Materialien ↔ Plattform

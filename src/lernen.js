@@ -77,6 +77,14 @@ function createLernen(ctx, { aufgaben, training = null }) {
     return neu;
   }
 
+  /** Falsche Antwort in Kurzform merken (für „häufige falsche Antworten“ der Lehrkraft); Fehler hier stören das Prüfen nie. */
+  function merkeFalsch(sub, a, antwort) {
+    let text = null;
+    try { text = a.typ.falsch(a, antwort); } catch { return; }
+    if (typeof text !== 'string' || !text.trim()) return;
+    db.prepare('INSERT INTO falsche_antworten (sub, aufgabe_id, antwort, at) VALUES (?, ?, ?, ?)').run(sub, a.id, text.trim().slice(0, 160), iso());
+  }
+
   /** Antwort prüfen. Fehlversuche zählen nur, solange die Aufgabe offen ist; Punkte nur beim ersten Lösen. */
   function pruefen(sub, id, antwort) {
     const a = aufgabe(id);
@@ -89,6 +97,7 @@ function createLernen(ctx, { aufgaben, training = null }) {
     db.transaction(() => {
       const r = sichereZeile(sub, a.id);
       if (erg.daten !== undefined) db.prepare('UPDATE fortschritt SET daten = ?, updated_at = ? WHERE sub = ? AND aufgabe_id = ?').run(JSON.stringify(erg.daten), iso(), sub, a.id);
+      if (!erg.ok && r.status === 'offen' && a.typ.falsch) merkeFalsch(sub, a, antwort);
       if (r.status === 'offen') {
         if (fertig) {
           const p = erg.anteil !== undefined ? Math.round(a.punkte * erg.anteil) : punkteFuer(a.punkte, r.fehlversuche, Math.min(r.tipps, a.tipps.length));
@@ -127,13 +136,64 @@ function createLernen(ctx, { aufgaben, training = null }) {
     return { zustand: zustand(a, zeile(sub, a.id)) };
   }
 
+  /** Aufgaben ohne „Lösung zeigen“: Die Lösung erscheint dort nach jeder Antwort (Quiz-artig). */
+  const ohneAufdecken = (a) => a.modul === 'quiz' || a.id.endsWith(':vorhersage') || a.id.endsWith(':raetsel') || a.id === 'ueberliste:bonus';
+
   function aufdecken(sub, id) {
     const a = aufgabe(id);
-    if (a.modul === 'quiz' || a.id.endsWith(':vorhersage') || a.id.endsWith(':raetsel') || a.id === 'ueberliste:bonus') throw fehler(400, 'Hier gibt es kein „Lösung zeigen“ – die Lösung erscheint nach jeder Antwort.');
+    if (ohneAufdecken(a)) throw fehler(400, 'Hier gibt es kein „Lösung zeigen“ – die Lösung erscheint nach jeder Antwort.');
     const r = sichereZeile(sub, a.id);
     if (r.status === 'offen') db.prepare("UPDATE fortschritt SET status = 'angesehen', punkte = 0, updated_at = ? WHERE sub = ? AND aufgabe_id = ?").run(iso(), sub, a.id);
     const r2 = zeile(sub, a.id);
     return { zustand: zustand(a, r2), loesung: a.typ.loesungsteil(a, zinfo(r2)) };
+  }
+
+  /* ---------- Vorschau für Lehrkräfte (wie die Aufgaben-Vorschau von Algo Quest) ----------
+   * Dieselben Prüfungen, aber ohne Speichern: Den Stand (status, fehlversuche, tipps, daten) hält der Browser und schickt
+   * ihn mit; der Server rechnet nur. „Lösung zeigen“ geht bei jeder Aufgabe (auch Quiz) und kostet nichts. */
+  function vorschauZeile(stand) {
+    const st = stand && typeof stand === 'object' ? stand : {};
+    const status = ['offen', 'geloest', 'angesehen'].includes(st.status) ? st.status : 'offen';
+    const n = (x) => (Number.isInteger(x) && x >= 0 && x < 1000 ? x : 0);
+    let daten = '{}';
+    try { daten = JSON.stringify(st.daten && typeof st.daten === 'object' ? st.daten : {}); } catch { /* leer */ }
+    if (daten.length > 50000) throw fehler(400, 'Der Vorschau-Stand ist zu groß.');
+    return { status, nachgeloest: st.nachgeloest ? 1 : 0, fehlversuche: n(st.fehlversuche), tipps: n(st.tipps), punkte: 0, daten };
+  }
+  const standVon = (r) => ({ status: r.status, nachgeloest: !!r.nachgeloest, fehlversuche: r.fehlversuche, tipps: r.tipps, daten: daten(r) });
+
+  function vorschau(id, aktion, body = {}) {
+    const a = aufgabe(id);
+    const r = vorschauZeile(body.stand);
+    if (ohneAufdecken(a) && r.status === 'angesehen') r.status = 'offen'; // Lösung kommt hier mit jeder Antwort
+    const mitLoesung = () => a.typ.loesungsteil(a, zinfo(r));
+    if (aktion === 'abrufen') {
+      return { id: a.id, modul: a.modul, aufgabe: a.typ.oeffentlich(a), zustand: zustand(a, r), stand: standVon(r), vorschau: true, ...(r.status !== 'offen' ? { loesung: mitLoesung() } : {}) };
+    }
+    if (aktion === 'tipp') {
+      if (!a.tipps.length) throw fehler(400, 'Zu dieser Aufgabe gibt es keine Tipps.');
+      if (r.status === 'offen' && r.tipps < a.tipps.length) r.tipps += 1;
+      return { zustand: zustand(a, r), stand: standVon(r) };
+    }
+    if (aktion === 'aufdecken') {
+      if (r.status === 'offen') r.status = 'angesehen';
+      return { zustand: zustand(a, r), loesung: mitLoesung(), stand: standVon(r) };
+    }
+    if (aktion === 'pruefen') {
+      const erg = a.typ.pruefe(a, body.antwort, zinfo(r), {});
+      const fertig = erg.fertig ?? erg.ok;
+      const zaehltFehler = erg.zaehltFehler ?? !erg.ok;
+      if (erg.daten !== undefined) r.daten = JSON.stringify(erg.daten);
+      if (r.status === 'offen') {
+        if (fertig) r.status = 'geloest';
+        else if (zaehltFehler) r.fehlversuche += 1;
+      } else if (r.status === 'angesehen' && erg.ok && erg.anteil === undefined) r.nachgeloest = 1;
+      const z = zustand(a, r);
+      const out = { ok: erg.ok, fertig, rueckmeldung: erg.rueckmeldung, zustand: z, geloest: false, nachgeloest: false, punkteErhalten: 0, neueAbzeichen: [], stand: standVon(r) };
+      if (z.status !== 'offen' && (erg.ok || fertig)) out.loesung = mitLoesung();
+      return out;
+    }
+    throw fehler(404, 'Diese Vorschau-Aktion gibt es nicht.');
   }
 
   /**
@@ -169,7 +229,7 @@ function createLernen(ctx, { aufgaben, training = null }) {
       .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.art ? { art: a.art } : {}), ...(['baukasten', 'minimierer', 'ueberliste', 'parallelwelten', 'keller', 'rallye', 'grammatik', 'turing'].includes(a.modul) ? { schluessel: a.id.slice(a.modul.length + 1) } : {}), ...(a.modul === 'mealy' ? { schluessel: a.id.slice('mealy:'.length), art: a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd' } : {}) }));
   }
 
-  return { abrufen, pruefen, tipp, aufdecken, lernstand, katalog, punkteFuer };
+  return { abrufen, pruefen, tipp, aufdecken, vorschau, lernstand, katalog, punkteFuer };
 }
 
 module.exports = { createLernen, punkteFuer };

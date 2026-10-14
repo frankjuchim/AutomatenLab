@@ -801,3 +801,6 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .lk-welt-abschnitt { scroll-margin-top: 5rem; margin-top: 1.6rem; }
 .lk-welt-abschnitt h4 { margin-top: 0; }
 @media (max-width: 600px) { .lk-tabelle { font-size: 0.85rem; } .lk-tabelle th, .lk-tabelle td { padding: 0.4rem 0.45rem; } }
+.lk-falsch ul { margin: 0; padding-left: 1rem; font-size: var(--fs-s); }
+.lk-falsch li { margin: 0.1rem 0; }
+.vorschau-hinweis { margin: 0 0 var(--gap); border-left: 4px solid var(--ocker); }

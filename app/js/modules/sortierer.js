@@ -25,7 +25,7 @@ export default {
     const alle = ctx.params.get('alle') === '1';
     // Training: Server (angemeldet) oder lokal im Browser mit Demo-Karten (Gast, Demo) – lokal ohne Punkte
     let T = null;
-    const training = async () => (T ??= (ctx.quelle.demo || !(await sitzung()).konto) ? lokalesTraining({ sortierer: DEMO_SORTIERER }) : ctx.quelle.training);
+    const training = async () => (T ??= (ctx.quelle.demo || ctx.quelle.vorschau || !(await sitzung()).konto) ? lokalesTraining({ sortierer: DEMO_SORTIERER }) : ctx.quelle.training);
     ctx.setSubtitle('Welche Maschine braucht diese Sprache? Sortiere – möglichst speziell.');
 
     function start() {

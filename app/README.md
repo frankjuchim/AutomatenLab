@@ -68,7 +68,9 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/themen?teil=niveaus` | Niveau-Übersicht: was ist für Grundkurs (gA), Leistungskurs (eA) und Zusatz (öffentlich) – auch `BASE_URL/niveaus` |
 | `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
 | `#/lehrkraft` | Bereich für Lehrkräfte, Aufbau wie Algo Quest: Meine Kurse – auch `BASE_URL/lehrer`. Kursseite `#/lehrkraft?kurs=<Kurs-ID>&tab=schueler\|beitritt\|auswertung\|rangliste\|einstellungen` (Kurs-ID wie `k:12`, ohne `tab` = Schüler) |
-| `#/lehrkraft?teil=aufgaben` | Lehrkraft-Bereich: Aufgaben der Welten nach Level (mit Link ins Modul) |
+| `#/lehrkraft?teil=aufgaben` | Lehrkraft-Bereich: Aufgaben der Welten nach Level (mit Link ins Modul und „Vorschau mit Lösung“) |
+
+**Vorschau für Lehrkräfte:** An jede Aufgaben-Route lässt sich `&vorschau=1` anhängen (Aufgabe mit eingesetzter Lösung) oder `&vorschau=ohne` (so, wie Schüler beginnen) – nur für Lehrkräfte, nichts wird gespeichert, keine Punkte. Beispiel: `#/turing?challenge=1&vorschau=1`. Für alle anderen Rollen wird der Parameter ignoriert.
 
 **Anmeldung:** Ohne Sitzung sind nur die Übersicht, `#/gast` mit den Demo-Aufgaben (Liste in `js/data/gast.js`), `#/themen` und `#/datenschutz` offen. Jede andere Route leitet still zur Anmeldung beim Portal InfoLabs und danach genau auf diese Route zurück – die QR-Codes bleiben gültig. Level-Quiz, Sprach-Detektiv und Automaten-Baukasten werden auf dem Server geprüft (Lösungen in `../inhalte/`, nie ausgeliefert).
 

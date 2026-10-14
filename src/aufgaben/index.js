@@ -3,6 +3,7 @@
 // ausgeliefert). Jeder Aufgabentyp liefert
 //   oeffentlich(a, h)        → was der Browser sehen darf (keine Lösung, keine ungenutzten Tipps)
 //   pruefe(a, antwort, z, h) → { ok, fertig?, zaehltFehler?, anteil?, daten?, rueckmeldung }
+//   falsch?(a, antwort)      → Kurzform einer falschen Antwort für die Aufgabenstatistik (nur feste Auswahlen/kurze Eingaben)
 //   loesungsteil(a, h)       → Lösung/Erklärung (erst nach dem Lösen oder „Lösung zeigen“)
 //   tipps                    → Liste der Tipps (werden einzeln abgerufen und kosten Punkte)
 //   abzeichen(ctx)           → neu verdiente Abzeichen (Schlüssel aus app/js/data/badges.js)
@@ -95,6 +96,14 @@ async function ladeAufgaben(secret) {
       const summe = Object.values(daten.antworten).reduce((s, x) => s + x, 0);
       return { ok: wert === 1, fertig, zaehltFehler: false, anteil: fertig ? summe / fragen.length : undefined, daten: z.offen ? daten : undefined, rueckmeldung: rm };
     },
+    falsch(a, antwort) {
+      const i = antwort.frage;
+      const f = a.daten.fragen[i];
+      const text = (id, liste) => liste[liste.findIndex((_, j) => h.oid(a.id, i, j) === id)] ?? '?';
+      if (f.typ === 'mc') return `Frage ${i + 1}: ${text(antwort.wahl, f.optionen)}`;
+      if (f.typ === 'wf') return `Frage ${i + 1}: ${antwort.wahr ? 'wahr' : 'falsch'} – ${text(antwort.begruendung, f.begruendungen)}`;
+      return null;
+    },
     loesungsteil(a, z) {
       const antworten = z.daten.antworten || {};
       const summe = Object.values(antworten).reduce((s, x) => s + x, 0);
@@ -125,6 +134,9 @@ async function ladeAufgaben(secret) {
       const j = f.optionen.findIndex((_, k) => h.oid(a.id, k) === (antwort && antwort.wahl));
       if (j < 0) throw fehler(400, 'Bitte wähle eine Beschreibung.');
       return pruefeDetektiv(f, j);
+    },
+    falsch(a, antwort) {
+      return a.daten.optionen.find((_, k) => h.oid(a.id, k) === antwort.wahl)?.text ?? null;
     },
     loesungsteil(a) {
       return { richtig: h.oid(a.id, 0), richtigText: a.daten.optionen[0].text, bedeutung: a.daten.bedeutung || null };
@@ -207,6 +219,10 @@ async function ladeAufgaben(secret) {
     pruefe(a, antwort, z) {
       const erg = pruefeMealyVorhersage(a.daten.automat, a.daten.vorhersage, z.daten.stand, antwort);
       return { ok: erg.richtig, fertig: z.offen && erg.fertig, zaehltFehler: false, anteil: z.offen && erg.fertig ? erg.anteil : undefined, daten: z.offen ? { stand: erg.stand } : undefined, rueckmeldung: erg.rueckmeldung };
+    },
+    falsch(a, antwort) {
+      const w = a.daten.vorhersage[antwort.wort];
+      return typeof w === 'string' ? `${w || 'ε'} → ${String(antwort.ausgabe ?? '').slice(0, 30)}` : null; // Ausgabe ist schon geprüft (nur Zeichen aus Ω)
     },
     loesungsteil(a, z) {
       const st = z.daten.stand ?? {};
@@ -421,6 +437,9 @@ async function ladeAufgaben(secret) {
     /** antwort: { to, write, move } */
     pruefe(a, antwort) {
       return pruefeTuringRegel(a.programm.maschine, a.daten.fehlt, a.daten.tests, antwort);
+    },
+    falsch(a, antwort) {
+      return `(${a.daten.fehlt.from}, ${a.daten.fehlt.read}) → (${antwort.to}, ${antwort.write}, ${antwort.move})`;
     },
     loesungsteil(a) {
       const [to, write, move] = a.programm.maschine.delta[a.daten.fehlt.from][a.daten.fehlt.read];
