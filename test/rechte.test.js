@@ -36,6 +36,7 @@ test('Matrix: erwarteter Status je Route und Rolle', async () => {
     ['get', '/api/lehrer/kurse/k%3A17/auswertung', { gast: 401, schueler: 403, lehrkraft: 200, fremdeLehrkraft: 404, superadmin: 200 }],
     ['get', '/api/lehrer/kurse/k%3A17/export.csv?art=matrix', { gast: 401, schueler: 403, lehrkraft: 200, fremdeLehrkraft: 404, superadmin: 200 }],
     ['post', '/api/lehrer/vorschau/detektiv%3Afall-1/abrufen', { gast: 401, schueler: 403, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
+    ['get', '/api/meine-kurse', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
     ['get', '/api/lehrer/kurse/k%3A99/auswertung', { gast: 401, schueler: 403, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
     ['post', '/api/sitzung/beenden', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],
     ['get', '/api/verbund/kurse/k%3A17/uebersicht', { gast: 401, schueler: 401, lehrkraft: 401, fremdeLehrkraft: 401, superadmin: 401 }],

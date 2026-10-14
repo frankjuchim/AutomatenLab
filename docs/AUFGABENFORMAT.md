@@ -176,6 +176,7 @@ POST /api/aufgaben/:id/tipp           nächster Tipp
 POST /api/aufgaben/:id/aufdecken      „Lösung zeigen“ (0 Punkte; nicht beim Quiz)
 POST /api/lehrer/vorschau/:id/:aktion Vorschau für Lehrkräfte (abrufen | pruefen | tipp | aufdecken), { stand, antwort? } → wie oben + stand; nichts wird gespeichert
 GET  /api/training                    Trainingspunkte heute und Tageshöchstwert
+GET  /api/meine-kurse                 Schüler: Einstellungen der eigenen Kurse (kursart, levelArt, auftrag) für die Startseite
 POST /api/training/:modul/neu         neue Trainingsrunde (arena | unterscheide | sortierer)
 POST /api/training/runde/:id/antwort  Sortierer: { i, typ } → { richtig, typ, warum, wiederholt? }
 POST /api/training/runde/:id/ende     { antworten } → { richtig, score?, besteSerie?, punkteErhalten, rekord?, neueAbzeichen, heute }

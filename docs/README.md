@@ -10,7 +10,8 @@
 | `DEPLOYMENT.md` | CapRover (Webhook, `main` = live), GitHub-Prüfung, Backup |
 | `VERBUND.md` | **Anschluss an das Portal InfoLabs** (Vertrag v1.2): SSO, Manifest, Niveaus, Verbund-API, Konfiguration, Vertragsvorschläge |
 | `ALGOQUEST_VERGLEICH.md` | Analyse AlgoQuest, Empfehlungen für Server/Dashboard (Login-Teile überholt) |
-| `DATENSCHUTZ.md` | Arbeitsgrundlage und Text-Entwurf für die Datenschutzseite |
+| `DATENSCHUTZ.md` | Welche Daten AutomatenLab im Verbund speichert, wer sie sieht, wann sie gelöscht werden |
+| `ABNAHME.md` | Checkliste für die Abnahme im echten Verbund (Gast, Schüler, Lehrkraft, Löschung) |
 | `MATERIALIEN.md` | Wie die Word-/PowerPoint-Dateien erzeugt und geprüft werden |
 | `einheit/PLAN.md` | Didaktische Planung, **verbindliche Notation**, KC-Bezug, App-Module |
 | `einheit/FALLEN.md` | Fallen P1–P10 (Entwurf zur Freigabe, Vertrag §9) |

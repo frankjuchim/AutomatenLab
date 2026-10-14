@@ -38,4 +38,4 @@ export const LEVEL_TYPE = {
   11: 'pflicht', 12: 'pflicht', 13: 'pflicht', 14: 'vertiefung',
   15: 'bonus', 16: 'bonus',
 };
-export const LEVEL_TYPE_LABEL = { pflicht: 'Pflicht', vertiefung: 'Vertiefung', bonus: 'Bonus' };
+export const LEVEL_TYPE_LABEL = { pflicht: 'Pflicht', vertiefung: 'Vertiefung', bonus: 'Bonus', spaeter: 'Später' }; // „Später“ nur als Kurs-Einstellung der Lehrkraft

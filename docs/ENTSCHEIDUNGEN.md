@@ -2,6 +2,16 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Kurs-Einstellungen: Level-Art und Auftrag statt Sperren (PR 7)
+Algo Quest schaltet Welten je Kurs frei und sperrt den Rest. Im AutomatenLab stehen Aufgaben als QR-Codes auf
+gedruckten Blättern (Regel 1: jeder Deep-Link führt genau zur Aufgabe). Deshalb **sperrt die Kurs-Einstellung nichts**:
+Die Lehrkraft legt je Level fest, ob es Pflicht, Vertiefung, Bonus oder „später“ ist (Vorgabe aus `worlds.js`), und
+kann einen kurzen Auftrag (≤ 400 Zeichen, bis zu vier Level hervorgehoben) auf die Startseite stellen. „Später“ graut
+ein Level auf der Level-Karte aus. Im Grundkurs (Kursart gA) tragen eA-Level den Hinweis „freiwillig (eA)“. Wer in
+mehreren Kursen ist, sieht je Level die verbindlichste Art und alle Aufträge. Gespeichert in `kurse.einstellungen`
+(keine Migration nötig), für Schüler über `GET /api/meine-kurse`. Verworfen: echte Sperren (bräche QR-Codes und das
+selbstständige Vorarbeiten), Aufträge mit Fälligkeit und Abgabe (das macht im Unterricht die Lehrkraft, nicht die App).
+
 ## 2026-10-14 · Aufgaben-Vorschau und häufige falsche Antworten (PR 6b)
 **Vorschau:** Algo Quest zeigt Lehrkräften jede Aufgabe mit eingesetzter Lösung. AutomatenLab hat zwölf sehr
 verschiedene Module; eine eigene Vorschau-Darstellung je Modul wäre doppelte Arbeit. Stattdessen öffnet die Vorschau

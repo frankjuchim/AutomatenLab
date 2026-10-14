@@ -1,5 +1,7 @@
 // Startseite: Level-Karte (die Einheit als Automat: Level = Zustände, Boss-Level = Endzustände)
 // und alle Module nach Welten. Auswahl eines Levels hebt die passenden Module hervor.
+// Angemeldete Schüler sehen die Kurs-Einstellungen ihrer Lehrkraft (GET /api/meine-kurse): Auftrag oben, Level-Art je
+// Level (Pflicht/Vertiefung/Bonus/Später), im Grundkurs eA-Level als „freiwillig“ – nur Anzeige, Links bleiben offen.
 
 import { h, clear, stateGlyph } from '../core/dom.js';
 import { WORLDS, LEVELS, BOSS_LEVELS, LEVEL_TYPE, LEVEL_TYPE_LABEL } from '../data/worlds.js';
@@ -65,6 +67,11 @@ export default {
   mount(el, ctx) {
     let selected = null;
     const levelButtons = new Map();
+    const levelNamen = new Map();
+    // Kurs-Einstellungen (Standard: worlds.js); bei mehreren Kursen gilt die „verbindlichste“ Art je Level
+    let kursArt = null; let grundkurs = false; let auftragLevel = new Set();
+    const artVon = (n) => kursArt?.[n] ?? LEVEL_TYPE[n] ?? 'pflicht';
+    const freiwillig = (n) => grundkurs && LEVEL_NIVEAU[n] === 'eA';
     const tiles = [];
 
     const info = h('p', { class: 'map-info', 'aria-live': 'polite' });
@@ -76,7 +83,7 @@ export default {
       const matching = MODULES.filter((m) => m.levels.includes(selected));
       clear(info);
       if (selected != null) {
-        info.append(h('strong', null, `Level ${selected}: ${LEVELS[selected]} (${LEVEL_TYPE_LABEL[LEVEL_TYPE[selected] || 'pflicht']}). `),
+        info.append(h('strong', null, `Level ${selected}: ${LEVELS[selected]} (${LEVEL_TYPE_LABEL[artVon(selected)]}${freiwillig(selected) ? ', im Grundkurs freiwillig' : ''}). `),
           `${NIVEAUS[LEVEL_NIVEAU[selected]].lang}. `,
           matching.length ? `${matching.length === 1 ? 'Passendes Modul' : 'Passende Module'}: ${matching.map((m) => m.title).join(', ')}.` : 'In diesem Level arbeitest du ohne App.',
           ' ', h('a', { href: ctx.link('quiz', { ds: selected }) }, `Exit-Ticket DS${String(selected).padStart(2, '0')}`),
@@ -92,22 +99,55 @@ export default {
         const mods = MODULES.filter((m) => m.levels.includes(n));
         const ready = mods.some((m) => m.load);
         const boss = BOSS_LEVELS.includes(n);
-        const typ = LEVEL_TYPE[n] || 'pflicht';
-        const btn = h('button', {
-          type: 'button', class: ['level-node', boss && 'is-boss', ready ? 'is-ready' : 'is-sketch', `is-${typ}`],
-          'aria-pressed': 'false',
-          'aria-label': `Level ${n}: ${LEVELS[n]} (${LEVEL_TYPE_LABEL[typ]}, ${NIVEAUS[LEVEL_NIVEAU[n]].lang})${boss ? ', mit Boss-Level als Extra-Training' : ''}`,
-          onclick: () => select(n),
-        }, h('span', { class: 'level-num' }, String(n)), niveauEtikett(LEVEL_NIVEAU[n]));
+        const btn = h('button', { type: 'button', 'aria-pressed': 'false', onclick: () => select(n) },
+          h('span', { class: 'level-num' }, String(n)), niveauEtikett(LEVEL_NIVEAU[n]));
+        btn.dataset.basis = ['level-node', boss && 'is-boss', ready ? 'is-ready' : 'is-sketch'].filter(Boolean).join(' ');
+        const name = h('span', { class: 'level-name', 'aria-hidden': 'true' });
         levelButtons.set(n, btn);
-        chain.append(h('li', { class: ['level-step', wi === 0 && i === 0 && 'is-first', i === 0 && wi > 0 && 'is-continued'] },
-          btn, h('span', { class: 'level-name', 'aria-hidden': 'true' }, LEVELS[n], typ !== 'pflicht' ? h('span', { class: `type-tag type-${typ}` }, LEVEL_TYPE_LABEL[typ]) : null, boss ? h('span', { class: 'boss-tag' }, 'Boss-Level (Extra)') : null)));
+        levelNamen.set(n, name);
+        zeichneLevel(n);
+        chain.append(h('li', { class: ['level-step', wi === 0 && i === 0 && 'is-first', i === 0 && wi > 0 && 'is-continued'] }, btn, name));
       });
       map.append(h('section', { class: 'world-row', 'data-welt': w.id, role: 'listitem', 'aria-labelledby': `welt-${w.id}` },
         // Thema vorn, Buchstabe als Kurzname (Manifest welten[].kennung, Boss-Level A–C, Kopfzeilen der Materialien)
         h('h3', { class: 'world-label', id: `welt-${w.id}` }, h('span', { class: 'world-title' }, w.title), h('span', { class: 'world-letter' }, `Welt ${w.id} · Level ${w.levels[0]}–${w.levels.at(-1)}`)),
         h('div', { class: 'chain-scroller' }, chain)));
     });
+
+    /** Level-Knoten und -Name nach der aktuellen Level-Art zeichnen (auch nach dem Laden der Kurs-Einstellungen). */
+    function zeichneLevel(n) {
+      const btn = levelButtons.get(n); const name = levelNamen.get(n);
+      const typ = artVon(n); const boss = BOSS_LEVELS.includes(n); const dran = auftragLevel.has(n);
+      btn.className = `${btn.dataset.basis} is-${typ}${dran ? ' is-auftrag' : ''}${selected === n ? ' is-active' : ''}`;
+      btn.setAttribute('aria-label', `Level ${n}: ${LEVELS[n]} (${LEVEL_TYPE_LABEL[typ]}${freiwillig(n) ? ', im Grundkurs freiwillig' : ''}, ${NIVEAUS[LEVEL_NIVEAU[n]].lang})${dran ? ', im Auftrag deiner Lehrkraft' : ''}${boss ? ', mit Boss-Level als Extra-Training' : ''}`);
+      clear(name, LEVELS[n],
+        typ !== 'pflicht' ? h('span', { class: `type-tag type-${typ}` }, LEVEL_TYPE_LABEL[typ]) : null,
+        freiwillig(n) ? h('span', { class: 'type-tag type-freiwillig' }, 'freiwillig (eA)') : null,
+        dran ? h('span', { class: 'type-tag type-auftrag' }, 'Auftrag') : null,
+        boss ? h('span', { class: 'boss-tag' }, 'Boss-Level (Extra)') : null);
+    }
+
+    // ───── Auftrag der Lehrkraft und Kurs-Einstellungen (nur angemeldete Schüler mit Kurs) ─────
+    const auftragSlot = h('div');
+    const RANG = { pflicht: 0, vertiefung: 1, bonus: 2, spaeter: 3 };
+    async function kursEinstellungen() {
+      let kurse = [];
+      try { kurse = await api('GET', '/api/meine-kurse'); } catch { return; }
+      if (!kurse.length) return;
+      kursArt = {};
+      for (const n of ALL_LEVELS) kursArt[n] = kurse.map((k) => k.levelArt?.[n] ?? LEVEL_TYPE[n] ?? 'pflicht').sort((a, b) => RANG[a] - RANG[b])[0];
+      grundkurs = kurse.every((k) => k.kursart === 'gA');
+      const auftraege = kurse.filter((k) => k.auftrag);
+      auftragLevel = new Set(auftraege.flatMap((k) => k.auftrag.level ?? []));
+      for (const n of ALL_LEVELS) zeichneLevel(n);
+      if (auftraege.length) clear(auftragSlot, h('section', { class: 'auftrag', 'aria-labelledby': 'auftrag-h' },
+        h('h2', { id: 'auftrag-h' }, auftraege.length === 1 ? 'Auftrag deiner Lehrkraft' : 'Aufträge deiner Lehrkräfte'),
+        auftraege.map((k) => h('div', { class: 'auftrag-eintrag' },
+          kurse.length > 1 ? h('p', { class: 'auftrag-kurs' }, k.name) : null,
+          h('p', { class: 'auftrag-text' }, k.auftrag.text),
+          k.auftrag.level?.length ? h('p', { class: 'auftrag-level' }, 'Dazu: ', k.auftrag.level.map((n, i) => [i ? ' · ' : '',
+            h('button', { type: 'button', class: 'link-button', onclick: () => { if (selected !== n) select(n); levelButtons.get(n)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, `Level ${n}: ${LEVELS[n]}`)])) : null))));
+    }
 
     // ───── Module nach Welten ─────
     const catalogue = h('div', { class: 'catalogue' });
@@ -187,6 +227,7 @@ export default {
         h('span', null, h('strong', null, 'Du bist nicht angemeldet. '), 'Ohne Anmeldung kannst du je Modul eine Aufgabe ausprobieren.'),
         h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren'),
         h('a', { class: 'btn', href: anmeldeLink('/') }, 'Anmelden über InfoLabs')));
+      if (konto?.rolle === 'schueler' && (konto.kurse ?? []).length) kursEinstellungen();
       else if (konto?.rolle === 'schueler' && !(konto.kurse ?? []).length) clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
         h('span', null, h('strong', null, 'Noch nicht freigeschaltet. '), 'Deine Lehrkraft schaltet AutomatenLab im Portal für euren Kurs frei – bis dahin gibt es die Demo-Aufgaben.'),
         h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren')));
@@ -198,6 +239,7 @@ export default {
 
     clear(el,
       gastSlot,
+      auftragSlot,
       h('section', { class: 'hero' },
         h('div', { class: 'hero-top' },
           h('div', { class: 'hero-text' },
