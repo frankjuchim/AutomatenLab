@@ -170,3 +170,18 @@ DEMO.push({
     tests: [''],
   },
 });
+
+// Chomsky-Sortierer im Gastmodus: eigene Demo-Karten (nicht die Karten des Servers aus inhalte/sortierer.js), genau
+// eine Zehnerrunde (4 × Typ 3, 3 × Typ 2, 3 × Typ 0/1). Format wie dort: id, text, typ, warum.
+export const DEMO_SORTIERER = [
+  { id: 'demo-beginnt-0', text: 'Wörter über {0, 1}, die mit 0 beginnen', typ: 3, warum: 'Nur das erste Zeichen entscheidet – danach bleibt der Automat in einem Endzustand.' },
+  { id: 'demo-kein-bb', text: 'Wörter über {a, b}, in denen nie zwei b direkt hintereinander stehen', typ: 3, warum: 'Der Automat merkt sich nur, ob das letzte Zeichen ein b war; ein zweites b führt in den Fehlerzustand.' },
+  { id: 'demo-b-mod-3', text: 'Wörter über {a, b}, deren Anzahl an b durch 3 teilbar ist', typ: 3, warum: 'Zählen modulo 3: drei Zustände für die Reste 0, 1 und 2 genügen.' },
+  { id: 'demo-uhrzeit', text: 'Uhrzeiten im Format hh:mm von 00:00 bis 23:59', typ: 3, warum: 'Es gibt nur 1440 Uhrzeiten – eine endliche Sprache ist immer regulär.' },
+  { id: 'demo-ancbn', text: 'aⁿcbⁿ (n ≥ 0): a-Block, ein c, gleich langer b-Block', typ: 2, warum: 'Jedes a kommt auf den Keller, jedes b nimmt eines herunter – unbeschränktes Zählen schafft kein DEA.' },
+  { id: 'demo-anban', text: 'aⁿbaⁿ (n ≥ 0): vor und nach dem b gleich viele a', typ: 2, warum: 'Die a vor dem b werden im Keller gezählt und danach abgebaut – ein Vergleich, also kontextfrei.' },
+  { id: 'demo-mehr-a', text: 'Wörter über {a, b} mit mehr a als b', typ: 2, warum: 'Die Differenz der Anzahlen kann beliebig groß werden – der Keller führt sie mit, ein DEA nicht.' },
+  { id: 'demo-anbnan', text: 'aⁿbⁿaⁿ (n ≥ 1)', typ: 0, warum: 'Drei gleich lange Blöcke brauchen zwei Vergleiche – der Keller ist nach dem ersten leer.' },
+  { id: 'demo-ijk', text: 'aⁱbʲcᵏ mit i < j < k', typ: 0, warum: 'b muss mit a und c verglichen werden – zwei Vergleiche mit demselben Block schafft kein Kellerautomat.' },
+  { id: 'demo-w-raute-w', text: 'w#w: ein Wort über {a, b}, ein #, dann dasselbe Wort noch einmal', typ: 0, warum: 'Der Keller gibt das Wort nur rückwärts heraus – für die Kopie in gleicher Reihenfolge braucht es ein Band.' },
+];

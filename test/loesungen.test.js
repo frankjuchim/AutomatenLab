@@ -20,7 +20,7 @@ function dateien(dir) {
 
 test('Keine ausgelieferte Datei enthält Lösungstexte, Tipps oder Erklärungen aus inhalte/', async () => {
   const lade = (n) => import(pathToFileURL(path.join(__dirname, '..', 'inhalte', `${n}.js`)).href);
-  const [quiz, detektiv, baukasten, minimierer, ueberliste, grammatik] = await Promise.all([lade('quiz'), lade('detektiv'), lade('baukasten'), lade('minimierer'), lade('ueberliste'), lade('grammatik')]);
+  const [quiz, detektiv, baukasten, minimierer, ueberliste, grammatik, sortierer] = await Promise.all([lade('quiz'), lade('detektiv'), lade('baukasten'), lade('minimierer'), lade('ueberliste'), lade('grammatik'), lade('sortierer')]);
   const geheim = new Set();
   for (const q of [...Object.values(quiz.QUIZ_WELTEN), ...Object.values(quiz.QUIZ_DS)]) {
     for (const f of q.fragen) {
@@ -35,6 +35,7 @@ test('Keine ausgelieferte Datei enthält Lösungstexte, Tipps oder Erklärungen 
   for (const x of ueberliste.UEBERLISTE_STUFEN) for (const t of x.tipps) geheim.add(t);
   for (const b of ueberliste.UEBERLISTE_BONUS) geheim.add(b.optionen[0]);
   for (const c of grammatik.GRAMMATIK_CHALLENGES) if (c.tipp) geheim.add(c.tipp);
+  for (const k of sortierer.SORTIERER_KARTEN) geheim.add(k.warum);
   for (const b of Object.values(minimierer.MINIMIERER_BEDEUTUNG)) for (const t of Object.values(b)) geheim.add(t);
   const lang = [...geheim].filter((t) => t.length >= 30); // kurze Texte („Genau einen“) können zufällig vorkommen
   assert.ok(lang.length > 60, 'genug Prüftexte');
@@ -44,7 +45,7 @@ test('Keine ausgelieferte Datei enthält Lösungstexte, Tipps oder Erklärungen 
 
 test('Die Datendateien der Server-Module werden nicht ausgeliefert', async () => {
   const app = await H.makeApp();
-  for (const p of ['/js/data/quiz.js', '/js/data/detektiv.js', '/js/data/baukasten.js', '/js/data/minimierer.js', '/js/data/mealy.js', '/js/data/ueberliste.js', '/js/data/parallelwelten.js', '/js/data/keller.js', '/js/data/rallye.js', '/js/data/grammatik.js', '/inhalte/turing.js', '/inhalte/quiz.js', '/../inhalte/quiz.js']) {
+  for (const p of ['/js/data/quiz.js', '/js/data/detektiv.js', '/js/data/baukasten.js', '/js/data/minimierer.js', '/js/data/mealy.js', '/js/data/ueberliste.js', '/js/data/parallelwelten.js', '/js/data/keller.js', '/js/data/rallye.js', '/js/data/grammatik.js', '/inhalte/turing.js', '/inhalte/sortierer.js', '/inhalte/quiz.js', '/../inhalte/quiz.js']) {
     assert.equal((await request(app).get(p)).status, 404, p);
   }
 });

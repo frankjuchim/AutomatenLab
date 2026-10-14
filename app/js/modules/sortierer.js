@@ -2,13 +2,17 @@
 // „DEA reicht“ (Typ 3), „Kellerautomat nötig“ (Typ 2), „mehr nötig“ (Turingmaschine) einordnen.
 // Runde mit 10 Karten, kurze Begründung nach jeder Karte, Chomsky-Hierarchie als verschachtelte Mengen füllt sich.
 // Deep-Link: #/sortierer?runde=1 (direkt starten), #/sortierer?alle=1 (alle Karten in zufälliger Reihenfolge)
+// Training (docs/AUFGABENFORMAT.md): Angemeldet erzeugt der Server die Runde; Fach und Begründung kommen erst nach der
+// Antwort (je Karte zählt die erste Antwort, 1 Punkt je richtiger Karte, Tageshöchstwert; Rekord nur für Zehnerrunden).
+// Gäste spielen lokal mit eigenen Demo-Karten (DEMO_SORTIERER) ohne Punkte.
 
 import { h, clear, reducedMotion } from '../core/dom.js';
-import { SORTIERER_KARTEN, FAECHER } from '../data/sortierer.js';
-import { makeRng } from '../engine/tokenize.js';
+import { FAECHER } from '../data/sortierer.js';
+import { DEMO_SORTIERER } from '../data/demo.js';
+import { SORTIERER_RUNDE as RUNDE } from '../engine/training.js';
+import { lokalesTraining } from '../core/aufgaben.js';
+import { sitzung } from '../core/sitzung.js';
 
-const RUNDE = 10;
-const PUNKTE_RICHTIG = 10;
 const NS = 'http://www.w3.org/2000/svg';
 const ORDER = [3, 2, 0];
 
@@ -16,8 +20,12 @@ export default {
   title: 'Chomsky-Sortierer',
   mount(el, ctx) {
     let cleanupRound = null;
+    let aktiv = true;
     const direct = ctx.params.get('runde') === '1';
     const alle = ctx.params.get('alle') === '1';
+    // Training: Server (angemeldet) oder lokal im Browser mit Demo-Karten (Gast, Demo) – lokal ohne Punkte
+    let T = null;
+    const training = async () => (T ??= (ctx.quelle.demo || !(await sitzung()).konto) ? lokalesTraining({ sortierer: DEMO_SORTIERER }) : ctx.quelle.training);
     ctx.setSubtitle('Welche Maschine braucht diese Sprache? Sortiere – möglichst speziell.');
 
     function start() {
@@ -32,13 +40,22 @@ export default {
         best != null ? h('p', { class: 'record' }, `Dein Rekord: ${best} von ${RUNDE}`) : null,
         h('div', { class: 'start-actions' },
           h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => play(false) }, 'Runde starten'),
-          h('button', { type: 'button', class: 'btn', onclick: () => play(true) }, `Alle ${SORTIERER_KARTEN.length} Karten`))));
+          h('button', { type: 'button', class: 'btn', onclick: () => play(true) }, 'Alle Karten'))));
     }
 
-    function play(all) {
-      const rng = makeRng();
-      const deck = all ? rng.shuffle(SORTIERER_KARTEN) : balancedDeck(rng);
-      const st = { i: 0, right: 0, answered: false, log: [] };
+    async function play(all) {
+      cleanupRound?.(); cleanupRound = null;
+      clear(el, h('p', { class: 'muted' }, 'Runde wird vorbereitet …'));
+      let runde;
+      try {
+        runde = await (await training()).neu('sortierer', all ? { alle: true } : {});
+      } catch (e) {
+        if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message), h('button', { type: 'button', class: 'btn', onclick: () => start() }, 'Zurück'));
+        return;
+      }
+      if (!aktiv) return;
+      const deck = runde.items;
+      const st = { i: 0, right: 0, answered: false, busy: false, over: false, log: [] };
       const total = deck.length;
 
       const progressEl = h('span', { class: 'stat-value' }, `1 / ${total}`);
@@ -54,7 +71,7 @@ export default {
         b.addEventListener('drop', (e) => { e.preventDefault(); b.classList.remove('is-over'); answer(typ); });
         return b;
       });
-      cardEl.addEventListener('dragstart', (e) => { e.dataTransfer?.setData('text/plain', deck[st.i].id); cardEl.classList.add('is-dragging'); });
+      cardEl.addEventListener('dragstart', (e) => { e.dataTransfer?.setData('text/plain', String(st.i)); cardEl.classList.add('is-dragging'); });
       cardEl.addEventListener('dragend', () => cardEl.classList.remove('is-dragging'));
       // Tastatur: 1/2/3 wählt ein Fach
       const onKey = (e) => { if (e.target.closest?.('input, textarea, select, dialog')) return; const k = { 1: 3, 2: 2, 3: 0 }[e.key]; if (k != null && !st.answered) { e.preventDefault(); answer(k); } };
@@ -75,19 +92,33 @@ export default {
         cardEl.focus({ preventScroll: true });
       }
 
-      function answer(typ) {
-        if (st.answered) return;
-        st.answered = true;
+      async function answer(typ) {
+        if (st.answered || st.busy || st.over) return;
+        st.busy = true;
+        bins.forEach((b) => { b.disabled = true; });
         const c = deck[st.i];
-        const ok = typ === c.typ;
+        let r;
+        try {
+          r = await (await training()).antwort(runde.id, st.i, typ);
+        } catch (e) {
+          st.busy = false;
+          if (!aktiv) return;
+          bins.forEach((b) => { b.disabled = false; });
+          clear(feedback, h('p', { class: 'notice notice-error' }, e.message));
+          return;
+        }
+        st.busy = false;
+        if (!aktiv || st.over) return;
+        st.answered = true;
+        const ok = r.richtig;
         if (ok) st.right++;
-        st.log.push({ card: c, typ, ok });
+        st.log.push({ text: c.text, typ: r.typ, warum: r.warum, ok });
         scoreEl.textContent = String(st.right);
         cardEl.classList.add(ok ? 'is-right' : 'is-wrong');
-        bins.forEach((b) => { b.disabled = true; if (Number(b.dataset.typ) === c.typ) b.classList.add('is-correct'); else if (Number(b.dataset.typ) === typ) b.classList.add('is-wrong'); });
-        hier.add(c.typ, ok);
+        bins.forEach((b) => { if (Number(b.dataset.typ) === r.typ) b.classList.add('is-correct'); else if (Number(b.dataset.typ) === typ) b.classList.add('is-wrong'); });
+        hier.add(r.typ, ok);
         clear(feedback, h('div', { class: ['notice', ok ? 'notice-success' : 'notice-error'] },
-          h('p', null, h('strong', null, ok ? 'Richtig. ' : `Nein – ${FAECHER[c.typ].kurz}: ${FAECHER[c.typ].name}. `), c.warum)));
+          h('p', null, h('strong', null, ok ? 'Richtig. ' : `Nein – ${FAECHER[r.typ].kurz}: ${FAECHER[r.typ].name}. `), r.warum)));
         nextBtn.hidden = false;
         nextBtn.textContent = st.i + 1 < total ? 'Nächste Karte' : 'Auswertung';
         nextBtn.focus({ preventScroll: true });
@@ -99,41 +130,45 @@ export default {
         showCard();
       }
 
-      function finish() {
+      async function finish() {
+        if (st.over) return;
+        st.over = true;
         cleanupRound?.(); cleanupRound = null;
-        let record = false;
-        if (!all) {
-          const prev = ctx.progress.best('sortierer:runde') ?? 0;
-          record = ctx.progress.setBest('sortierer:runde', st.right);
-          if (record) ctx.progress.addPoints((st.right - prev) * PUNKTE_RICHTIG);
-          if (st.right === RUNDE) ctx.progress.award('sortierer-perfekt');
-        } else {
-          const { first } = ctx.progress.solve('sortierer', 'alle', st.right >= total - 2 ? 40 : 0);
-          if (first && st.right >= total - 2) ctx.toast('+40 Punkte', { type: 'success' });
-        }
-        ctx.progress.award('sortierer-erste');
+        clear(el, h('p', { class: 'muted' }, 'Runde wird ausgewertet …'));
+        let erg = null;
+        try { erg = await (await training()).ende(runde.id, []); } catch (e) { erg = { fehler: e.message }; }
+        if (aktiv) result(erg);
+      }
+
+      function result(erg) {
+        const lokal = T?.lokal !== false;
+        const gespielt = st.log.length;
         clear(el, h('div', { class: 'panel arena-result' },
           h('h2', null, 'Runde beendet'),
           h('div', { class: 'result-stats' },
-            h('p', { class: 'result-big' }, h('span', { class: 'num' }, String(st.right)), ` von ${total} richtig`),
-            record && !all ? h('p', { class: 'record' }, 'Neuer Rekord!') : null),
+            h('p', { class: 'result-big' }, h('span', { class: 'num' }, String(st.right)), ` von ${gespielt < total ? `${gespielt} gespielten (${total})` : total} richtig`),
+            erg?.rekord ? h('p', { class: 'record' }, 'Neuer Rekord!') : null,
+            erg?.fehler ? h('p', { class: 'notice notice-error' }, `Die Runde konnte nicht gezählt werden: ${erg.fehler}`) : null,
+            !lokal && erg && !erg.fehler ? h('p', { class: 'muted' }, `+${erg.punkteErhalten} Trainingspunkte (heute ${erg.heute} von höchstens ${erg.maxProTag}).`) : null,
+            lokal && !ctx.quelle.demo ? h('p', { class: 'muted' }, 'Ohne Anmeldung spielst du mit Demo-Karten – Punkte, Rekorde und alle Karten gibt es nach der Anmeldung über InfoLabs.') : null),
           h('div', { class: 'sort-result-layout' },
             h('div', null, h('h3', null, 'Die Landkarte deiner Runde'), hier.el),
             h('div', null, h('h3', null, 'Alle Karten dieser Runde'),
               h('ul', { class: 'sort-log' }, st.log.map((e) => h('li', { class: e.ok ? 'is-yes' : 'is-no' },
-                h('span', { class: 'sort-log-text' }, e.card.text),
-                h('span', { class: 'sort-log-typ' }, `${FAECHER[e.card.typ].kurz} · ${FAECHER[e.card.typ].name}`),
-                e.ok ? null : h('span', { class: 'sort-log-why muted' }, e.card.warum)))))),
+                h('span', { class: 'sort-log-text' }, e.text),
+                h('span', { class: 'sort-log-typ' }, `${FAECHER[e.typ].kurz} · ${FAECHER[e.typ].name}`),
+                e.ok ? null : h('span', { class: 'sort-log-why muted' }, e.warum)))))),
           h('div', { class: 'start-actions' },
             h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => play(all) }, 'Nochmal'),
             h('button', { type: 'button', class: 'btn', onclick: () => start() }, 'Zum Start'))));
+        el.querySelector('.btn-primary')?.focus({ preventScroll: true });
       }
 
       clear(el, h('div', { class: 'sort-play' },
         h('div', { class: 'arena-hud' },
           h('span', { class: 'stat' }, h('span', { class: 'stat-label' }, 'Karte'), progressEl),
           h('span', { class: 'stat' }, h('span', { class: 'stat-label' }, 'Richtig'), scoreEl),
-          h('button', { type: 'button', class: 'btn btn-ghost btn-small', onclick: () => { st.i = total; finish(); } }, 'Runde beenden')),
+          h('button', { type: 'button', class: 'btn btn-ghost btn-small', onclick: () => finish() }, 'Runde beenden')),
         h('div', { class: 'sort-layout' },
           h('div', { class: 'sort-main' },
             cardEl,
@@ -144,14 +179,8 @@ export default {
       showCard();
     }
 
-    function balancedDeck(rng) {
-      const by = (t) => rng.shuffle(SORTIERER_KARTEN.filter((c) => c.typ === t));
-      const pick = [...by(3).slice(0, 4), ...by(2).slice(0, 3), ...by(0).slice(0, 3)];
-      return rng.shuffle(pick);
-    }
-
     if (direct || alle) play(alle); else start();
-    return () => cleanupRound?.();
+    return () => { aktiv = false; cleanupRound?.(); };
   },
 };
 

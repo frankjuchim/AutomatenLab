@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD, turingC, turingP] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD, turingC, turingP, sortiererD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -58,7 +58,8 @@ async function ladeAufgaben(secret) {
     lade(path.join(INHALTE, 'rallye.js')),
     lade(path.join(INHALTE, 'grammatik.js')),
     lade(path.join(INHALTE, 'turing.js')),
-    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'turing.js'))
+    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'turing.js')),
+    lade(path.join(INHALTE, 'sortierer.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
   const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } = pruefer;
@@ -438,9 +439,9 @@ async function ladeAufgaben(secret) {
 
   const map = new Map(liste.map((a) => [a.id, a]));
 
-  // Training (src/training.js): Arena-Automaten (öffentlich) und Minimierer-Automaten für „Unterscheide!“
-  const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })) };
-  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
+  // Training (src/training.js): Arena-Automaten (öffentlich), Minimierer-Automaten für „Unterscheide!“, Sortierer-Karten
+  const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })), sortierer: sortiererD.SORTIERER_KARTEN };
+  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
 }
 
 module.exports = { ladeAufgaben, PUNKTE_STUFE };

@@ -145,19 +145,25 @@ findet er einen, schlägt die Prüfung fehl.
 * Teilmengen: `{ menge, ziele: { a: [...] } }` je Zeile; falsche Zeile = Fehlversuch (Rückmeldung: falsche Spalten und
   wohin die Figuren ohne ε-Abschluss ziehen). „Zeile aufdecken“ ist „Lösung zeigen“ (alle Zeilen und der DEA).
 
-### Training (`arena`, `unterscheide`)
+### Training (`arena`, `unterscheide`, `sortierer`)
 Wie der Trainingsplatz von Algo Quest (Umsetzung von `docs/VERBUND.md` §6): Spielrunden statt Aufgaben mit IDs.
 * `POST /api/training/<modul>/neu` erzeugt die Runde auf dem Server und speichert sie samt Lösungen (Tabelle
   `training`). Arena `{ stufe: 1–3, automat?, ueben? }` → 150 Items `{ automat, wort }`; Unterscheide `{ aufgabe? }`
-  (Minimierer-Schlüssel) → bis zu 8 Paare `{ aufgabe, p, q }`. Nur eine offene Runde je Modul.
+  (Minimierer-Schlüssel) → bis zu 8 Paare `{ aufgabe, p, q }`; Sortierer `{ alle? }` → 10 Karten (4 × Typ 3, 3 × Typ 2,
+  3 × Typ 0/1) bzw. alle Karten, je nur `{ text }`. Nur eine offene Runde je Modul.
 * Die App spielt die Runde (die Automaten sind sichtbar, die sofortige Rückmeldung kommt aus der Engine) und schickt
   am Ende alle Antworten: `POST /api/training/runde/:id/ende { antworten }` – Arena `[true|false, …]` in Reihenfolge,
   Unterscheide `[{ wort } | { aequivalent: true } | null, …]`. Der Server zählt (`app/js/engine/training.js`).
+* Sortierer: Fach und Begründung sind das Geheimnis (`inhalte/sortierer.js`). Jede Karte geht einzeln an den Server –
+  `POST /api/training/runde/:id/antwort { i, typ }` → `{ richtig, typ, warum }`; es zählt die **erste** Antwort je Karte
+  (eine zweite liefert dieselbe Rückmeldung mit `wiederholt: true`). `ende` zählt die gespeicherten Antworten.
 * Punkte: **1 je richtiger Antwort**, höchstens **30 je Kalendertag** (Europe/Berlin) über alle Trainings. Arena-Rekord
-  je Stufe (`best["arena:s"]` im Lernstand) nur für Zeitrunden einer Stufe, die spätestens 90 s nach dem Start enden.
+  je Stufe (`best["arena:s"]` im Lernstand) nur für Zeitrunden einer Stufe, die spätestens 90 s nach dem Start enden;
+  Sortierer-Rekord (`best["sortierer:runde"]`, richtige Karten) nur für Zehnerrunden.
 * Abzeichen: Arena wie bisher (erste Runde, Zehnerserie, 100 Punkte in einer Zeitrunde, 120 in Stufe 3),
-  „Unterscheider“ ab 10 richtig beurteilten Paaren.
-* Gäste spielen dieselben Runden lokal (`lokalesTraining()` in `app/js/core/aufgaben.js`), ohne Punkte.
+  „Unterscheider“ ab 10 richtig beurteilten Paaren, Sortierer „Kartograf“ (erste Runde) und „Chomsky-Kenner“ (10 von 10).
+* Gäste spielen dieselben Runden lokal (`lokalesTraining()` in `app/js/core/aufgaben.js`), ohne Punkte; den Sortierer
+  mit eigenen Demo-Karten (`DEMO_SORTIERER` in `app/js/data/demo.js`).
 
 ## 4. API (angemeldet; Schüler nur mit freigeschaltetem Kurs, Vertrag §4)
 
@@ -169,7 +175,8 @@ POST /api/aufgaben/:id/pruefen        { antwort } → { ok, fertig, rueckmeldung
 POST /api/aufgaben/:id/tipp           nächster Tipp
 POST /api/aufgaben/:id/aufdecken      „Lösung zeigen“ (0 Punkte; nicht beim Quiz)
 GET  /api/training                    Trainingspunkte heute und Tageshöchstwert
-POST /api/training/:modul/neu         neue Trainingsrunde (arena | unterscheide)
+POST /api/training/:modul/neu         neue Trainingsrunde (arena | unterscheide | sortierer)
+POST /api/training/runde/:id/antwort  Sortierer: { i, typ } → { richtig, typ, warum, wiederholt? }
 POST /api/training/runde/:id/ende     { antworten } → { richtig, score?, besteSerie?, punkteErhalten, rekord?, neueAbzeichen, heute }
 ```
 

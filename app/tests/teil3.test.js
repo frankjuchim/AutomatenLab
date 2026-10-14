@@ -10,7 +10,9 @@ import { tm, runTM, countOnes, tmToGraph } from '../js/engine/turing.js';
 import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../../inhalte/ueberliste.js';
 import { RALLYE_AUFGABEN } from '../../inhalte/rallye.js';
 import { GRAMMATIK_CHALLENGES } from '../../inhalte/grammatik.js';
-import { SORTIERER_KARTEN, FAECHER } from '../js/data/sortierer.js';
+import { FAECHER } from '../js/data/sortierer.js';
+import { SORTIERER_KARTEN } from '../../inhalte/sortierer.js';
+import { DEMO_SORTIERER } from '../js/data/demo.js';
 import { TURING_PROGRAMME } from '../js/data/turing.js';
 import { TURING_CHALLENGES } from '../../inhalte/turing.js';
 import { QUIZ_WELTEN, QUIZ_DS } from '../../inhalte/quiz.js';
@@ -104,10 +106,12 @@ test('Grammatik-Tester: Musterlösungen stimmen mit Prädikaten überein, Beispi
   assert.deepEqual(languageUpTo(parseGrammar('S → SS | ε'), 4).words, [[]]);
 });
 
-test('Sortierer: ≥ 24 Karten, alle Fächer vertreten, Begründungen vorhanden', () => {
+test('Sortierer: ≥ 24 Karten, alle Fächer vertreten, Begründungen vorhanden; Demo-Karten eigene', () => {
   assert.ok(SORTIERER_KARTEN.length >= 24);
   const ids = new Set();
-  for (const k of SORTIERER_KARTEN) {
+  const texte = new Set(SORTIERER_KARTEN.map((k) => k.text));
+  for (const k of DEMO_SORTIERER) assert.ok(!texte.has(k.text) && !SORTIERER_KARTEN.some((x) => x.id === k.id), `Demo-Karte ${k.id} stammt aus dem Kartensatz`);
+  for (const k of [...SORTIERER_KARTEN, ...DEMO_SORTIERER]) {
     assert.ok(!ids.has(k.id), `doppelte id ${k.id}`); ids.add(k.id);
     assert.ok(FAECHER[k.typ], `${k.id}: unbekannter Typ ${k.typ}`);
     assert.ok(k.warum && k.warum.length > 20, `${k.id}: Begründung fehlt`);

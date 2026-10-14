@@ -92,6 +92,30 @@ const MIGRATIONEN = [
     ended_at   TEXT
   );
   CREATE INDEX idx_training_sub ON training(sub, tag);
+  `,
+  `
+  -- Chomsky-Sortierer als Training (PR 5): Tabelle neu anlegen, weil CHECK sich in SQLite nicht ändern lässt
+  CREATE TABLE training_neu (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    sub        TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    modul      TEXT NOT NULL CHECK (modul IN ('arena', 'unterscheide', 'sortierer')),
+    art        TEXT NOT NULL DEFAULT '',      -- z. B. „stufe-2“, „stufe-1-ueben“, „automat-lol“, „aufgabe-smiley“, „runde“, „alle“
+    daten      TEXT NOT NULL,                 -- erzeugte Runde samt Lösungen (Sortierer: auch die Antworten je Karte)
+    status     TEXT NOT NULL DEFAULT 'offen' CHECK (status IN ('offen', 'fertig')),
+    richtig    INTEGER NOT NULL DEFAULT 0,
+    score      INTEGER NOT NULL DEFAULT 0,    -- Arena: Rundenpunkte, Sortierer: richtige Karten (Rekord), sonst 0
+    serie      INTEGER NOT NULL DEFAULT 0,    -- längste Serie richtiger Antworten
+    wertung    INTEGER NOT NULL DEFAULT 0,    -- 1 = zählt für Rekorde (Arena: rechtzeitige Zeitrunde; Sortierer: Zehnerrunde)
+    punkte     INTEGER NOT NULL DEFAULT 0,    -- vergebene Trainingspunkte
+    tag        TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    ended_at   TEXT
+  );
+  INSERT INTO training_neu (id, sub, modul, art, daten, status, richtig, score, serie, wertung, punkte, tag, created_at, ended_at)
+    SELECT id, sub, modul, art, daten, status, richtig, score, serie, wertung, punkte, tag, created_at, ended_at FROM training;
+  DROP TABLE training;
+  ALTER TABLE training_neu RENAME TO training;
+  CREATE INDEX idx_training_sub ON training(sub, tag);
   `
 ];
 

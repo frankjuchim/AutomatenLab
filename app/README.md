@@ -111,7 +111,7 @@ erwartete Zusammenfassung, `stufe`, `merke`, getestet in `tests/teil2.test.js`).
 * `ueberliste.js` (in `inhalte/`) – Stufen von „Überliste den Automaten“ (Sprache, Kapazität c, Bauplan `bau(c)`, Prädikat, Tipps).
 * `rallye.js` (in `inhalte/`) – Rallye-Aufgaben (Grammatiktext in Abi-Notation, Zielwort, `modus: 'baum'` für Mehrdeutigkeit).
 * `grammatik.js` (in `inhalte/`) – Grammatik-Challenges (Σ, Prädikat `pruefe`, `regulaer`, Musterlösung – im Test gegen das Prädikat geprüft). Geprüft wird die Sprache bis `maxLen`; auch Grammatiken mit vielen ε-Regeln werden vollständig ausgewertet (`tests/grammar-nullable.test.js`).
-* `sortierer.js` – Sprachkarten (`typ` 3/2/0 + Begründung); `turing.js` – TM-Programme (Übergang `[Folgezustand, geschrieben, L|R|N]`) und Tabellen-Challenges; `quiz.js` – Quizfragen (mc/wf/zuordnung, erste Option richtig).
+* `sortierer.js` – die drei Fächer; die Sprachkarten (`typ` 3/2/0 + Begründung) liegen in `inhalte/sortierer.js`, Gäste spielen `DEMO_SORTIERER` aus `demo.js`; `turing.js` – TM-Programme (Übergang `[Folgezustand, geschrieben, L|R|N]`), die Tabellen-Challenges liegen in `inhalte/turing.js`; `quiz.js` – Quizfragen (mc/wf/zuordnung, erste Option richtig).
 * `mealy.js` (in `inhalte/`) – Mealy-Automaten mit `beispiele`, `vorhersage`, Bug-Jagd-Fehlern `fehler: [{von, zeichen, ausgabe}]` und Prädikat `pruefe(w)` → Ausgabe; `parallelwelten.js` (in `inhalte/`) – NEAs (`raetsel`, `teilmengen`); `keller.js` (in `inhalte/`) – Kellerautomaten (Notation `'S0 -> S1 : (#, a) : A#'`, Prädikat, Wörter für Simulator/Tabelle/Rückwärts). Alle in `tests/teil2.test.js` gegen alle Wörter bis Länge 7–8 geprüft.
 * `badges.js` – Abzeichen; `worlds.js` – Welten und Level.
 

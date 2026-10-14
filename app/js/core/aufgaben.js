@@ -3,14 +3,15 @@
 //   liste(modul) · aufgabe(id) · pruefen(id, antwort) · tipp(id) · aufdecken(id)
 // • serverQuelle(): angemeldet – Lösungen bleiben auf dem Server, Punkte vergibt nur der Server.
 // • demoQuelle(): Gastmodus – eigene Demo-Aufgaben (app/js/data/demo.js), im Browser geprüft, ohne Punkte.
-// Training (Arena, „Unterscheide!“): quelle.training = { lokal, neu(modul, optionen), ende(id, antworten) } – auf dem
-// Server gezählt (1 Punkt je richtiger Antwort, Tageshöchstwert) bzw. mit lokalesTraining() im Browser ohne Punkte.
+// Training (Arena, „Unterscheide!“, Sortierer): quelle.training = { lokal, neu(modul, optionen), antwort(id, i, typ),
+// ende(id, antworten) } – auf dem Server gezählt (1 Punkt je richtiger Antwort, Tageshöchstwert) bzw. mit
+// lokalesTraining() im Browser ohne Punkte.
 
 import { api as apiRoh } from './api.js';
 import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
-import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
+import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde, erzeugeSortiererRunde, pruefeSortiererKarte, werteSortiererRunde } from '../engine/training.js';
 import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } from '../engine/pruefer.js';
 import { TURING_PROGRAMME } from '../data/turing.js';
 import { tm } from '../engine/turing.js';
@@ -47,6 +48,7 @@ export function serverQuelle() {
     training: {
       lokal: false,
       neu: (modul, optionen = {}) => api('POST', `/api/training/${encodeURIComponent(modul)}/neu`, optionen),
+      antwort: (id, i, typ) => api('POST', `/api/training/runde/${encodeURIComponent(id)}/antwort`, { i, typ }),
       ende: async (id, antworten) => nachTraining(await api('POST', `/api/training/runde/${encodeURIComponent(id)}/ende`, { antworten })),
     },
     liste: async (modul) => (await api('GET', `/api/katalog?modul=${encodeURIComponent(modul)}`)).aufgaben,
@@ -118,7 +120,8 @@ function vorbereiten(d) {
 
 /**
  * Training im Browser (Gastmodus, ohne Anmeldung): dieselben Runden und dieselbe Auswertung wie auf dem Server, aber
- * ohne Punkte und ohne Speicherung. daten = { arena: ARENA_AUTOMATEN } bzw. { minimierer: [{ id, automat }] }.
+ * ohne Punkte und ohne Speicherung. daten = { arena: ARENA_AUTOMATEN }, { minimierer: [{ id, automat }] } bzw.
+ * { sortierer: DEMO_SORTIERER } (eigene Demo-Karten, nicht die Karten des Servers).
  */
 export function lokalesTraining(daten) {
   const runden = new Map();
@@ -126,18 +129,32 @@ export function lokalesTraining(daten) {
   return {
     lokal: true,
     async neu(modul, o = {}) {
+      const id = naechste++;
+      if (modul === 'sortierer') {
+        const items = erzeugeSortiererRunde(daten.sortierer, { alle: o.alle === true });
+        runden.set(id, { modul, items, antworten: items.map(() => null) });
+        return { id, modul, art: o.alle === true ? 'alle' : 'runde', items: items.map((x) => ({ text: x.text })), heute: 0, maxProTag: 0 };
+      }
       const items = modul === 'arena'
         ? erzeugeArenaRunde(daten.arena, { stufe: o.stufe ?? 1, nurId: o.automat ?? null })
         : erzeugeUnterscheideRunde(daten.minimierer, { nurId: o.aufgabe ?? null });
-      const id = naechste++;
       runden.set(id, { modul, items });
       return { id, modul, items: items.map(({ akzeptiert, aequivalent, wort, ...rest }) => (modul === 'arena' ? { ...rest, wort } : rest)), heute: 0, maxProTag: 0 };
+    },
+    async antwort(id, i, typ) {
+      const r = runden.get(id);
+      if (!r) throw Object.assign(new Error('Diese Runde gibt es nicht (mehr).'), { status: 404 });
+      if (r.antworten[i] != null) return { ...pruefeSortiererKarte(r.items[i], r.antworten[i]), wiederholt: true };
+      const erg = pruefeSortiererKarte(r.items[i], typ);
+      r.antworten[i] = typ;
+      return erg;
     },
     async ende(id, antworten) {
       const r = runden.get(id);
       if (!r) throw Object.assign(new Error('Diese Runde gibt es nicht (mehr).'), { status: 404 });
       runden.delete(id);
-      const erg = r.modul === 'arena' ? werteArenaRunde(r.items, antworten) : werteUnterscheideRunde(daten.minimierer, r.items, antworten);
+      const erg = r.modul === 'arena' ? werteArenaRunde(r.items, antworten)
+        : r.modul === 'sortierer' ? werteSortiererRunde(r.items, r.antworten) : werteUnterscheideRunde(daten.minimierer, r.items, antworten);
       return { ...erg, punkteErhalten: 0, wertung: false, neueAbzeichen: [], heute: 0, maxProTag: 0 };
     },
   };

@@ -17,7 +17,7 @@ export const GAST = [
   { route: 'ueberliste', titel: 'Überliste den Automaten', text: 'Der Kontostand: Finde das Wort, bei dem der Automat irrt.', params: { demo: '1' } },
   { route: 'rallye', titel: 'Ableitungs-Rallye', text: 'Eine Binärzahl Schritt für Schritt ableiten.', params: { demo: '1' } },
   { route: 'grammatik', titel: 'Grammatik-Tester', text: 'Eine Demo-Challenge: rechtsreguläre Grammatik für „beginnt mit a“.', params: { demo: '1' } },
-  { route: 'sortierer', titel: 'Chomsky-Sortierer', text: 'Eine Runde mit zehn Karten.', params: { runde: '1' } },
+  { route: 'sortierer', titel: 'Chomsky-Sortierer', text: 'Eine Runde mit zehn Demo-Karten.', params: { runde: '1' } },
   { route: 'turing', titel: 'Turing-Labor', text: 'Die Turingmaschine „Binärzahl + 1“ – und eine Demo-Challenge (fehlende Regel).', params: {}, erlaubt: ['demo'] },
   { route: 'quiz', titel: 'Level-Quiz', text: 'Ein Demo-Quiz mit drei Fragen.', params: { demo: '1' } },
 ];

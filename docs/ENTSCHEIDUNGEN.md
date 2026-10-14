@@ -2,6 +2,24 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Welten B–D auf dem Server (PR 5)
+Überliste, Parallelwelten, Keller-Labor, Ableitungs-Rallye, Grammatik-Tester und Turing-Labor prüfen auf dem Server;
+ihre Daten liegen in `inhalte/`, die Prüflogik ohne Daten in `app/js/engine/pruefer.js`. Punkte nach Stufe (10/20/30)
+statt der bisherigen Einzelwerte (Rallye 10–25 → Stufen, kein Bonus mehr für die kürzeste Ableitung; Grammatik 30 →
+Standard, sonst Profi). Puzzle-artige Teile (Wo stehen die Figuren?, Überliste-Bonusfrage) werden wie ein Quiz nach dem
+ersten Versuch gewertet und haben kein „Lösung zeigen“. Bei Keller „Rückwärts“ zeigt der Server keine Beispielwörter,
+weil das gesuchte Wort darunter sein könnte. Grenzen wie bei Mealy, bewusst hingenommen: Die Turing-Programme bleiben im
+Simulator sichtbar (aus ihnen ließe sich die fehlende Regel ablesen), freie Modi bleiben im Browser ohne Punkte.
+Jedes Modul hat eine eigene Demo-Aufgabe für Gäste.
+
+**Chomsky-Sortierer als Training:** Anders als bei der Arena kommt die Begründung sofort nach jeder Karte – sie ist der
+Lerninhalt. Deshalb geht jede Karte einzeln an den Server (`/antwort`), gezählt wird die erste Antwort je Karte; Fach
+und Begründung erfährt die App erst danach. 1 Punkt je richtiger Karte im Rahmen des Tageshöchstwerts, Rekord nur für
+Zehnerrunden; „Alle Karten“ bringt Punkte, aber keinen Rekord (bisher 40 Punkte bei höchstens zwei Fehlern im Browser).
+Gäste spielen eine Zehnerrunde mit eigenen Demo-Karten. Die Tabelle `training` wird dafür in Migration 5 neu angelegt
+(SQLite kann einen CHECK nicht ändern). Verworfen: Antworten am Ende gesammelt wie in der Arena – dann bräuchte die App
+die Begründungen vorab, und damit die Lösungen.
+
 ## 2026-10-14 · Training: Arena und „Unterscheide!“ (PR 4c)
 Wie der Trainingsplatz von Algo Quest: Der Server erzeugt die Runde, die App spielt sie und schickt die Antworten am
 Ende gesammelt (keine Anfrage je Klick – die Arena ist ein Tempo-Spiel). 1 Punkt je richtiger Antwort, höchstens 30
