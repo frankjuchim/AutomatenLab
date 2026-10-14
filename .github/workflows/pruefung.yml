@@ -1,10 +1,13 @@
-# Prüfung bei jedem Push und Pull Request.
+# Prüfung bei jedem Pull Request und jedem Push auf main (Feature-Branches nur über den Pull Request – sonst liefe
+# jeder Push doppelt und verbrauchte die Actions-Minuten des privaten Repositorys zweimal).
+# Läuft GitHub Actions nicht: dieselben Schritte lokal mit `bash qa/pruefung_lokal.sh`.
 # Hinweis: Die Live-App baut CapRover direkt bei jedem Push auf main (Webhook) – diese Prüfung blockiert das nicht.
 # Deshalb auf Feature-Branches arbeiten und erst nach grüner Prüfung nach main übernehmen.
 name: Prüfung
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:

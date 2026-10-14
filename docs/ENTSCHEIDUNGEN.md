@@ -2,6 +2,25 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Lokale Prüfung statt GitHub Actions (Übergang)
+Seit dem 14.10. startet GitHub Actions für das private Repository keine Jobs mehr (vermutlich Minuten bzw. Ausgabenlimit).
+Frank: „Wir warten darauf nicht mehr.“ Freigabe zum Merge ist dann `bash qa/pruefung_lokal.sh` mit demselben Ablauf wie
+die CI (Tests, Image wie CapRover, Material-Rechte, Vertrag, alle Deep-Links angemeldet und als Gast) und „PRÜFUNG GRÜN“
+für genau den Commit, der gemergt wird; das Ergebnis steht im Merge-Commit. Damit künftig weniger Minuten anfallen,
+läuft die GitHub-Prüfung nur noch für Pull Requests und `main` (vorher zusätzlich bei jedem Push auf Feature-Branches,
+also doppelt). Hinter dem Proxy einer Cloud-Sitzung gibt das Skript dem Docker-Build Proxy und CA nur für diesen Lauf mit.
+
+## 2026-10-14 · Materialpaket als Release-Anhang, Erklärvideos nur verlinkt (Phase 6)
+**Materialpaket:** Ein Tag `v*` (z. B. `v1.13.0`) startet `.github/workflows/materialpaket.yml`: Alle Materialien werden
+aus den geprüften Daten neu gebaut (dabei prüft `build_all.sh` jeden Automaten und jede Grammatik), das
+Lehrkräfte-Paket und die PDFs der Plattform hängen als ZIP am Release. Das Repository ist privat, die Lösungen sind
+also nicht öffentlich. Die PDFs werden nicht im Workflow neu erzeugt (LibreOffice im Runner wäre langsam und
+schriftabhängig), sondern wie committet gepackt – `npm run materials:pdf` bleibt Teil jeder Material-Änderung.
+**Erklärvideos:** `app/js/data/videos.js` ordnet die Videos der Reihe (V1–V9, O1–O2) Modulen und Leveln zu; Knopf und
+Link erscheinen erst mit eingetragener Adresse. Nur verlinkt (neuer Tab), nie eingebettet – ein eingebettetes Video
+lüde Ressourcen eines fremden Dienstes (Regel 4). Offen: Wo die Videos liegen (eigener Server, Schulplattform oder ein
+Videodienst) entscheidet Frank; danach Adressen eintragen und Video-QR-Codes auf die Merkblätter.
+
 ## 2026-10-14 · Kurs-Einstellungen: Level-Art und Auftrag statt Sperren (PR 7)
 Algo Quest schaltet Welten je Kurs frei und sperrt den Rest. Im AutomatenLab stehen Aufgaben als QR-Codes auf
 gedruckten Blättern (Regel 1: jeder Deep-Link führt genau zur Aufgabe). Deshalb **sperrt die Kurs-Einstellung nichts**:
