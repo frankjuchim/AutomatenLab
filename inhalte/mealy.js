@@ -12,12 +12,16 @@
 //                        fehlerhafte Automat entsteht aus der Referenz, indem diese Ausgaben ersetzt werden
 //   fehlerText           Auftrag zur Bug-Jagd (was der Automat eigentlich tun soll)
 //   pruefe(w)            optional: Funktion Eingabewort (Array) → erwartete Ausgabe (String) – Test bis Länge ~8
+//   stufe                Bug-Jagd: 1 Basis, 2 Standard, 3 Profi (Punkte 10/20/30, Vertrag §9)
+//
+// Liegt in inhalte/ (nur Server, Vertrag InfoLabs §9): Die Bug-Jagd-Fehler sind die Lösung. Die Referenz selbst ist in
+// „Was kommt raus?“ ohnehin sichtbar (sie ist dort Gegenstand der Aufgabe).
 
 const D = (n) => String(n);
 
 export const MEALY_AUFGABEN = [
   {
-    id: 'suessigkeiten', titel: 'Süßigkeitenautomat',
+    id: 'suessigkeiten', stufe: 1, titel: 'Süßigkeitenautomat',
     kontext: 'Erst eine Münze einwerfen (M), dann den Hebel ziehen (H): Dann kommt ein Bonbon (B). Weitere Münzen werden ohne Wirkung geschluckt; Hebelziehen ohne Münze bewirkt nichts.',
     automat: { inputAlphabet: ['M', 'H'], outputAlphabet: ['B'], start: 'S0',
       delta: { S0: { M: ['S1', 'ε'], H: ['S0', 'ε'] }, S1: { M: ['S1', 'ε'], H: ['S0', 'B'] } } },
@@ -29,7 +33,7 @@ export const MEALY_AUFGABEN = [
     pruefe: (w) => { let m = false; let o = ''; for (const c of w) { if (c === 'M') m = true; else if (m) { o += 'B'; m = false; } } return o; },
   },
   {
-    id: 'kartoffel', titel: 'Kartoffelautomat (4 €)',
+    id: 'kartoffel', stufe: 1, titel: 'Kartoffelautomat (4 €)',
     kontext: 'Ein Sack Kartoffeln kostet 4 €. Der Automat nimmt 1-€- und 2-€-Münzen. Sobald 4 € erreicht sind, gibt er Kartoffeln (K) aus; bei 5 € zusätzlich 1 € Rückgeld (1).',
     automat: { inputAlphabet: ['1', '2'], outputAlphabet: ['1', 'K'], start: 'S0',
       delta: { S0: { 1: ['S1', 'ε'], 2: ['S2', 'ε'] }, S1: { 1: ['S2', 'ε'], 2: ['S3', 'ε'] },
@@ -42,7 +46,7 @@ export const MEALY_AUFGABEN = [
     pruefe: (w) => { let s = 0; let o = ''; for (const c of w) { s += Number(c); if (s >= 4) { o += s === 5 ? 'K1' : 'K'; s = 0; } } return o; },
   },
   {
-    id: 'addierer', titel: 'Ziffernaddierer',
+    id: 'addierer', stufe: 2, titel: 'Ziffernaddierer',
     kontext: 'Der Automat liest immer zwei Ziffern aus {0, 1, 2, 3} und gibt nach der zweiten Ziffer deren Summe aus. Beispiel: 13 liefert 4, 30 liefert 3.',
     automat: { inputAlphabet: ['0', '1', '2', '3'], outputAlphabet: ['0', '1', '2', '3', '4', '5', '6'], start: 'S0',
       delta: Object.fromEntries([
@@ -57,7 +61,7 @@ export const MEALY_AUFGABEN = [
     pruefe: (w) => { let o = ''; for (let i = 0; i + 1 < w.length; i += 2) o += String(Number(w[i]) + Number(w[i + 1])); return o; },
   },
   {
-    id: 'frog', titel: 'Lauflängen-Kompressor (Frog, angelehnt an Abitur 2022)',
+    id: 'frog', stufe: 3, titel: 'Lauflängen-Kompressor (Frog, angelehnt an Abitur 2022)',
     kontext: 'Ein Frosch hüpft (h) und dreht sich (d), # schließt die Befehlsfolge ab. Bis zu drei gleiche Befehle in Folge werden zusammengefasst: Aus hdddhhhhhdhh# wird 1h3d3h2h1d2h#. Die Zahl bezieht sich auf den folgenden Buchstaben.',
     automat: { inputAlphabet: ['h', 'd', '#'], outputAlphabet: ['1', '2', '3', 'h', 'd', '#'], start: 'S0',
       states: ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6'],
@@ -87,7 +91,7 @@ export const MEALY_AUFGABEN = [
     },
   },
   {
-    id: 'palindrom', titel: 'Palindrom-Generator (angelehnt an Abitur 2024 Nachtermin)',
+    id: 'palindrom', stufe: 3, titel: 'Palindrom-Generator (angelehnt an Abitur 2024 Nachtermin)',
     kontext: 'Der Automat liest jeweils 3 Bit und gibt ein 5-stelliges Palindrom aus: erst die drei Bits, dann die ersten beiden in umgekehrter Reihenfolge. Aus 011 wird 01110.',
     automat: { inputAlphabet: ['0', '1'], outputAlphabet: ['0', '1'], start: 'S0',
       delta: {
@@ -107,7 +111,7 @@ export const MEALY_AUFGABEN = [
     pruefe: (w) => { let o = ''; for (let i = 0; i < w.length; i++) { o += w[i]; if (i % 3 === 2) o += w[i - 1] + w[i - 2]; } return o; },
   },
   {
-    id: 'caesar', titel: 'Caesar-Verschiebung',
+    id: 'caesar', stufe: 1, titel: 'Caesar-Verschiebung',
     kontext: 'Jeder Buchstabe aus {A, B, C, D} wird um eine Stelle verschoben: A → B, B → C, C → D und D → A (das Alphabet ist ein Kreis).',
     automat: { inputAlphabet: ['A', 'B', 'C', 'D'], outputAlphabet: ['A', 'B', 'C', 'D'], start: 'S0',
       delta: { S0: { A: ['S0', 'B'], B: ['S0', 'C'], C: ['S0', 'D'], D: ['S0', 'A'] } } },
@@ -119,7 +123,7 @@ export const MEALY_AUFGABEN = [
     pruefe: (w) => w.map((c) => 'ABCD'['ABCD'.indexOf(c) + 1] ?? 'A').join(''),
   },
   {
-    id: 'vigenere', titel: 'Wechselnde Verschiebung (1, 2, 1, 2, …)',
+    id: 'vigenere', stufe: 2, titel: 'Wechselnde Verschiebung (1, 2, 1, 2, …)',
     kontext: 'Wie Caesar, aber die Verschiebung wechselt: Das 1., 3., 5. … Zeichen wird um 1 verschoben, das 2., 4., 6. … um 2. Dafür muss sich der Automat etwas merken.',
     automat: { inputAlphabet: ['A', 'B', 'C', 'D'], outputAlphabet: ['A', 'B', 'C', 'D'], start: 'S0',
       delta: { S0: { A: ['S1', 'B'], B: ['S1', 'C'], C: ['S1', 'D'], D: ['S1', 'A'] },

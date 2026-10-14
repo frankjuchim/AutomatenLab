@@ -41,17 +41,18 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, dfaM, pruefer, badgesM] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
     lade(path.join(INHALTE, 'minimierer.js')),
+    lade(path.join(INHALTE, 'mealy.js')),
     lade(path.join(ENGINE, 'dfa.js')),
     lade(path.join(ENGINE, 'pruefer.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -183,6 +184,59 @@ async function ladeAufgaben(secret) {
   minimierer.MINIMIERER_AUFGABEN.forEach((x, i) => {
     dfa(x.automat);
     liste.push({ id: `minimierer:${x.id}`, typ: MINIMIERER, modul: 'minimierer', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [5], daten: x, tipps: [] });
+  });
+
+  /* ---------- Mealy-Maschine: „Was kommt raus?“ (wie ein Quiz) und Bug-Jagd (Reparatur gegen die Referenz) ---------- */
+  const MEALY_V = {
+    modul: 'mealy',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, titel: x.titel, kontext: x.kontext, automat: x.automat, bedeutung: x.bedeutung ?? null, beispiele: x.beispiele, worte: x.vorhersage };
+    },
+    /** antwort: { wort: Index, ausgabe } – gewertet wird der erste Versuch je Wort. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeMealyVorhersage(a.daten.automat, a.daten.vorhersage, z.daten.stand, antwort);
+      return { ok: erg.richtig, fertig: z.offen && erg.fertig, zaehltFehler: false, anteil: z.offen && erg.fertig ? erg.anteil : undefined, daten: z.offen ? { stand: erg.stand } : undefined, rueckmeldung: erg.rueckmeldung };
+    },
+    loesungsteil(a, z) {
+      const st = z.daten.stand ?? {};
+      const summe = Object.values(st.antworten ?? {}).reduce((s, x) => s + x, 0);
+      return { ergebnis: { ersterVersuch: summe, von: a.daten.vorhersage.length } };
+    },
+    abzeichen({ anteil }) {
+      return anteil === 1 ? ['mealy-hellseher'] : [];
+    }
+  };
+  const MEALY_BUG = {
+    modul: 'mealy',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: a.fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele: a.okBeispiele, worte: x.vorhersage };
+    },
+    /** antwort: { test, urteil: 'bug' | 'stimmt' } (Schritt 1, ohne Wertung) oder { ausgaben: { S0: { M: 'B' } } } (Reparatur). */
+    pruefe(a, antwort, z) {
+      if (antwort && antwort.test !== undefined) {
+        const erg = pruefeMealyTest(a.daten.automat, a.fehlerhaft, antwort);
+        const gefunden = !!z.daten.gefunden || (erg.bug && antwort.urteil === 'bug');
+        return { ok: false, fertig: false, zaehltFehler: false, daten: { ...z.daten, gefunden }, rueckmeldung: { ...erg.rueckmeldung, gefunden } };
+      }
+      const erg = pruefeMealyReparatur(a.daten.automat, a.fehlerhaft, antwort && antwort.ausgaben);
+      return { ...erg, rueckmeldung: { ...erg.rueckmeldung, gefunden: !!z.daten.gefunden } };
+    },
+    loesungsteil(a) {
+      return mealyLoesung(a.daten.automat, a.daten.fehler);
+    },
+    abzeichen({ zeilen, katalog }) {
+      const geloest = new Set(zeilen.filter((r) => r.status === 'geloest' || r.nachgeloest).map((r) => r.aufgabe_id));
+      const bugs = katalog.filter((x) => x.typ === MEALY_BUG).map((x) => x.id);
+      return ['mealy-bugjaeger', ...(bugs.every((id) => geloest.has(id)) ? ['mealy-alle-bugs'] : [])];
+    }
+  };
+  mealyD.MEALY_AUFGABEN.forEach((x, i) => {
+    const fehlerhaft = mealyFehlerVariante(x.automat, x.fehler);
+    const okBeispiele = x.beispiele.filter(([ein]) => pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug === false).slice(0, 3);
+    liste.push({ id: `mealy:${x.id}:vorhersage`, typ: MEALY_V, modul: 'mealy', nr: i + 1, titel: `${x.titel}: Was kommt raus?`, stufe: 1, punkte: PUNKTE_STUFE[1], levels: [6], daten: x, tipps: [] });
+    liste.push({ id: `mealy:${x.id}`, typ: MEALY_BUG, modul: 'mealy', nr: i + 1, titel: `${x.titel}: Bug-Jagd`, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [6], daten: x, fehlerhaft, okBeispiele, tipps: [] });
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));

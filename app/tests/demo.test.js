@@ -4,11 +4,14 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung } from '../js/engine/pruefer.js';
+import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
-test('je Modul eine Demo-Aufgabe, IDs mit Präfix „demo:“', () => {
-  assert.deepEqual(DEMO.map((d) => d.modul).sort(), ['baukasten', 'detektiv', 'minimierer', 'quiz']);
+test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'quiz']);
+  assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
+  assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
 });
 
@@ -48,6 +51,29 @@ test('Demo-Minimierer: erwartete Klassen = Markierungsverfahren, Runden wie auf 
   const falsch = pruefeMinimiererRunde(x.automat, null, { runde: 0, markiert: ['S0|S2'] });
   assert.equal(falsch.zaehltFehler, true);
   assert.equal(falsch.ok, false);
+});
+
+test('Demo-Mealy: Beispiele und Prädikat passen, Vorhersage und Bug-Jagd wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.id === 'demo:mealy').daten;
+  const M = mealy(x.automat);
+  for (const [ein, aus] of x.beispiele) assert.equal(runMealy(M, ein).output || 'ε', aus, ein);
+  for (const w of enumerateWords(M.inputAlphabet, 8)) assert.equal(runMealy(M, w).output, x.pruefe(w), w.join(''));
+  // Vorhersage: erster Versuch zählt, nach zwei Versuchen kommt die Lösung
+  let r = pruefeMealyVorhersage(x.automat, x.vorhersage, null, { wort: 0, ausgabe: 'GGG' });
+  assert.equal(r.richtig, false); assert.equal(r.rueckmeldung.ausgabe, undefined);
+  r = pruefeMealyVorhersage(x.automat, x.vorhersage, r.stand, { wort: 0, ausgabe: 'U U U' });
+  assert.equal(r.rueckmeldung.ausgabe, 'GUG');
+  r = pruefeMealyVorhersage(x.automat, x.vorhersage, r.stand, { wort: 1, ausgabe: 'UGGU' });
+  r = pruefeMealyVorhersage(x.automat, x.vorhersage, r.stand, { wort: 2, ausgabe: runMealy(M, '100').output });
+  assert.equal(r.fertig, true); assert.equal(r.anteil, 2 / 3);
+  // Bug-Jagd: fehlerhafte Variante unterscheidet sich, Reparatur mit den Lösungs-Ausgaben ist richtig
+  const F = mealyFehlerVariante(x.automat, x.fehler);
+  assert.equal(pruefeMealyTest(x.automat, F, { test: '10', urteil: 'bug' }).bug, true);
+  assert.equal(pruefeMealyTest(x.automat, F, { test: '011', urteil: 'stimmt' }).rueckmeldung.urteilRichtig, true);
+  assert.equal(pruefeMealyReparatur(x.automat, F, {}).ok, false);
+  const fix = {}; for (const f of mealyLoesung(x.automat, x.fehler).fehler) (fix[f.von] ??= {})[f.zeichen] = f.richtig;
+  assert.equal(pruefeMealyReparatur(x.automat, F, fix).ok, true);
+  assert.equal(pruefeMealyTest(x.automat, F, { test: '10', urteil: 'bug', ausgaben: fix }).bug, false);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

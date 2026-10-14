@@ -8,7 +8,7 @@ import { api as apiRoh } from './api.js';
 import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung } from '../engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } from '../engine/pruefer.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -58,6 +58,14 @@ function vorbereiten(d) {
   } else if (d.modul === 'detektiv') {
     const f = d.daten;
     oeffentlich = { titel: f.titel, nr: 0, automat: f.automat, vorschlaege: f.vorschlaege ?? [], optionen: mische(f.optionen.map((o, j) => ({ id: idVon(0, j), text: o.text }))) };
+  } else if (d.modul === 'mealy') {
+    const x = d.daten;
+    if (d.art === 'vorhersage') oeffentlich = { id: x.id, nr: 0, titel: x.titel, kontext: x.kontext, automat: x.automat, bedeutung: x.bedeutung ?? null, beispiele: x.beispiele, worte: x.vorhersage };
+    else {
+      const fehlerhaft = mealyFehlerVariante(x.automat, x.fehler);
+      const beispiele = x.beispiele.filter(([ein]) => !pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug).slice(0, 3);
+      oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele, worte: x.vorhersage };
+    }
   } else if (d.modul === 'minimierer') {
     const x = d.daten;
     oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, frage: x.frage, automat: x.automat };
@@ -76,12 +84,15 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'minimierer' ? minimiererLoesung(s.d.daten.automat, s.d.daten.merke) : s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
+  const loesung = (s) => (s.d.modul === 'mealy' ? (s.d.art === 'vorhersage'
+    ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.vorhersage.length } }
+    : mealyLoesung(s.d.daten.automat, s.d.daten.fehler))
+    : s.d.modul === 'minimierer' ? minimiererLoesung(s.d.daten.automat, s.d.daten.merke) : s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
     : s.d.modul === 'baukasten' ? { musterloesung: s.d.daten.referenz }
       : { ergebnis: { prozent: Math.round((100 * Object.values(s.antworten).reduce((a, b) => a + b, 0)) / s.d.daten.fragen.length) } });
   return {
     demo: true,
-    liste: async (modul) => DEMO.filter((d) => d.modul === modul).map((d) => ({ id: d.id, modul, titel: d.titel, stufe: d.daten.stufe ?? 1, punkte: 0 })),
+    liste: async (modul) => DEMO.filter((d) => d.modul === modul).map((d) => ({ id: d.id, modul, titel: d.titel, stufe: d.daten.stufe ?? 1, punkte: 0, ...(d.art ? { art: d.art, schluessel: d.daten.id } : {}) })),
     aufgabe: async (id) => { const s = get(id); return { id, modul: s.d.modul, aufgabe: s.oeffentlich, zustand: zustand(s), ...(s.geloest || s.angesehen ? { loesung: loesung(s) } : {}) }; },
     async pruefen(id, antwort) {
       const s = get(id);
@@ -102,11 +113,24 @@ export function demoQuelle() {
       } else if (s.d.modul === 'minimierer') {
         erg = pruefeMinimiererRunde(s.d.daten.automat, s.stand, antwort);
         s.stand = erg.stand;
+      } else if (s.d.modul === 'mealy' && s.d.art === 'vorhersage') {
+        const r = pruefeMealyVorhersage(s.d.daten.automat, s.d.daten.vorhersage, s.stand, antwort);
+        s.stand = r.stand;
+        erg = { ok: r.richtig, fertig: !s.geloest && r.fertig, zaehltFehler: false, rueckmeldung: r.rueckmeldung };
+      } else if (s.d.modul === 'mealy') {
+        if (antwort?.test !== undefined) {
+          const r = pruefeMealyTest(s.d.daten.automat, s.oeffentlich.automat, antwort);
+          s.gefunden = s.gefunden || (r.bug && antwort.urteil === 'bug');
+          erg = { ok: false, fertig: false, zaehltFehler: false, rueckmeldung: { ...r.rueckmeldung, gefunden: !!s.gefunden } };
+        } else {
+          erg = pruefeMealyReparatur(s.d.daten.automat, s.oeffentlich.automat, antwort?.ausgaben);
+          erg.rueckmeldung.gefunden = !!s.gefunden;
+        }
       } else {
         erg = pruefeBaukasten(s.d.daten.referenz, antwort?.automat);
       }
-      if (s.d.modul !== 'quiz') { if (erg.ok) s.geloest = true; else if (!s.geloest && !s.angesehen && (erg.zaehltFehler ?? true)) s.fehlversuche++; }
       const fertig = erg.fertig ?? erg.ok;
+      if (s.d.modul !== 'quiz') { if (fertig) s.geloest = true; else if (!s.geloest && !s.angesehen && (erg.zaehltFehler ?? !erg.ok)) s.fehlversuche++; }
       return { ...erg, fertig, zustand: zustand(s), geloest: fertig, punkteErhalten: 0, neueAbzeichen: [], ...(fertig || s.angesehen ? { loesung: loesung(s) } : {}) };
     },
     async tipp(id) { const s = get(id); if (s.tippsGenutzt < s.tipps.length) s.tippsGenutzt++; return { zustand: zustand(s) }; },

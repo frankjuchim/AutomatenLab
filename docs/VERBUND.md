@@ -127,7 +127,7 @@ Freie Modi und Simulatoren (Baukasten frei, Grammatik frei, Turing-Programme, NE
 bringen keine Punkte und bleiben im Browser.
 
 **Stand:** Level-Quiz, Sprach-Detektiv und Automaten-Baukasten prüfen auf dem Server (PR 3), der Minimierer seit
-PR 4a (jede Runde des Markierungsverfahrens); Format, IDs, Punkte und API: `docs/AUFGABENFORMAT.md`. Die übrigen
+PR 4a (jede Runde des Markierungsverfahrens), die Mealy-Maschine seit PR 4b (Vorhersage, Bug-Jagd); Format, IDs, Punkte und API: `docs/AUFGABENFORMAT.md`. Die übrigen
 Module folgen in PR 4b/4c und 5.
 
 ## 7. Weitere Vertragspunkte

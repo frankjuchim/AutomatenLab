@@ -3,6 +3,8 @@
 
 import { dfa, runDFA, normalizeDFA, equivalent, minimizeDFA } from './dfa.js';
 import * as MK from './markierung.js';
+import { mealy, runMealy, mealyEquivalent } from './mealy.js';
+import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -118,4 +120,102 @@ export function minimiererLoesung(automat, merke) {
   }
   return { klassen: m.classes.filter((c) => c.length > 1), vorher: T.states.length, nachher: m.dfa.states.length, mitFehlerzustand: !!err,
     automat: M, markierung: Object.fromEntries(MK.loesung(T).marked), merke: merke ?? null };
+}
+
+/* ───────────── Mealy-Maschine ───────────── */
+
+const ungueltig400 = (t) => Object.assign(new Error(t), { status: 400 });
+
+/** Mealy-Automat (normalisiert) zurück ins Datenformat { delta: { S0: { M: ['S1', 'ε'] } } } – JSON-sicher. */
+export function mealySpec(M) {
+  const delta = {};
+  for (const s of M.states) { delta[s] = {}; for (const c of M.inputAlphabet) { const t = M.delta[s]?.[c]; if (t) delta[s][c] = [t.to, t.out === '' ? 'ε' : t.out]; } }
+  return { inputAlphabet: M.inputAlphabet, outputAlphabet: M.outputAlphabet, states: M.states, start: M.start, delta };
+}
+
+/** Bug-Jagd: fehlerhafte Variante der Referenz (Liste { von, zeichen, ausgabe }) im Datenformat. */
+export function mealyFehlerVariante(automat, fehler) {
+  const F = mealy(automat);
+  for (const f of fehler) F.delta[f.von][f.zeichen] = { ...F.delta[f.von][f.zeichen], out: f.ausgabe === 'ε' ? '' : f.ausgabe };
+  return mealySpec(F);
+}
+
+/** Ausgabe-Eingabe lesen: Leerzeichen egal, ε/leer = leere Ausgabe, sonst Wort über Ω. → { ok, text } | { ok: false, message } */
+export function leseMealyAusgabe(raw, outputAlphabet) {
+  const t = String(raw ?? '').replace(/\s+/g, '');
+  if (isEpsilon(t)) return { ok: true, text: '' };
+  const tk = tokenizeWort(t, outputAlphabet);
+  if (!tk.ok) return { ok: false, message: tk.message.replace('Eingabealphabet Σ', 'Ausgabealphabet Ω') };
+  return { ok: true, text: tk.tokens.join('') };
+}
+
+/**
+ * „Was kommt raus?“: Ausgabe zu Wort Nr. i vorhersagen. Gewertet wird der erste Versuch je Wort (wie beim Quiz);
+ * nach dem zweiten falschen Versuch erscheint die richtige Ausgabe. stand = { antworten: { i: 0|1 }, versuche: { i: n } }.
+ */
+export function pruefeMealyVorhersage(automat, worte, stand0, antwort) {
+  const i = Number.isInteger(antwort?.wort) ? antwort.wort : -1;
+  if (!worte[i] && worte[i] !== '') throw ungueltig400('Dieses Wort gibt es nicht.');
+  const M = mealy(automat);
+  const r = leseMealyAusgabe(antwort.ausgabe, M.outputAlphabet);
+  if (!r.ok) throw ungueltig400(r.message);
+  const soll = runMealy(M, worte[i]).output;
+  const richtig = r.text === soll;
+  const stand = { antworten: { ...(stand0?.antworten ?? {}) }, versuche: { ...(stand0?.versuche ?? {}) } };
+  const k = String(i);
+  if (!(k in stand.antworten)) stand.antworten[k] = richtig ? 1 : 0;
+  stand.versuche[k] = (stand.versuche[k] ?? 0) + 1;
+  const zeigen = richtig || stand.versuche[k] >= 2;
+  const fertig = Object.keys(stand.antworten).length === worte.length && worte.every((_, j) => stand.antworten[j] === 1 || (stand.versuche[j] ?? 0) >= 2);
+  const summe = Object.values(stand.antworten).reduce((a, b) => a + b, 0);
+  return { richtig, fertig, anteil: summe / worte.length, stand,
+    rueckmeldung: { wort: i, richtig, versuche: stand.versuche[k], ...(zeigen ? { ausgabe: soll } : {}), fertig, ersterVersuch: summe, von: worte.length } };
+}
+
+/** Bug-Jagd: Arbeitsstand = fehlerhafter Automat mit den (teilweise) reparierten Ausgaben { S0: { M: 'B' } }. */
+function mealyArbeit(fehlerhaft, outputAlphabet, ausgaben) {
+  const W = mealy(fehlerhaft);
+  if (ausgaben === undefined || ausgaben === null) return W;
+  if (typeof ausgaben !== 'object' || JSON.stringify(ausgaben).length > 20000) throw ungueltig400('Die Ausgaben fehlen.');
+  for (const s of W.states) for (const c of W.inputAlphabet) {
+    if (!W.delta[s][c]) continue;
+    const raw = ausgaben[s]?.[c];
+    if (raw === undefined) continue;
+    const r = leseMealyAusgabe(raw, outputAlphabet);
+    if (!r.ok) throw ungueltig400(`Ausgabe bei ${s} mit ${c}: ${r.message}`);
+    W.delta[s][c] = { ...W.delta[s][c], out: r.text };
+  }
+  return W;
+}
+
+/**
+ * Bug-Jagd Schritt 1: Eingabewort am Arbeitsstand testen und urteilen („bug“ oder „stimmt“). Ohne Wertung; die
+ * richtige Ausgabe kommt erst mit dem Urteil zurück. antwort = { test, urteil, ausgaben? }.
+ */
+export function pruefeMealyTest(referenz, fehlerhaft, antwort) {
+  const R = mealy(referenz);
+  if (typeof antwort?.test !== 'string' || antwort.test.length > 60) throw ungueltig400('Bitte gib ein Eingabewort ein.');
+  if (!['bug', 'stimmt'].includes(antwort.urteil)) throw ungueltig400('Bitte urteile: Bug oder richtig?');
+  const tk = tokenizeWort(antwort.test, R.inputAlphabet);
+  if (!tk.ok) throw ungueltig400(tk.message);
+  const W = mealyArbeit(fehlerhaft, R.outputAlphabet, antwort.ausgaben);
+  const ist = runMealy(W, tk.tokens).output; const soll = runMealy(R, tk.tokens).output;
+  const bug = ist !== soll;
+  return { bug, rueckmeldung: { test: tk.tokens, ausgabe: ist, richtigeAusgabe: soll, bug, urteilRichtig: bug === (antwort.urteil === 'bug') } };
+}
+
+/** Bug-Jagd Schritt 2: reparierte Ausgaben { S0: { M: 'B' } } gegen die Referenz (kürzestes Gegenbeispiel). */
+export function pruefeMealyReparatur(referenz, fehlerhaft, ausgaben) {
+  const R = mealy(referenz);
+  if (!ausgaben || typeof ausgaben !== 'object') throw ungueltig400('Die Ausgaben fehlen.');
+  const W = mealyArbeit(fehlerhaft, R.outputAlphabet, ausgaben);
+  const d = mealyEquivalent(W, R);
+  if (d.equivalent) return { ok: true, rueckmeldung: { richtig: true } };
+  return { ok: false, rueckmeldung: { richtig: false, gegenbeispiel: { wort: d.word, deine: d.outA, richtig: d.outB } } };
+}
+
+/** Bug-Jagd: Lösungsteil – die falschen Kanten mit richtiger Ausgabe. */
+export function mealyLoesung(referenz, fehler) {
+  const R = mealy(referenz);
+  return { fehler: fehler.map((f) => ({ von: f.von, zeichen: f.zeichen, falsch: f.ausgabe, richtig: R.delta[f.von][f.zeichen].out === '' ? 'ε' : R.delta[f.von][f.zeichen].out })) };
 }

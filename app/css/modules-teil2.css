@@ -107,6 +107,7 @@
 .me-edit { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; width: 6.5rem; min-height: 40px; padding: 0.2rem 0.5rem; border: 2px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink); }
 .me-edit:focus { border-color: var(--teal); outline: none; box-shadow: 0 0 0 3px var(--teal-soft); }
 .me-edit.is-changed { border-color: var(--ocker); background: var(--ocker-soft); }
+.me-edit.is-missing { outline: 3px dashed var(--ocker); outline-offset: 1px; }
 .me-edit[aria-invalid] { border-color: var(--reject); background: var(--reject-soft); }
 .me-table td { vertical-align: middle; }
 .me-sim-form { margin-top: 1rem; }

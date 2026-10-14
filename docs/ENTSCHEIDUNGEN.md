@@ -2,6 +2,14 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Mealy-Maschine auf dem Server (PR 4b)
+Zwei Aufgaben je Automat: „Was kommt raus?“ wird wie ein Exit-Ticket gewertet (erster Versuch je Wort, 10 Punkte ×
+Anteil), die Bug-Jagd nach Stufe (Süßigkeiten, Kartoffel, Caesar 10; Addierer, Wechselnde Verschiebung 20; Frog,
+Palindrom 30), falsche Reparaturen kosten Punkte. Das Finden des Bugs (Schritt 1) bringt keine eigenen Punkte mehr –
+es ist Teil der Bug-Jagd; die Rückmeldung „Tipp für die Klausur“ bleibt. Die Fehlerliste ist das Geheimnis und liegt
+in `inhalte/mealy.js`; die Referenz ist in der Vorhersage sichtbar (Gegenstand der Aufgabe) – bewusst hingenommen.
+Gäste bekommen den eigenen Demo-Automaten „Paritäts-Melder“ für alle drei Modi.
+
 ## 2026-10-14 · Minimierer auf dem Server (PR 4a)
 Jede Runde des Markierungsverfahrens prüft der Server; er hält den Stand (bestätigte Paare) und zählt jede falsch
 geprüfte Runde als Fehlversuch. Punkte nach Stufe statt pauschal 30: Smiley und „gerade Anzahl a“ Basis (10), fünf

@@ -36,6 +36,7 @@ findet er einen, schlägt die Prüfung fehl.
 | Automaten-Baukasten | 18 Challenges | Basis 1 / Standard 2 / Profi 3 → 10/20/30 | 20/30/40 |
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
+| Mealy-Maschine | 7 × „Was kommt raus?“ + 7 Bug-Jagden | Vorhersage 10 (Anteil im ersten Versuch); Bug-Jagd Basis/Standard/Profi → 10/20/30 | 10 je Wort, 10 gefunden, 30 repariert |
 | Minimierer | 7 Aufgaben (Markierungsverfahren) | Basis 1 (Smiley, gerade Anzahl a) / Standard 2 / Profi 3 (Prüfnummern) → 10/20/30 | 30 je Aufgabe, „Unterscheide!“ 5 je Paar |
 
 ## 3. Interaktionen
@@ -73,6 +74,20 @@ findet er einen, schlägt die Prüfung fehl.
   Automat, Merksatz. „Lösung zeigen“ wie bei allen Aufgaben.
 * „Unterscheide!“ ist Übung ohne Punkte (Paare und unterscheidende Wörter folgen aus dem sichtbaren Automaten). Das
   Abzeichen „Unterscheider“ kommt mit dem Training (Roadmap PR 4c).
+
+### Mealy-Maschine (`mealy`)
+* Je Automat zwei Aufgaben: `mealy:<schlüssel>:vorhersage` („Was kommt raus?“) und `mealy:<schlüssel>` (Bug-Jagd).
+  Deep-Links unverändert `#/mealy?aufgabe=n&modus=vorhersage|bugjagd|frei`. Der Katalog nennt `art` und `schluessel`.
+* Vorhersage – öffentlich: Referenzautomat (Gegenstand der Aufgabe), Bedeutungen, Beispiele, Eingabewörter.
+  Antwort `{ wort: Index, ausgabe }`; gewertet wird wie beim Quiz der erste Versuch je Wort (keine Fehlversuche,
+  Punkte = Anteil × 10), die richtige Ausgabe kommt nach dem richtigen oder dem zweiten falschen Versuch.
+  Kein „Lösung zeigen“.
+* Bug-Jagd – öffentlich: der **fehlerhafte** Automat, Auftrag, Beispiele, die schon stimmen. Schritt 1
+  `{ test, urteil: 'bug'|'stimmt', ausgaben? }` prüft ein Wort am (teilweise reparierten) Arbeitsstand – ohne Wertung,
+  die richtige Ausgabe erst mit dem Urteil. Schritt 2 `{ ausgaben: { S0: { M: 'B' } } }` vergleicht mit der Referenz
+  (kürzestes Gegenbeispiel), falsch = Fehlversuch. Lösungsteil: die falschen Kanten mit richtiger Ausgabe.
+* Grenze: Die Referenz steht in „Was kommt raus?“ und in der freien Simulation – wer vergleicht, findet die Bugs
+  schneller. Das ist didaktisch in Ordnung (Vergleichen ist eine Strategie) und lässt sich nicht verbergen.
 
 ## 4. API (angemeldet; Schüler nur mit freigeschaltetem Kurs, Vertrag §4)
 

@@ -39,7 +39,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ PR 3 – Grundlage: Aufgabenkatalog mit stabilen IDs, `inhalte/` (Lösungen, nicht ausgeliefert), Lernstand-Tabellen, Punkteformel §9, API Aufgabe/Prüfen/Tipp/Lösung zeigen, `progress.js`-Adapter für Angemeldete; Gastmodus `#/gast` mit Demo-Aufgaben und Login-Hinweis für alle übrigen Routen; erste Module: Level-Quiz, Sprach-Detektiv, Automaten-Baukasten; `docs/AUFGABENFORMAT.md`; QA angemeldet und als Gast
 - [ ] PR 4 – Welt A:
   - ✅ PR 4a – Minimierer: jede Runde des Markierungsverfahrens auf dem Server, Stufen 10/20/30, Demo-Aufgabe; „Unterscheide!“ vorerst Übung ohne Punkte
-  - [ ] PR 4b – Mealy-Maschine (Vorhersage, Bug-Jagd)
+  - ✅ PR 4b – Mealy-Maschine: „Was kommt raus?“ wie ein Quiz, Bug-Jagd mit Test ohne Wertung und Reparatur auf dem Server, Demo-Automat
   - [ ] PR 4c – Training wie der Algo-Quest-Trainingsplatz: Akzeptor-Arena und „Unterscheide!“ (1 Punkt je Aufgabe, Tageshöchstwert), Abzeichen serverseitig
 - [ ] PR 5 – Welten B–D: Parallelwelten, Keller-Labor, Überliste, Ableitungs-Rallye, Grammatik-Tester, Turing-Labor, Chomsky-Sortierer (Training); Test „keine Lösung in ausgelieferten Dateien“; Abzeichen serverseitig
 

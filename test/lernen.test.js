@@ -153,6 +153,53 @@ test('Minimierer: Runden auf dem Server, falsche Runde = Fehlversuch, Stand-Fehl
   assert.ok((await s.get('/api/lernstand')).body.solved[id]);
 });
 
+test('Mealy: Vorhersage wie ein Quiz (erster Versuch zählt), Bug-Jagd mit Test ohne Wertung und Reparatur', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=mealy')).body.aufgaben;
+  assert.equal(k.length, 14);
+  const v = k.find((a) => a.id === 'mealy:suessigkeiten:vorhersage');
+  assert.deepEqual([v.art, v.schluessel, v.punkte], ['vorhersage', 'suessigkeiten:vorhersage', 10]);
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // Vorhersage: Süßigkeitenautomat, Wörter MH, HMHH, MHMHM, MMHH → B, B, BB, B
+  const va = (await s.get('/api/aufgaben/mealy:suessigkeiten:vorhersage')).body.aufgabe;
+  assert.deepEqual(va.worte, ['MH', 'HMHH', 'MHMHM', 'MMHH']);
+  let r = (await pr(v.id, { wort: 0, ausgabe: 'ε' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.rueckmeldung.ausgabe, undefined, 'Lösung erst nach dem zweiten Versuch');
+  assert.equal(r.zustand.fehlversuche, 0, 'Vorhersage zählt keine Fehlversuche');
+  r = (await pr(v.id, { wort: 0, ausgabe: 'B' })).body;
+  assert.equal(r.rueckmeldung.richtig, true);
+  for (const [i, aus] of [[1, 'B'], [2, 'BB']]) assert.equal((await pr(v.id, { wort: i, ausgabe: aus })).body.rueckmeldung.richtig, true);
+  r = (await pr(v.id, { wort: 3, ausgabe: 'B' })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, Math.round(10 * 3 / 4));
+  assert.deepEqual(r.loesung.ergebnis, { ersterVersuch: 3, von: 4 });
+  assert.equal((await post(s, `/api/aufgaben/${v.id}/aufdecken`)).status, 400);
+  assert.equal((await pr(v.id, { wort: 9, ausgabe: 'B' })).status, 400);
+  assert.equal((await pr(v.id, { wort: 0, ausgabe: 'X' })).status, 400);
+  // Bug-Jagd: öffentlich nur der fehlerhafte Automat (S0 –H / B→), keine Fehlerliste
+  const id = 'mealy:suessigkeiten';
+  const b = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.deepEqual(b.aufgabe.automat.delta.S0.H, ['S0', 'B']);
+  assert.doesNotMatch(JSON.stringify(b.aufgabe), /fehler"|"ausgabe"/);
+  r = (await pr(id, { test: 'HH', urteil: 'bug' })).body;
+  assert.equal(r.rueckmeldung.bug, true); assert.equal(r.rueckmeldung.richtigeAusgabe, '');
+  assert.equal(r.zustand.fehlversuche, 0, 'Testen kostet nichts');
+  r = (await pr(id, { ausgaben: {} })).body;
+  assert.equal(r.ok, false); assert.deepEqual(r.rueckmeldung.gegenbeispiel.wort, ['H']);
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr(id, { ausgaben: { S0: { H: 'ε' } } })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 1, 0));
+  assert.deepEqual(r.loesung.fehler, [{ von: 'S0', zeichen: 'H', falsch: 'B', richtig: 'ε' }]);
+  assert.ok(r.neueAbzeichen.some((x) => x.id === 'mealy-bugjaeger'));
+  assert.equal(r.rueckmeldung.gefunden, true);
+  assert.equal((await pr(id, { ausgaben: { S0: { H: 'Q' } } })).status, 400);
+  const ls = (await s.get('/api/lernstand')).body;
+  assert.ok(ls.solved[id] && ls.solved[v.id]);
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

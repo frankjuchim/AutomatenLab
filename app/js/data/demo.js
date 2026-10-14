@@ -4,7 +4,7 @@
 // Notation nach docs/einheit/PLAN.md Abschnitt 1. Tests: app/tests/demo.test.js (gegen die Engine).
 //
 // Format wie in inhalte/: modul, id (Präfix „demo:“), titel, daten (Quiz: fragen; Detektiv: Fall; Baukasten: Challenge;
-// Minimierer: Aufgabe mit Automat).
+// Minimierer: Aufgabe mit Automat; Mealy: Automat mit vorhersage und fehler, art = vorhersage | bugjagd).
 
 const count = (w, s) => w.filter((x) => x === s).length;
 
@@ -66,3 +66,21 @@ export const DEMO = [
     },
   },
 ];
+
+// Mealy-Demo: ein Automat für beide Modi („Was kommt raus?“ und Bug-Jagd)
+const PARITAET = {
+  id: 'demo-paritaet', stufe: 1, titel: 'Paritäts-Melder',
+  kontext: 'Nach jedem gelesenen Bit meldet der Automat, ob er bisher eine gerade (G) oder ungerade (U) Anzahl Einsen gelesen hat.',
+  automat: { inputAlphabet: ['0', '1'], outputAlphabet: ['G', 'U'], start: 'S0',
+    delta: { S0: { 0: ['S0', 'G'], 1: ['S1', 'U'] }, S1: { 0: ['S1', 'U'], 1: ['S0', 'G'] } } },
+  bedeutung: { S0: 'bisher gerade Anzahl Einsen', S1: 'bisher ungerade Anzahl Einsen' },
+  beispiele: [['011', 'GUG'], ['1101', 'UGGU'], ['000', 'GGG'], ['10', 'UU'], ['', 'ε']],
+  vorhersage: ['011', '1101', '100'],
+  fehler: [{ von: 'S1', zeichen: '0', ausgabe: 'G' }],
+  fehlerText: 'Der Automat soll nach jedem Bit melden, ob bisher gerade (G) oder ungerade (U) viele Einsen gelesen wurden. Bei manchen Eingaben meldet er das Falsche.',
+  pruefe: (w) => { let n = 0; return w.map((c) => { if (c === '1') n++; return n % 2 ? 'U' : 'G'; }).join(''); },
+};
+DEMO.push(
+  { modul: 'mealy', art: 'vorhersage', id: 'demo:mealy:vorhersage', titel: 'Demo: Paritäts-Melder – Was kommt raus?', daten: PARITAET },
+  { modul: 'mealy', art: 'bugjagd', id: 'demo:mealy', titel: 'Demo: Paritäts-Melder – Bug-Jagd', daten: PARITAET },
+);
