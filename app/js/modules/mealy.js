@@ -179,6 +179,8 @@ export default {
       const work = clone(F);
       let zustand = x.zustand;
       let loesung = x.loesung;
+      // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
+      if (q.vorschau && loesung) setTimeout(() => { if (aktiv) aufdecken(); }, 0);
       let renderTimer = null;
       let checks = 0;
 

@@ -59,6 +59,28 @@ export function serverQuelle() {
   };
 }
 
+/**
+ * Vorschau für Lehrkräfte (#/<modul>?…&vorschau=1): dieselben Aufgaben und Prüfungen wie angemeldet, aber nichts wird
+ * gespeichert – den Stand je Aufgabe hält diese Quelle im Arbeitsspeicher, der Server rechnet nur
+ * (POST /api/lehrer/vorschau/:id/:aktion). mitLoesung: Aufgabe startet im Zustand „angesehen“ (Lösung eingesetzt, wie
+ * die Aufgaben-Vorschau von Algo Quest); vorschau=ohne startet offen zum Ausprobieren. Keine Punkte, kein Lernstand.
+ */
+export function vorschauQuelle({ mitLoesung = true } = {}) {
+  const staende = new Map();
+  const merke = (id, r) => { if (r?.stand) staende.set(id, r.stand); return r; };
+  const aktion = async (id, was, extra = {}) => merke(id, await api('POST', `/api/lehrer/vorschau/${encodeURIComponent(id)}/${was}`, { stand: staende.get(id) ?? null, ...extra }));
+  return {
+    demo: false,
+    vorschau: true,
+    training: null, // Trainingsmodule laufen in der Vorschau lokal (lokalesTraining)
+    liste: async (modul) => (await api('GET', `/api/katalog?modul=${encodeURIComponent(modul)}`)).aufgaben,
+    aufgabe: (id) => { if (mitLoesung && !staende.has(id)) staende.set(id, { status: 'angesehen' }); return aktion(id, 'abrufen'); },
+    pruefen: (id, antwort) => aktion(id, 'pruefen', { antwort }),
+    tipp: (id) => aktion(id, 'tipp'),
+    aufdecken: (id) => aktion(id, 'aufdecken'),
+  };
+}
+
 /* ───────────── Gastmodus: Demo-Aufgaben im Browser ───────────── */
 
 const zufallsId = () => Math.random().toString(36).slice(2, 10);

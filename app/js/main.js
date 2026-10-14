@@ -8,7 +8,7 @@ import { MODULES, findModule } from './modules/manifest.js';
 import { LEVELS } from './data/worlds.js';
 import { toast } from './components/toast.js';
 import { sitzung, anmeldeLink, istLehrkraft } from './core/sitzung.js';
-import { serverQuelle, demoQuelle } from './core/aufgaben.js';
+import { serverQuelle, demoQuelle, vorschauQuelle } from './core/aufgaben.js';
 import { api } from './core/api.js';
 import { gastErlaubt } from './data/gast.js';
 
@@ -127,12 +127,19 @@ async function route() {
     return;
   }
   if (seq !== navSeq) return;
-  const body = meta ? modulePage(meta) : main;
+  // Vorschau für Lehrkräfte (?vorschau=1 mit eingesetzter Lösung, ?vorschau=ohne zum Ausprobieren): nichts wird
+  // gespeichert; Links innerhalb des Moduls behalten den Parameter
+  const vorschauArt = ['1', 'ohne'].includes(params.get('vorschau')) && istLehrkraft(sess.konto) && meta ? params.get('vorschau') : null;
+  const vorschau = !!vorschauArt;
+  const body = meta ? modulePage(meta, { vorschauArt, params }) : main;
+  const mitVorschau = (route, p = {}) => (vorschau && route === r ? { ...p, vorschau: vorschauArt } : p);
   const ctx = {
     route: r, params, meta,
-    navigate, link, toast, progress,
-    /** Aufgaben und Prüfung: Server (angemeldet) oder Demo-Aufgaben im Browser (?demo=1, Gastmodus). */
-    quelle: params.get('demo') === '1' ? demoQuelle() : serverQuelle(),
+    navigate: (route, p, o) => navigate(route, mitVorschau(route, p), o),
+    link: (route, p) => link(route, mitVorschau(route, p)),
+    toast, progress,
+    /** Aufgaben und Prüfung: Server (angemeldet), Demo-Aufgaben im Browser (?demo=1, Gastmodus) oder Vorschau (?vorschau=1, Lehrkräfte). */
+    quelle: params.get('demo') === '1' ? demoQuelle() : vorschau ? vorschauQuelle({ mitLoesung: vorschauArt === '1' }) : serverQuelle(),
     /** Untertitel unter der Modulüberschrift setzen (z. B. Challenge-Name). */
     setSubtitle: (t) => { const s = main.querySelector('.module-subtitle'); if (s) s.textContent = t ?? ''; },
   };
@@ -160,7 +167,8 @@ function levelChips(levels) {
     levels.map((n) => h('li', null, h('span', { class: 'level-chip', title: LEVELS[n] }, `Level ${n}`))));
 }
 
-function modulePage(meta) {
+function modulePage(meta, { vorschauArt = null, params = null } = {}) {
+  const umschalten = () => { const p = new URLSearchParams(params); p.set('vorschau', vorschauArt === '1' ? 'ohne' : '1'); return `#/${meta.route}?${p}`; };
   const body = h('div', { class: 'module-body' });
   main.append(h('section', { class: ['module-page', `module-${meta.route}`] },
     h('div', { class: 'module-head' },
@@ -169,6 +177,10 @@ function modulePage(meta) {
         h('h1', { class: 'module-title' }, meta.title),
         meta.levels.length ? levelChips(meta.levels) : null),
       h('p', { class: 'module-subtitle' })),
+    vorschauArt ? h('p', { class: 'notice vorschau-hinweis' }, h('strong', null, 'Vorschau für Lehrkräfte: '),
+      vorschauArt === '1' ? 'Lösung eingesetzt – Ausprobieren geht trotzdem. ' : 'Ohne Lösung – so beginnen Ihre Schülerinnen und Schüler. ',
+      'Nichts wird gespeichert. ', h('a', { href: umschalten() }, vorschauArt === '1' ? 'Ohne Lösung ausprobieren' : 'Mit Lösung ansehen'),
+      ' · ', h('a', { href: '#/lehrkraft?teil=aufgaben' }, 'Zurück zu den Aufgaben')) : null,
     body));
   return body;
 }

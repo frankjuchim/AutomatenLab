@@ -2,6 +2,20 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Aufgaben-Vorschau und häufige falsche Antworten (PR 6b)
+**Vorschau:** Algo Quest zeigt Lehrkräften jede Aufgabe mit eingesetzter Lösung. AutomatenLab hat zwölf sehr
+verschiedene Module; eine eigene Vorschau-Darstellung je Modul wäre doppelte Arbeit. Stattdessen öffnet die Vorschau
+das echte Modul (`&vorschau=1`) mit einer eigenen Quelle (`vorschauQuelle`): Der Server rechnet wie sonst, speichert
+aber nichts – den Stand hält der Browser. Die Aufgabe startet im Zustand „angesehen“, die Module setzen die Lösung ein
+(Quiz-artige Aufgaben ohne „Lösung zeigen“ starten offen, dort kommt die Lösung mit jeder Antwort). `&vorschau=ohne`
+zeigt die Aufgabe so, wie Schüler beginnen. Verworfen: Lehrkräfte probieren mit ihrem eigenen Lernstand (dann wäre
+„Lösung zeigen“ endgültig und Tipps verbraucht).
+**Falsche Antworten:** Wie Algo Quest zeigt die Aufgabenstatistik die drei häufigsten falschen Antworten – aber nur
+dort, wo eine Kurzform aussagekräftig ist und keinen Freitext enthält: gewählte Quiz-Option bzw. wahr/falsch mit
+Begründung, gewählte Detektiv-Beschreibung, eingegebene Turing-Regel, Mealy-Ausgabe (nur Zeichen aus Ω). Automaten,
+Tabellen und Grammatiken lassen sich nicht sinnvoll auszählen. Tabelle `falsche_antworten` (Migration 6), gelöscht mit
+dem Konto; Datenschutzhinweise ergänzt. **Fallen-Profil** (P1–P10) folgt nach Freigabe von `docs/einheit/FALLEN.md`.
+
 ## 2026-10-14 · Lehrkraft-Bereich im Aufbau wie Algo Quest (PR 6)
 Wunsch von Frank: Lehrkräfte sollen sich in allen Labs gleich zurechtfinden. Übernommen wird der Aufbau des
 Lehrkraft-Bereichs von Algo Quest (`public/static/js/lehrer.js`), nicht das Design: Navigation 📚 Kurse · 📖 Aufgaben ·

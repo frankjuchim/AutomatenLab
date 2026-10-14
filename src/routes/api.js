@@ -95,6 +95,12 @@ function apiRoutes(app, h) {
 
   api.get('/lernstand', darfUeben, (req, res) => res.json(svc.lernen.lernstand(req.konto.sub)));
   api.get('/aufgaben/:id', darfUeben, (req, res) => res.json(svc.lernen.abrufen(req.konto.sub, req.params.id)));
+  // Aufgaben-Vorschau: prüfen, Tipps, Lösung – ohne Speichern (Stand kommt vom Browser, src/lernen.js vorschau)
+  api.post('/lehrer/vorschau/:id/:aktion', nurLehrkraft, begrenzt, (req, res) => {
+    const aktion = String(req.params.aktion);
+    if (!['abrufen', 'pruefen', 'tipp', 'aufdecken'].includes(aktion)) return res.status(404).json({ error: 'Diese Vorschau-Aktion gibt es nicht.' });
+    res.json(svc.lernen.vorschau(req.params.id, aktion, req.body || {}));
+  });
   api.post('/aufgaben/:id/pruefen', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.pruefen(req.konto.sub, req.params.id, (req.body || {}).antwort)));
   api.post('/aufgaben/:id/tipp', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.tipp(req.konto.sub, req.params.id)));
   api.post('/aufgaben/:id/aufdecken', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.aufdecken(req.konto.sub, req.params.id)));

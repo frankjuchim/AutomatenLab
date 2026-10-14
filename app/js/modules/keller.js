@@ -377,6 +377,8 @@ export default {
       const seq = x.folge;
       let zustand = x.zustand;
       let loesung = x.loesung;
+      // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
+      if (q.vorschau && loesung) setTimeout(() => { if (aktiv) aufdecken(); }, 0);
       // Mehrdeutig? (verschiedene Eingabezeichen führen zur selben nächsten Konfiguration)
       const ambiguous = seq.slice(0, -1).some((c, i) => {
         const inputs = new Set(P.transitions.filter((t) => t.from === c.state && t.top === c.stack[0] && t.to === seq[i + 1].state
