@@ -55,6 +55,28 @@ test('Lehrkraft: Sitzung höchstens 8 Stunden; Superadmin mit allen Kursen als L
   assert.equal((await a.get('/api/lehrer/kurse')).body.length, 2);
 });
 
+test('Ziel passt zur Rolle: Lehrkraft von der Startseite in den Lehrkraft-Bereich, Schüler nie dorthin, Deep-Links bleiben', async () => {
+  const app = await H.verbundApp();
+  const lk = { sub: 'l:5', rolle: 'lehrkraft', name: 'Frau Beispiel', kurse: [{ id: 'k:17', name: 'LK', rolle: 'lehrkraft' }] };
+  const admin = { sub: 'a:1', rolle: 'superadmin', name: 'Admin', kurse: [] };
+  const faelle = [
+    [lk, '/', '/#/lehrkraft'],
+    [admin, '/', '/#/lehrkraft'],
+    [lk, '/#/baukasten?level=3', '/#/baukasten?level=3'],
+    [lk, '/#/lehrkraft?kurs=k%3A17', '/#/lehrkraft?kurs=k%3A17'],
+    [{}, '/', '/'],
+    [{}, '/#/lehrkraft', '/'],
+    [{}, '/lehrer', '/'],
+    [{}, '/#/arena?stufe=2', '/#/arena?stufe=2']
+  ];
+  for (const [inhalt, ziel, erwartet] of faelle) {
+    const { agent, state } = await H.ssoStart(app);
+    const r = await agent.get('/sso/ende').query({ token: H.ssoToken(app.now, inhalt), state, ziel });
+    assert.equal(r.status, 302, ziel);
+    assert.equal(r.headers.location, erwartet, `${inhalt.rolle ?? 'schueler'} ${ziel}`);
+  }
+});
+
 test('Ablehnung mit 401: falsche Signatur, falsches aud, abgelaufen, exp − iat > 120 s, falsches iss, wiederverwendet, falsches v', async () => {
   const app = await H.verbundApp();
   const jetzt = Math.floor(app.now() / 1000);

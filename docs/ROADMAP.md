@@ -33,7 +33,8 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ Verbund-API §6: `loeschen` (idempotent), Kursübersicht (Kennzahlen noch 0 bis Phase 4), Kursänderung
 - ✅ Alle Testfälle aus `INTEGRATION.md` §5, Rechte-Matrix je Route × Rolle, CSRF
 - ✅ Kopfzeile: „Anmelden“ bzw. Name + Menü, Link „⌂ Portal“; Lehrkraft-Bereich mit Kursliste; Manifest `auth.modus: "portal"`, `sso: true`
-- [ ] Inbetriebnahme im Portal (`docs/VERBUND.md` §5) – nach dem Deploy durch den Superadmin (Hotfix 1.2.1: Schlüssel tolerant einlesen, Grund in `/healthz`)
+- ✅ Inbetriebnahme im Portal (`docs/VERBUND.md` §5): AutomatenLab steht im Portal ohne „vorläufig“, Anmeldung über das Portal läuft live
+- ✅ Ziel nach der Anmeldung passt zur Rolle (1.17.1, wie Algo Quest 2.8.3): Lehrkräfte von der Startseite in den Lehrkraft-Bereich, Schüler nie dorthin; Startseite mit „Zum Lehrkraft-Bereich“
 
 ## Phase 4 – Prüfung und Lernstand auf dem Server (V1) und Gastmodus (V2)
 - ✅ PR 3 – Grundlage: Aufgabenkatalog mit stabilen IDs, `inhalte/` (Lösungen, nicht ausgeliefert), Lernstand-Tabellen, Punkteformel §9, API Aufgabe/Prüfen/Tipp/Lösung zeigen, `progress.js`-Adapter für Angemeldete; Gastmodus `#/gast` mit Demo-Aufgaben und Login-Hinweis für alle übrigen Routen; erste Module: Level-Quiz, Sprach-Detektiv, Automaten-Baukasten; `docs/AUFGABENFORMAT.md`; QA angemeldet und als Gast

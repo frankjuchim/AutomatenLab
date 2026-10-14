@@ -17,6 +17,14 @@ function sicheresZiel(z) {
   return typeof z === 'string' && z.length <= 2000 && /^\/(?![/\\])/.test(z) && !/[\r\n]/.test(z) ? z : '/';
 }
 
+/** Ziel passend zur Rolle (wie Algo Quest 2.8.3): Lehrkräfte und Admins kommen von der Startseite in den
+ *  Lehrkraft-Bereich, Schüler nie dorthin. Deep-Links auf Aufgaben (QR-Codes) bleiben für alle unverändert. */
+function zielFuerRolle(ziel, rolle) {
+  const lehrkraftZiel = ziel.startsWith('/lehrer') || ziel.startsWith('/#/lehrkraft');
+  if (rolle === 'schueler') return lehrkraftZiel ? '/' : ziel;
+  return ziel === '/' ? '/#/lehrkraft' : ziel;
+}
+
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC[c]);
 
@@ -89,7 +97,7 @@ function ssoRoutes(app, h) {
     if (!inhalt) return abgelehnt();
     const k = svc.konten.anmelden(inhalt);
     S.setCookie(req, res, S.COOKIE_SITZUNG, { k: k.sub, g: k.session_gen }, secret, k.rolle === 'schueler' ? SCHUELER_SITZUNG_MS : LEHRKRAFT_SITZUNG_MS);
-    res.redirect(302, sicheresZiel(req.query.ziel));
+    res.redirect(302, zielFuerRolle(sicheresZiel(req.query.ziel), k.rolle));
   });
 
   // Abmelden nur auf dieser Plattform

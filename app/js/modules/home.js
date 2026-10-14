@@ -227,6 +227,10 @@ export default {
         h('span', null, h('strong', null, 'Du bist nicht angemeldet. '), 'Ohne Anmeldung kannst du je Modul eine Aufgabe ausprobieren.'),
         h('a', { class: 'btn btn-primary', href: ctx.link('gast') }, 'Ausprobieren'),
         h('a', { class: 'btn', href: anmeldeLink('/') }, 'Anmelden über InfoLabs')));
+      // Lehrkräfte und Admins: Weg in den Lehrkraft-Bereich (wie Algo Quest)
+      if (konto && konto.rolle !== 'schueler') clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
+        h('span', null, h('strong', null, 'Sie sind als Lehrkraft angemeldet. '), 'Kurse, Auswertung und Aufgaben-Vorschau finden Sie im Lehrkraft-Bereich.'),
+        h('a', { class: 'btn btn-primary', href: ctx.link('lehrkraft') }, 'Zum Lehrkraft-Bereich')));
       if (konto?.rolle === 'schueler' && (konto.kurse ?? []).length) kursEinstellungen();
       else if (konto?.rolle === 'schueler' && !(konto.kurse ?? []).length) clear(gastSlot, h('div', { class: 'notice gast-hinweis' },
         h('span', null, h('strong', null, 'Noch nicht freigeschaltet. '), 'Deine Lehrkraft schaltet AutomatenLab im Portal für euren Kurs frei – bis dahin gibt es die Demo-Aufgaben.'),
