@@ -9,7 +9,7 @@ Jeder Punkt eignet sich als GitHub-Issue. Reihenfolge = Vorschlag. ✅ = erledig
 - [ ] Release **v1.0** mit `Automaten_LK.zip` (Materialpaket) erstellen
 - ✅ Deployment per CapRover-Webhook aus dem Wurzelordner (`captain-definition`, `Dockerfile`), GitHub-Prüfung mit allen Deep-Links
 - ✅ `.github`-Dateien: Release-Workflow für das Materialpaket, Issue-Vorlagen (Fehler, fachlicher Fehler), PR-Vorlage und Prüfung
-- [ ] Lizenz festlegen
+- ✅ Lizenz festgelegt (1.17.0): Code MIT, Material CC BY-SA 4.0, Vermerk in jeder Fußzeile
 
 ## Phase 1 – Analyse und Angleichung
 - ✅ AlgoQuest analysieren → `docs/ALGOQUEST_VERGLEICH.md`

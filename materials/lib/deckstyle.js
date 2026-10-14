@@ -33,6 +33,7 @@ const THEME = {
 };
 const H = { teal: '0E6455', tealDark: '0A4A3F', tealTint: 'E4F0EE', tealTint2: 'F1F7F6', ocker: 'B26A0F', ockerTint: 'F8ECDB', ink: '1F2A2E', muted: '5B6770', line: 'C9D3D6', white: 'FFFFFF', red: 'A83232' };
 const W = 13.333, HT = 7.5, M = 0.6;
+const LIZENZ = 'CC BY-SA 4.0 · Frank Juchim'; // Lizenzvermerk, siehe materials/LIZENZ.md
 const BASE_URL = process.env.AUTOMATENLAB_URL || '';
 const WELT = (ds) => (ds <= 6 ? 'A' : ds <= 10 ? 'B' : ds <= 14 ? 'C' : 'D');
 const WELT_NAME = { A: 'Endliche Automaten', B: 'Grenzen & Keller', C: 'Formale Sprachen', D: 'Sprachdesign & Ausblick' };
@@ -109,10 +110,12 @@ function deck({ ds, title, niveau }) {
   pres.defineSlideMaster({ title: 'INHALT', background: { color: H.white }, objects: [
     { placeholder: { options: { name: 'title', type: 'title', x: M, y: 0.35, w: W - 2 * M, h: 0.95, fontFace: 'Cambria', fontSize: 32, bold: true, color: C.accent1, valign: 'middle', align: 'left', margin: 0 }, text: '' } },
     { text: { text: footerText, options: { x: M, y: HT - 0.42, w: 8, h: 0.3, fontSize: 11, color: H.muted, fontFace: 'Calibri', margin: 0 } } },
+    { text: { text: LIZENZ, options: { x: W - M - 4.0, y: HT - 0.42, w: 3.2, h: 0.3, fontSize: 11, color: H.muted, fontFace: 'Calibri', align: 'right', margin: 0 } } },
   ], slideNumber: { x: W - M - 0.6, y: HT - 0.42, w: 0.6, h: 0.3, fontSize: 11, color: H.muted, align: 'right' } });
   pres.defineSlideMaster({ title: 'AUFTRAG', background: { color: H.tealTint2 }, objects: [
     { placeholder: { options: { name: 'title', type: 'title', x: M, y: 0.35, w: W - 2 * M, h: 0.95, fontFace: 'Cambria', fontSize: 32, bold: true, color: C.accent1, valign: 'middle', align: 'left', margin: 0 }, text: '' } },
     { text: { text: footerText, options: { x: M, y: HT - 0.42, w: 8, h: 0.3, fontSize: 11, color: H.muted, fontFace: 'Calibri', margin: 0 } } },
+    { text: { text: LIZENZ, options: { x: W - M - 4.0, y: HT - 0.42, w: 3.2, h: 0.3, fontSize: 11, color: H.muted, fontFace: 'Calibri', align: 'right', margin: 0 } } },
   ], slideNumber: { x: W - M - 0.6, y: HT - 0.42, w: 0.6, h: 0.3, fontSize: 11, color: H.muted, align: 'right' } });
 
   let section = null;

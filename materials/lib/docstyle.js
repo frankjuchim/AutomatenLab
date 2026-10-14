@@ -314,11 +314,14 @@ function header(o) {
       new TextRun({ text: `\t${NIV.NIVEAU_KURS[NIV.niveauVon(o)]} · Automaten & formale Sprachen`, font: FONT_BODY, size: 16, color: C.muted })],
   })] });
 }
+// Lizenzvermerk der Unterrichtsmaterialien (siehe materials/LIZENZ.md)
+const LIZENZ = 'CC BY-SA 4.0 Frank Juchim';
+
 function footer(o) {
   const code = o.code || (o.ds ? `DS${String(o.ds).padStart(2, '0')} · ${KIND_LABEL[o.kind]}` : KIND_LABEL[o.kind]);
   return new Footer({ children: [new Paragraph({
     tabStops: [{ type: TabStopType.RIGHT, position: CONTENT_W }],
-    children: [new TextRun({ text: `Max-Planck-Gymnasium Delmenhorst  ·  ${code}`, font: FONT_BODY, size: 16, color: C.muted }),
+    children: [new TextRun({ text: `Max-Planck-Gymnasium Delmenhorst  ·  ${code}  ·  ${LIZENZ}`, font: FONT_BODY, size: 16, color: C.muted }),
       new TextRun({ children: ['\tSeite ', PageNumber.CURRENT, ' von ', PageNumber.TOTAL_PAGES], font: FONT_BODY, size: 16, color: C.muted })],
   })] });
 }

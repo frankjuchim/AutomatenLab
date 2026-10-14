@@ -79,3 +79,6 @@ Ein Tag `v*` baut alle Materialien in GitHub Actions neu und hängt `Automaten_L
 
 ## Abitur-Fallen in Warnkästen
 `D.warn({ titel: 'Darauf achten', fallen: ['P2', 'P7'] }, body)` setzt unter den Kasten die Zeile „Abitur-Fallen: P2 … · P7 …“ (Liste aus `app/js/data/fallen.js`, Übersicht auf Merkblatt M12). Neue Warnkästen bekommen ihre Fallen gleich mit; ohne Abitur-Bezug genügt der Titel als Text.
+
+## Lizenzvermerk
+Material steht unter CC BY-SA 4.0 (`materials/LIZENZ.md`). Die Fußzeilen setzen den Vermerk automatisch: Dokumente in `materials/lib/docstyle.js` (`LIZENZ`), Folien in `materials/lib/deckstyle.js` (`LIZENZ`, rechts unten), Video-Folien in `materials/lib/videostyle.js`. Neue Dokumentarten nutzen diese Bausteine und brauchen nichts weiter.

@@ -89,9 +89,9 @@ function video({ nr, code, title, short }) {
   pres.theme = { headFontFace: 'Cambria', bodyFontFace: 'Calibri' };
   pres.author = 'Frank Juchim'; pres.title = `${code} – ${title}`;
   const C = pres.SchemeColor;
-  const footer = `${code}  ·  ${short}  ·  ${HOST}`;
+  const footer = `${code}  ·  ${short}  ·  ${HOST}  ·  CC BY-SA 4.0 Frank Juchim`;
   const titlePh = { placeholder: { options: { name: 'title', type: 'title', x: M, y: 0.35, w: W - 2 * M, h: 0.9, fontFace: 'Cambria', fontSize: 32, bold: true, color: C.accent1, valign: 'middle', align: 'left', margin: 0 }, text: '' } };
-  const foot = { text: { text: footer, options: { x: M, y: 7.0, w: 8.6, h: 0.3, fontSize: 12, color: H.muted, fontFace: 'Calibri', margin: 0 } } };
+  const foot = { text: { text: footer, options: { x: M, y: 7.0, w: W - 2 * M - 0.8, h: 0.3, fontSize: 12, color: H.muted, fontFace: 'Calibri', margin: 0 } } };
   pres.defineSlideMaster({ title: 'V_TITEL', background: { color: H.teal }, objects: [...camMarks('0B574A', 'F3D9B5')] });
   pres.defineSlideMaster({ title: 'V_INHALT', background: { color: H.white }, objects: [titlePh, foot, ...camMarks(H.tealTint2, '9FC3BC')] });
   pres.defineSlideMaster({ title: 'V_AKZENT', background: { color: H.tealTint2 }, objects: [titlePh, foot, ...camMarks('E4EEEC', '9FC3BC')] });
