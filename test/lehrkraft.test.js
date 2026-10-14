@@ -147,8 +147,10 @@ test('Löschung über die Verbund-API vollständig: jede Tabelle mit Konto-Bezug
   const db = app.locals.db;
   const mika = await H.angemeldet(app);
   // Daten in allen Bereichen erzeugen: Lernstand (schon da), falsche Antwort, Training, Abzeichen
+  const { DETEKTIV_FAELLE } = await import('../inhalte/detektiv.js');
   const auf = (await mika.get('/api/aufgaben/detektiv%3Afall-1')).body;
-  for (const o of auf.aufgabe.optionen) await mika.post('/api/aufgaben/detektiv%3Afall-1/pruefen').set(ORIGIN).send({ antwort: { wahl: o.id } });
+  const falsch = auf.aufgabe.optionen.find((o) => o.text !== DETEKTIV_FAELLE[0].optionen[0].text); // Optionen sind gemischt
+  await mika.post('/api/aufgaben/detektiv%3Afall-1/pruefen').set(ORIGIN).send({ antwort: { wahl: falsch.id } });
   const r = (await mika.post('/api/training/sortierer/neu').set(ORIGIN).send({})).body;
   await mika.post(`/api/training/runde/${r.id}/antwort`).set(ORIGIN).send({ i: 0, typ: 3 });
   await mika.post(`/api/training/runde/${r.id}/ende`).set(ORIGIN).send({});
