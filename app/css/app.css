@@ -804,3 +804,20 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .lk-falsch ul { margin: 0; padding-left: 1rem; font-size: var(--fs-s); }
 .lk-falsch li { margin: 0.1rem 0; }
 .vorschau-hinweis { margin: 0 0 var(--gap); border-left: 4px solid var(--ocker); }
+.lk-form textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 0.5rem 0.6rem; border: 1.5px solid var(--line); border-radius: var(--r-m); }
+.lk-check-reihe { display: flex; flex-wrap: wrap; gap: 0 0.9rem; }
+.lk-check-klein { min-width: 3.2rem; }
+.lk-level-tabelle select { min-height: var(--touch); font: inherit; }
+
+/* ───── Kurs-Einstellungen auf der Startseite (PR 7): Auftrag, „später“, „freiwillig“ ───── */
+.auftrag { margin: 0 0 1.4rem; padding: 1rem 1.2rem; border-radius: var(--r-m); background: var(--ocker-soft); border-left: 5px solid var(--ocker); }
+.auftrag h2 { margin: 0 0 0.4rem; font-size: 1.2rem; }
+.auftrag-eintrag + .auftrag-eintrag { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(178, 106, 15, 0.3); }
+.auftrag-kurs { margin: 0; font-weight: 700; font-size: var(--fs-s); color: var(--ink-2); }
+.auftrag-text { margin: 0.2rem 0; white-space: pre-line; font-size: 1.05rem; }
+.auftrag-level { margin: 0.3rem 0 0; }
+.level-node.is-spaeter { border-style: dashed; border-color: var(--line); background: var(--surface); color: var(--ink-2); opacity: 0.75; }
+.level-node.is-auftrag { box-shadow: 0 0 0 3px var(--ocker-fill); }
+.type-tag.type-spaeter { color: var(--ink-2); }
+.type-tag.type-freiwillig { color: var(--ink-2); font-weight: 600; }
+.type-tag.type-auftrag { color: #8A520B; }

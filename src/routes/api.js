@@ -49,6 +49,9 @@ function apiRoutes(app, h) {
     }));
   });
 
+  // Schüler: Einstellungen der eigenen Kurse für die Startseite (Level-Art, Kursart, Auftrag der Lehrkraft)
+  api.get('/meine-kurse', nurAngemeldet, (req, res) => res.json(svc.auswertung.meineKurse(req.konto.sub)));
+
   // Kurs der Lehrkraft (laut letztem Token) – sonst 404, damit fremde Kurse nicht erkennbar sind
   const meinKurs = (req, res, next) => {
     const id = String(req.params.id);

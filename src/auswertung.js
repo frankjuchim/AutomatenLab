@@ -12,6 +12,8 @@
 // Welt) zum letzten Level der Welt – sonst verzerrten Aufgaben mit mehreren Leveln die Matrix.
 
 const KURSARTEN = ['eA', 'gA'];
+const LEVEL_ARTEN = ['pflicht', 'vertiefung', 'bonus', 'spaeter'];
+const AUFTRAG_MAX = 400;
 const hauptLevel = (a) => { const l = a.levels || []; return l.length ? (a.modul === 'quiz' && l.length > 1 ? l[l.length - 1] : l[0]) : null; };
 
 function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
@@ -21,18 +23,44 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
   const LEVELS = [...levelInfo.keys()].sort((a, b) => a - b);
   const liste = aufgaben ? aufgaben.liste : [];
 
+  /**
+   * Kurs-Einstellungen (PR 7): kursart; levelArt = Art je Level (pflicht | vertiefung | bonus | spaeter, Vorgabe aus
+   * worlds.js LEVEL_TYPE); auftrag = { text, level: [n …] } für die Startseite der Schüler (oder null).
+   * Sie ändern nur die Anzeige – Deep-Links bleiben immer offen (CLAUDE.md Regel 1).
+   */
   function einstellungen(kurs) {
     let e = {};
     try { e = JSON.parse(kurs.einstellungen || '{}'); } catch { /* leer */ }
-    return { kursart: KURSARTEN.includes(e.kursart) ? e.kursart : 'eA' };
+    const levelArt = {};
+    for (const n of LEVELS) levelArt[n] = LEVEL_ARTEN.includes(e.levelArt?.[n]) ? e.levelArt[n] : levelInfo.get(n).typ || 'pflicht';
+    const auftrag = e.auftrag && typeof e.auftrag.text === 'string' && e.auftrag.text.trim() ? { text: e.auftrag.text, level: Array.isArray(e.auftrag.level) ? e.auftrag.level : [], at: e.auftrag.at ?? null } : null;
+    return { kursart: KURSARTEN.includes(e.kursart) ? e.kursart : 'eA', levelArt, auftrag };
   }
 
-  /** Einstellungen eines Kurses ändern (nur bekannte Felder). */
+  /** Einstellungen eines Kurses ändern (nur bekannte Felder, geprüft). */
   function einstellungenSetzen(kurs, body) {
     const e = einstellungen(kurs);
+    const ungueltig = (t) => Object.assign(new Error(t), { status: 400 });
     if (body && body.kursart !== undefined) {
-      if (!KURSARTEN.includes(body.kursart)) throw Object.assign(new Error('Diese Kursart gibt es nicht.'), { status: 400 });
+      if (!KURSARTEN.includes(body.kursart)) throw ungueltig('Diese Kursart gibt es nicht.');
       e.kursart = body.kursart;
+    }
+    if (body && body.levelArt !== undefined) {
+      if (!body.levelArt || typeof body.levelArt !== 'object') throw ungueltig('Die Level-Einstellungen passen nicht.');
+      for (const [k, v] of Object.entries(body.levelArt)) {
+        if (!levelInfo.has(Number(k)) || !LEVEL_ARTEN.includes(v)) throw ungueltig('Die Level-Einstellungen passen nicht.');
+        e.levelArt[Number(k)] = v;
+      }
+    }
+    if (body && body.auftrag !== undefined) {
+      if (body.auftrag === null || (typeof body.auftrag?.text === 'string' && !body.auftrag.text.trim())) e.auftrag = null;
+      else {
+        const text = typeof body.auftrag?.text === 'string' ? body.auftrag.text.trim() : '';
+        const level = Array.isArray(body.auftrag.level) ? [...new Set(body.auftrag.level.map(Number))] : [];
+        if (text.length > AUFTRAG_MAX) throw ungueltig(`Der Auftrag ist zu lang (höchstens ${AUFTRAG_MAX} Zeichen).`);
+        if (level.length > 4 || level.some((n) => !levelInfo.has(n))) throw ungueltig('Wählen Sie höchstens vier Level.');
+        e.auftrag = { text, level: level.sort((a, b) => a - b), at: iso() };
+      }
     }
     db.prepare('UPDATE kurse SET einstellungen = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(e), iso(), kurs.id);
     return e;
@@ -201,7 +229,12 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     };
   }
 
-  return { kursUebersicht, schueler, kursAuswertung, einstellungen, einstellungenSetzen, export: export_, KURSARTEN };
+  /** Für Schüler: Einstellungen ihrer Kurse (nur, was die Startseite braucht). */
+  function meineKurse(sub) {
+    return konten.kurseVon(sub).filter((k) => k.rolle === 'mitglied').map((k) => ({ id: k.id, name: k.name, ...einstellungen(konten.kurs(k.id)) }));
+  }
+
+  return { kursUebersicht, schueler, kursAuswertung, einstellungen, einstellungenSetzen, meineKurse, export: export_, KURSARTEN, LEVEL_ARTEN };
 }
 
-module.exports = { createAuswertung, KURSARTEN, hauptLevel };
+module.exports = { createAuswertung, KURSARTEN, LEVEL_ARTEN, hauptLevel };

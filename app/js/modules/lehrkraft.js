@@ -11,7 +11,7 @@
 import { h, clear } from '../core/dom.js';
 import { api } from '../core/api.js';
 import { sitzung, anmeldeLink, istLehrkraft } from '../core/sitzung.js';
-import { WORLDS, LEVELS } from '../data/worlds.js';
+import { WORLDS, LEVELS, LEVEL_TYPE_LABEL } from '../data/worlds.js';
 import { LEVEL_NIVEAU, NIVEAUS } from '../data/niveaus.js';
 import { MODULES } from './manifest.js';
 
@@ -260,28 +260,47 @@ export default {
 
     /* ⚙️ Einstellungen */
     function reiterEinstellungen(id, kurs) {
+      const e0 = kurs.einstellungen;
       const status = h('p', { class: 'lk-status', 'aria-live': 'polite' });
       const auswahl = Object.entries(KURSART).map(([k, text]) => h('label', { class: 'check' },
-        h('input', { type: 'radio', name: 'kursart', value: k, checked: kurs.einstellungen.kursart === k }), ` ${text}`));
+        h('input', { type: 'radio', name: 'kursart', value: k, checked: e0.kursart === k }), ` ${text}`));
+      // Level-Art je Level (Pflicht/Vertiefung/Bonus/Später) – ändert nur die Startseite, Deep-Links bleiben offen
+      const levelZeilen = WORLDS.flatMap((w) => w.levels.map((n) => h('tr', null,
+        h('th', { scope: 'row' }, `${n}`), h('td', null, LEVELS[n], ' ', h('span', { class: ['niveau-pille', `niveau-${LEVEL_NIVEAU[n] === 'eA' ? 'ea' : LEVEL_NIVEAU[n]}`] }, NIVEAUS[LEVEL_NIVEAU[n]].kurz)),
+        h('td', null, h('select', { name: `level-${n}`, 'aria-label': `Level ${n}: ${LEVELS[n]}` },
+          Object.entries(LEVEL_TYPE_LABEL).map(([k, text]) => h('option', { value: k, selected: e0.levelArt[n] === k }, text)))))));
+      const auftragText = h('textarea', { id: 'lk-auftrag', rows: 3, maxlength: 400, placeholder: 'z. B. „Bis Freitag: Baukasten Stufe 1 und das Exit-Ticket DS03“' }, e0.auftrag?.text ?? '');
+      const auftragLevel = WORLDS.flatMap((w) => w.levels).map((n) => h('label', { class: 'check lk-check-klein' },
+        h('input', { type: 'checkbox', name: 'auftrag-level', value: String(n), checked: (e0.auftrag?.level ?? []).includes(n) }), ` ${n}`));
       const form = h('form', { class: 'lk-form', onsubmit: async (e) => {
         e.preventDefault();
-        const kursart = form.querySelector('input[name=kursart]:checked')?.value;
+        const einstellungen = {
+          kursart: form.querySelector('input[name=kursart]:checked')?.value,
+          levelArt: Object.fromEntries([...form.querySelectorAll('select[name^="level-"]')].map((x) => [x.name.slice(6), x.value])),
+          auftrag: auftragText.value.trim() ? { text: auftragText.value.trim(), level: [...form.querySelectorAll('input[name=auftrag-level]:checked')].map((x) => Number(x.value)) } : null,
+        };
         status.textContent = 'Speichere …';
         try {
-          const r = await api('PATCH', `/api/lehrer/kurse/${encodeURIComponent(id)}`, { einstellungen: { kursart } });
+          const r = await api('PATCH', `/api/lehrer/kurse/${encodeURIComponent(id)}`, { einstellungen });
           kurs.einstellungen = r.einstellungen;
-          status.textContent = 'Gespeichert.';
+          status.textContent = 'Gespeichert. Ihre Schülerinnen und Schüler sehen die Änderungen beim nächsten Öffnen der Startseite.';
           const pille = el.querySelector('.lk-kurskopf .niveau-pille');
           if (pille) pille.textContent = KURSART[r.einstellungen.kursart];
         } catch (err) { status.textContent = err.message; }
       } },
         h('fieldset', null, h('legend', null, 'Kursart'), ...auswahl,
-          h('p', { class: 'muted klein' }, 'Im Grundkurs gehören nur die Level „gA + eA“ zum Kursumfang; eA-Level (Kellerautomaten, Grammatiken) gelten als freiwillig. Die Kursart bestimmt die Kennzahlen, die das Portal für diesen Kurs anzeigt, und die Markierung in der Lernstand-Matrix. Zusatz-Level zählen in keinem Kurs zum Umfang.')),
+          h('p', { class: 'muted klein' }, 'Im Grundkurs gehören nur die Level „gA + eA“ zum Kursumfang; eA-Level (Kellerautomaten, Grammatiken) sehen Ihre Schülerinnen und Schüler als „freiwillig“. Die Kursart bestimmt auch die Kennzahlen, die das Portal für diesen Kurs anzeigt, und die Markierung in der Lernstand-Matrix. Zusatz-Level zählen in keinem Kurs zum Umfang.')),
+        h('fieldset', null, h('legend', null, 'Auftrag auf der Startseite'),
+          h('label', { for: 'lk-auftrag', class: 'muted klein' }, 'Erscheint oben auf der Startseite Ihrer Schülerinnen und Schüler (höchstens 400 Zeichen; leer = kein Auftrag).'),
+          auftragText,
+          h('p', { class: 'muted klein' }, 'Dazu passende Level hervorheben (höchstens vier):'),
+          h('div', { class: 'lk-check-reihe' }, auftragLevel)),
+        h('fieldset', null, h('legend', null, 'Level: Pflicht, Vertiefung, Bonus oder später'),
+          h('p', { class: 'muted klein' }, 'So erscheinen die Level auf der Level-Karte Ihrer Schülerinnen und Schüler. „Später“ graut ein Level aus – gesperrt wird nichts: QR-Codes und Links auf Arbeitsblättern führen immer zur Aufgabe.'),
+          tabelle(['Level', 'Thema', 'Art'], levelZeilen, { klasse: 'lk-level-tabelle' })),
         h('button', { type: 'submit', class: 'btn btn-primary' }, 'Speichern'), status);
       return [
         h('div', { class: 'panel lk-karte' }, h('h3', null, 'Einstellungen'), form),
-        h('div', { class: 'panel lk-karte' }, h('h3', null, 'Freischaltungen und Aufträge'),
-          h('p', null, 'Welten freischalten und Aufträge auf der Startseite folgen. Bis dahin sehen alle Schülerinnen und Schüler alle Welten.')),
         h('div', { class: 'panel lk-karte lk-gefahr' }, h('h3', null, '⚠️ Löschen'),
           h('p', null, 'Kurse und Schülerkonten löschen Sie im Portal InfoLabs. Das Portal meldet die Löschung an AutomatenLab; der Lernstand wird dann auch hier gelöscht.'),
           portal ? h('p', null, h('a', { class: 'btn', href: portal + '/' }, '⌂ Zum Portal')) : null),

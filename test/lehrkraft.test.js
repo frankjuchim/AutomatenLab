@@ -65,7 +65,7 @@ test('Kursart: speichern, ungültig 400; Portal-Kennzahlen nur über den Kursumf
   const { app, lk } = await kursMitLernstand();
   const patch = (body) => lk.patch('/api/lehrer/kurse/k%3A17').set(ORIGIN).send(body);
   assert.equal((await patch({ einstellungen: { kursart: 'xy' } })).status, 400);
-  assert.deepEqual((await patch({ einstellungen: { kursart: 'gA' } })).body.einstellungen, { kursart: 'gA' });
+  assert.equal((await patch({ einstellungen: { kursart: 'gA' } })).body.einstellungen.kursart, 'gA');
   assert.equal((await lk.get('/api/lehrer/kurse/k%3A17')).body.einstellungen.kursart, 'gA');
   const a = (await lk.get('/api/lehrer/kurse/k%3A17/auswertung')).body;
   assert.equal(a.matrix.levels.find((l) => l.nr === 9).imKurs, false, 'Level 9 (eA) nicht im Grundkurs');
@@ -116,4 +116,57 @@ test('Häufige falsche Antworten: Kurzform je Aufgabe, nur Kursmitglieder, gelö
   const t = H.verbundToken(app.now, 'loeschen');
   await request(app).post('/api/verbund/loeschen').set('Authorization', `Bearer ${t}`).send({ sub: 's:1042' });
   assert.equal(app.locals.db.prepare('SELECT COUNT(*) AS n FROM falsche_antworten').get().n, 0);
+});
+
+test('Kurs-Einstellungen: Level-Art und Auftrag; Schüler sehen sie über /api/meine-kurse', async () => {
+  const { app, lk } = await kursMitLernstand();
+  const patch = (einstellungen) => lk.patch('/api/lehrer/kurse/k%3A17').set(ORIGIN).send({ einstellungen });
+  const e0 = (await lk.get('/api/lehrer/kurse/k%3A17')).body.einstellungen;
+  assert.deepEqual([e0.levelArt[1], e0.levelArt[5], e0.levelArt[4], e0.auftrag], ['pflicht', 'vertiefung', 'bonus', null], 'Vorgabe aus worlds.js');
+  assert.equal((await patch({ levelArt: { 17: 'pflicht' } })).status, 400);
+  assert.equal((await patch({ levelArt: { 3: 'quatsch' } })).status, 400);
+  assert.equal((await patch({ auftrag: { text: 'x'.repeat(401) } })).status, 400);
+  assert.equal((await patch({ auftrag: { text: 'Hallo', level: [1, 2, 3, 4, 5] } })).status, 400);
+  const e = (await patch({ levelArt: { 9: 'spaeter', 4: 'pflicht' }, auftrag: { text: '  Bis Freitag: Baukasten Stufe 1  ', level: [3, 3, 4] } })).body.einstellungen;
+  assert.deepEqual([e.levelArt[9], e.levelArt[4], e.levelArt[1]], ['spaeter', 'pflicht', 'pflicht']);
+  assert.deepEqual([e.auftrag.text, e.auftrag.level], ['Bis Freitag: Baukasten Stufe 1', [3, 4]]);
+  // Schüler: nur eigene Kurse als Mitglied; Lehrkraft-Kurse nicht
+  const mika = await H.angemeldet(app);
+  const mk = (await mika.get('/api/meine-kurse')).body;
+  assert.deepEqual(mk.map((k) => k.id), ['k:17']);
+  assert.equal(mk[0].auftrag.text, 'Bis Freitag: Baukasten Stufe 1');
+  assert.equal(mk[0].levelArt[9], 'spaeter');
+  assert.deepEqual((await lk.get('/api/meine-kurse')).body, []);
+  assert.equal((await request(app).get('/api/meine-kurse')).status, 401);
+  // Auftrag löschen
+  assert.equal((await patch({ auftrag: null })).body.einstellungen.auftrag, null);
+});
+
+test('Löschung über die Verbund-API vollständig: jede Tabelle mit Konto-Bezug, Kurs samt Einstellungen', async () => {
+  const { app, lk } = await kursMitLernstand();
+  const db = app.locals.db;
+  const mika = await H.angemeldet(app);
+  // Daten in allen Bereichen erzeugen: Lernstand (schon da), falsche Antwort, Training, Abzeichen
+  const auf = (await mika.get('/api/aufgaben/detektiv%3Afall-1')).body;
+  for (const o of auf.aufgabe.optionen) await mika.post('/api/aufgaben/detektiv%3Afall-1/pruefen').set(ORIGIN).send({ antwort: { wahl: o.id } });
+  const r = (await mika.post('/api/training/sortierer/neu').set(ORIGIN).send({})).body;
+  await mika.post(`/api/training/runde/${r.id}/antwort`).set(ORIGIN).send({ i: 0, typ: 3 });
+  await mika.post(`/api/training/runde/${r.id}/ende`).set(ORIGIN).send({});
+  await lk.patch('/api/lehrer/kurse/k%3A17').set(ORIGIN).send({ einstellungen: { auftrag: { text: 'Test' } } });
+  const tabellen = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").all().map((t) => t.name)
+    .filter((t) => db.prepare(`PRAGMA table_info(${t})`).all().some((c) => c.name === 'sub'));
+  assert.deepEqual(tabellen.sort(), ['abzeichen', 'falsche_antworten', 'fortschritt', 'konten', 'kurs_mitglieder', 'training'].sort(), 'neue Tabelle mit sub? Dann auch in konten.loescheKonto aufnehmen');
+  const zaehle = (sub) => Object.fromEntries(tabellen.map((t) => [t, db.prepare(`SELECT COUNT(*) AS n FROM ${t} WHERE sub = ?`).get(sub).n]));
+  assert.ok(Object.values(zaehle('s:1042')).every((n) => n > 0), JSON.stringify(zaehle('s:1042')));
+  const loeschen = (body) => request(app).post('/api/verbund/loeschen').set('Authorization', `Bearer ${H.verbundToken(app.now, 'loeschen')}`).send(body);
+  // Kurs löschen: Kurs und Mitgliedschaften weg, Lernstand der Konten bleibt
+  assert.equal((await loeschen({ kurs: 'k:17' })).status, 200);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM kurse WHERE id = 'k:17'").get().n, 0);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM kurs_mitglieder WHERE kurs_id = 'k:17'").get().n, 0);
+  assert.ok(zaehle('s:1042').fortschritt > 0);
+  // Konto löschen: überall weg, andere Konten unberührt
+  const vorher = zaehle('s:7');
+  assert.equal((await loeschen({ sub: 's:1042' })).status, 200);
+  assert.ok(Object.values(zaehle('s:1042')).every((n) => n === 0), JSON.stringify(zaehle('s:1042')));
+  assert.deepEqual(zaehle('s:7'), vorher);
 });

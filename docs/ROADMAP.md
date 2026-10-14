@@ -45,14 +45,14 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 
 ## Grund- und Leistungskurs (Vertrag v1.2)
 - ✅ Niveaus nach KC 2017 (gA + eA / nur eA / Zusatz) für Level, Boss-Level, Module, Merkblätter; Niveau-Übersicht `/niveaus` (= `#/themen?teil=niveaus`), Manifest v1.2 (`kurs`, `niveaus`, `urls.niveaus`), Etiketten in der App, Niveau im Kopf aller Materialien, Abschnitt in der Einheitsplanung
-- [ ] Kurs-Einstellung „Kursart“ (Grundkurs/Leistungskurs) wie Algo Quest: ✅ Einstellung, Lernstand-Matrix und Kursübersicht für das Portal nur über die Level des Kurses (PR 6); offen: eA-Level im Grundkurs auch für Schüler als „freiwillig“ (mit PR 7)
+- ✅ Kurs-Einstellung „Kursart“ (Grundkurs/Leistungskurs) wie Algo Quest: Einstellung, Lernstand-Matrix und Kursübersicht für das Portal nur über die Level des Kurses (PR 6); eA-Level im Grundkurs für Schüler als „freiwillig“ (PR 7)
 - ✅ Übungsklausur für den Grundkurs „Fahrradverleih“ (90 min, 30 BE, DEA/Mealy/Grenzen, alle Automaten geprüft)
 
 ## Phase 5 – Lehrkraft-Bereich
 - ✅ PR 6 (1.10.0): Lehrkraft-Bereich im Aufbau wie Algo Quest – Navigation (Kurse · Aufgaben · Materialien · Themen · Portal), Meine Kurse, Kursseite mit Reitern Schüler · Beitritt · Auswertung (Lernstand-Matrix Level 1–16 × Schüler, Aufgabenstatistik, CSV) · Rangliste · Einstellungen (Kursart gA/eA); Aufgaben der Welten nach Level; Kursübersicht für das Portal mit echten Kennzahlen (Kursumfang je Kursart)
 - ✅ PR 6b (1.11.0): Aufgaben-Vorschau für Lehrkräfte (`&vorschau=1` mit eingesetzter Lösung, `&vorschau=ohne` zum Ausprobieren – nichts wird gespeichert), häufige falsche Antworten in der Aufgabenstatistik (Migration 6, Kurzform bei Quiz, Detektiv, Turing, Mealy-Vorhersage)
 - [ ] Fallen-Profil P1–P10 in der Auswertung – wartet auf Franks Freigabe von `docs/einheit/FALLEN.md` (V3)
-- [ ] PR 7: Kurs-Einstellungen (Freischaltung Pflicht/Vertiefung/Bonus, Aufträge auf der Startseite), Datenschutzhinweise der Plattform, Löschung über die Verbund-API vollständig getestet, Doku, Abnahme
+- ✅ PR 7 (1.12.0): Kurs-Einstellungen – Level-Art je Kurs (Pflicht/Vertiefung/Bonus/Später, nur Anzeige: Deep-Links bleiben offen), Auftrag der Lehrkraft auf der Startseite, Grundkurs: eA-Level „freiwillig“; Datenschutzhinweise (`docs/DATENSCHUTZ.md`, `#/datenschutz`) auf dem Stand des Verbunds; Löschung über die Verbund-API vollständig getestet (jede Tabelle mit Konto-Bezug); Abnahme-Checkliste `docs/ABNAHME.md`
 
 ## Phase 6 – Materialien ↔ Plattform
 - [ ] Erklärvideos verlinken: „Erklärvideo“-Knopf in den Modulen, Video-QR-Codes auf Merkblättern (Links nach Upload)
