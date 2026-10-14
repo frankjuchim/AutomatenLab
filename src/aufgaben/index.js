@@ -506,7 +506,13 @@ async function ladeAufgaben(secret) {
 
   // Training (src/training.js): Arena-Automaten (öffentlich), Minimierer-Automaten für „Unterscheide!“, Sortierer-Karten
   const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })), sortierer: sortiererD.SORTIERER_KARTEN };
-  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training, fallen: fallenM.FALLEN, boss };
+  // Eigene Aufgaben der Lehrkräfte (src/eigene.js): dieselben Aufgabentypen wie Level-Quiz und Baukasten, ohne Abzeichen
+  const typen = {
+    quiz: { ...QUIZ, modul: 'eigen', abzeichen: () => [] },
+    baukasten: { ...BAUKASTEN, modul: 'eigen', abzeichen: () => [] },
+    normalizeDFA
+  };
+  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training, fallen: fallenM.FALLEN, boss, typen };
 }
 
 module.exports = { ladeAufgaben, PUNKTE_STUFE };

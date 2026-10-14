@@ -70,6 +70,8 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/lehrkraft` | Bereich für Lehrkräfte, Aufbau wie Algo Quest: Meine Kurse – auch `BASE_URL/lehrer`. Kursseite `#/lehrkraft?kurs=<Kurs-ID>&tab=schueler\|beitritt\|auswertung\|rangliste\|einstellungen` (Kurs-ID wie `k:12`, ohne `tab` = Schüler) |
 | `#/lehrkraft?teil=aufgaben` | Lehrkraft-Bereich: Aufgaben der Welten nach Level (mit Link ins Modul und „Vorschau mit Lösung“) |
 | `#/lehrkraft?teil=urkunden&kurs=<Kurs-ID>` | Lehrkraft-Bereich: Urkunden des Kurses zum Drucken (A4, eine Seite je Schüler; wie Algo Quest) |
+| `#/quiz?eigen=<Nummer>` · `#/baukasten?eigen=<Nummer>` | Aufgaben der Lehrkraft aus dem Aufgaben-Editor (eigene Quizfragen bzw. Baukasten-Challenges, ohne Punkte) – nur für Mitglieder des Kurses, wenn freigegeben |
+| `#/lehrkraft?teil=eigene` | Lehrkraft-Bereich: Aufgaben-Editor – eigene Aufgaben je Kurs anlegen, bearbeiten, freigeben (`&kurs=<Kurs-ID>`, `&neu=quiz` bzw. `&neu=baukasten`, `&aufgabe=<Nummer>`) |
 | `#/boss` · `#/boss?welt=A` · `#/boss?welt=B` · `#/boss?welt=C` | Boss-Kämpfe am Ende der Welten A–C: Prüfung auf Zeit aus zufällig gezogenen Aufgaben, Auswertung am Ende (nur angemeldet; Kampf und Auswertung unter `?kampf=<Nummer>`) |
 | `#/rangliste` · `#/rangliste?welt=A` … `?welt=D` | Rangliste der eigenen Kurse (gesamt bzw. je Welt) – nur wenn die Lehrkraft sie eingeschaltet hat, sonst ein Hinweis |
 | `#/board` | Beamer-Board eines Kurses (öffentlich): Top 15, Fortschritt je Welt, letzte Abzeichen – nur mit dem zufälligen Link aus den Kurs-Einstellungen (`?t=…`, auch `BASE_URL/board/…`), sonst ein Hinweis |

@@ -30,6 +30,14 @@ export default {
     const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
     clear(el, h('p', { class: 'muted' }, 'Lade …'));
     (async () => {
+      // Aufgabe der Lehrkraft (Aufgaben-Editor, #/baukasten?eigen=<nr>): gleiche Werkbank, ohne Punkte
+      const eigen = p.get('eigen');
+      if (!q.demo && /^\d{1,9}$/.test(eigen ?? '')) {
+        const d = await q.aufgabe(`eigen:${eigen}`);
+        if (!aktiv) return;
+        aufraeumen = workbench({ ...d.aufgabe, aufgabeId: `eigen:${eigen}`, nr: 0, eigen: true, zustand: d.zustand, loesung: d.loesung ?? null });
+        return;
+      }
       const liste = await q.liste('baukasten');
       if (!aktiv) return;
       CHALLENGES = liste;
@@ -72,7 +80,7 @@ export default {
     // ───────────────────────── Werkbank ─────────────────────────
     function workbench(c) {
       const draftKey = `baukasten:${c ? c.id : 'frei'}`; // c.id = Schlüssel der Challenge (bisheriges Format)
-      ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
+      ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : c.eigen ? `Aufgabe deiner Lehrkraft: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
       let zustand = c?.zustand ?? null;
       let loesung = c?.loesung ?? null;
       // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
@@ -181,7 +189,7 @@ export default {
             : `Dein Automat lehnt ${wortText} ab – das gehört aber zur Sprache.`;
           clear(checkResult, h('div', { class: 'notice notice-error' },
             h('p', null, h('strong', null, 'Noch nicht. '), msg),
-            h('p', { class: 'muted' }, `Das ist ein kürzestes Gegenbeispiel.${zustand.status === 'offen' && !q.demo ? ` Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : ''}`),
+            h('p', { class: 'muted' }, `Das ist ein kürzestes Gegenbeispiel.${zustand.status === 'offen' && !q.demo && !c.eigen ? ` Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : ''}`),
             h('div', { class: 'start-actions' },
               h('button', { type: 'button', class: 'btn btn-small', onclick: () => { wordInput.value = wordToString(w, A.alphabet).replace(/^ε$/, ''); runWord(w); graphPanel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, 'Lauf ansehen'),
               versuch > 3 || loesung ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => aufdecken() }, 'Musterlösung zeigen') : null)));
@@ -205,7 +213,7 @@ export default {
           clear(box, gezeigt.map((t) => h('p', null, h('strong', null, 'Tipp: '), t)),
             gezeigt.length < (c.tippsAnzahl ?? 0) ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: async () => {
               try { const r = await q.tipp(c.aufgabeId); zustand = r.zustand; zeichne(); } catch (e) { ctx.toast(e.message, { type: 'error' }); }
-            } }, q.demo || zustand?.status !== 'offen' ? 'Tipp anzeigen' : 'Tipp anzeigen (kostet Punkte)') : null);
+            } }, q.demo || c.eigen || zustand?.status !== 'offen' ? 'Tipp anzeigen' : 'Tipp anzeigen (kostet Punkte)') : null);
         };
         zeichne();
         return box;

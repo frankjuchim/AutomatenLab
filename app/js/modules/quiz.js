@@ -14,7 +14,9 @@ export default {
     const ds = Number(ctx.params.get('ds'));
     const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
     clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    const eigen = ctx.params.get('eigen'); // Quiz der Lehrkraft (Aufgaben-Editor), ohne Punkte
     if (q.demo) q.liste('quiz').then((l) => aktiv && run(l[0].id, ctx.link('gast'))).catch(fehler);
+    else if (/^\d{1,9}$/.test(eigen ?? '')) run(`eigen:${eigen}`, '#/');
     else if (/^[A-D]$/.test(welt)) run(`quiz:welt-${welt}`, ctx.link('quiz'));
     else if (ds >= 1 && ds <= 16) run(`quiz:ds-${ds}`, ctx.link('quiz'));
     else overview().catch(fehler);
@@ -56,7 +58,7 @@ export default {
       if (!aktiv) return;
       const quiz = daten.aufgabe;
       const gewertet = daten.zustand.status === 'offen'; // erster Durchgang zählt, danach ist es Übung
-      ctx.setSubtitle(quiz.titel + (q.demo ? ' (Demo – ohne Punkte)' : gewertet ? '' : ' (Wiederholung – zählt nicht mehr)'));
+      ctx.setSubtitle(quiz.titel + (q.demo ? ' (Demo – ohne Punkte)' : id.startsWith('eigen:') ? ' (Aufgabe deiner Lehrkraft, ohne Punkte)' : gewertet ? '' : ' (Wiederholung – zählt nicht mehr)'));
       const fragen = quiz.fragen;
       const st = { i: 0, score: 0, t0: performance.now(), log: [], letzte: null };
       const box = h('div', { class: 'panel quiz-box' });
@@ -151,7 +153,7 @@ export default {
               h('span', null, e.f.frage ?? e.f.aussage)))),
             h('div', { class: 'start-actions' },
               h('button', { type: 'button', class: 'btn btn-primary', onclick: () => run(id, back) }, 'Nochmal'),
-              h('a', { class: 'btn', href: back }, q.demo ? 'Zu den Demo-Aufgaben' : 'Alle Quizze'))));
+              h('a', { class: 'btn', href: back }, q.demo ? 'Zu den Demo-Aufgaben' : id.startsWith('eigen:') ? 'Zur Übersicht' : 'Alle Quizze'))));
       }
 
       clear(el, bar, box);

@@ -140,6 +140,16 @@ export default {
       const auftraege = kurse.filter((k) => k.auftrag);
       auftragLevel = new Set(auftraege.flatMap((k) => k.auftrag.level ?? []));
       for (const n of ALL_LEVELS) zeichneLevel(n);
+      // Aufgaben der Lehrkraft (Aufgaben-Editor, PR 10): freigegebene eigene Quizze und Baukasten-Challenges
+      api('GET', '/api/eigene').then((eigene) => {
+        if (!eigene.length || !auftragSlot.isConnected) return;
+        auftragSlot.after(h('section', { class: 'eigene-aufgaben panel', 'aria-labelledby': 'eigene-h' },
+          h('h2', { id: 'eigene-h' }, '✏️ Aufgaben deiner Lehrkraft'),
+          h('ul', { class: 'eigene-liste' }, eigene.map((x) => h('li', { class: x.status === 'geloest' ? 'is-geloest' : null },
+            h('a', { href: x.link }, x.art === 'quiz' ? '❓ ' : '🧩 ', x.titel),
+            h('span', { class: 'muted klein' }, ` · ${x.art === 'quiz' ? 'Quiz' : 'Baukasten'}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
+          h('p', { class: 'muted klein' }, 'Diese Aufgaben hat deine Lehrkraft selbst erstellt. Sie geben keine Punkte – üben lohnt sich trotzdem.')));
+      }).catch(() => {});
       // Rangliste, wenn eine Lehrkraft sie für einen der Kurse eingeschaltet hat (PR 8)
       if (kurse.some((k) => k.scoreboard)) auftragSlot.after(h('p', { class: 'rangliste-link' }, h('a', { class: 'btn', href: ctx.link('rangliste') }, '🏆 Rangliste deines Kurses')));
       if (auftraege.length) clear(auftragSlot, h('section', { class: 'auftrag', 'aria-labelledby': 'auftrag-h' },

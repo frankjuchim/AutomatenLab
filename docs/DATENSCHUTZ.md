@@ -15,6 +15,7 @@ Stand: 1.12.0 (Oktober 2026). Grundlage ist der Vertrag des Plattform-Verbunds I
 | Lernstand je Aufgabe (Status, Fehlversuche, Tipps, Punkte, Zwischenstand, Zeitpunkt), Abzeichen | Üben auf jedem Gerät, Rückmeldung für die Lehrkraft | pseudonym | mit dem Konto |
 | Trainingsrunden (Arena, Unterscheide!, Sortierer) mit Ergebnis | Trainingspunkte, Tageshöchstwert, Rekorde | pseudonym | mit dem Konto |
 | Boss-Kämpfe: Zeitpunkt, gezogene Aufgaben, eigene Antworten (Auswahl), Punkte | Wertung am Ende, bester Versuch, 12-Stunden-Pause | pseudonym | mit dem Konto |
+| Eigene Aufgaben der Lehrkraft (Texte, Musterautomat, Kennung der Lehrkraft) | Aufgaben-Editor | Kennung pseudonym; Inhalte ohne Personenbezug | mit dem Kurs; Kennung beim Löschen des Kontos |
 | Falsche Antworten in Kurzform (Quiz-Option, Detektiv-Beschreibung, Turing-Regel, Mealy-Ausgabe – nie Freitext) | „Häufige falsche Antworten“ für die Lehrkraft (ohne Namen) | pseudonym | mit dem Konto |
 | Kurs-Einstellungen (Kursart, Level-Art, Auftrag der Lehrkraft) | Anzeige auf der Startseite der Schüler | keiner (Text der Lehrkraft) | mit dem Kurs |
 | Sitzungs-Cookie `al_s` (signiert) | technisch notwendig | – | Abmeldung / Ablauf (Schüler ≤ 30 Tage, Lehrkräfte ≤ 8 h) |

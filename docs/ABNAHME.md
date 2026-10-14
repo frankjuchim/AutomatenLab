@@ -31,6 +31,7 @@ Dauer: etwa 30 Minuten mit einem Lehrkraft-Konto und einem Test-Schülerkonto im
 - [ ] ⚙️ Einstellungen: Rangliste und Beamer-Board einschalten → Schüler sehen „🏆 Rangliste deines Kurses“; der Board-Link öffnet sich ohne Anmeldung auf dem Beamer; „Neuen Link erzeugen“ sperrt den alten.
 - [ ] 🏅 Urkunden: Vorschau prüfen, als PDF drucken (A4, eine Seite je Schüler).
 - [ ] 📖 Aufgaben: „Vorschau mit Lösung“ bei drei Modulen öffnen (z. B. Turing, Keller, Quiz) – Lösung eingesetzt, „Ohne Lösung ausprobieren“ geht, der eigene Lernstand bleibt leer.
+- [ ] ✏️ Eigene Aufgaben: ein Quiz mit zwei Fragen und eine Baukasten-Challenge anlegen, freigeben → beim Schüler unter „Aufgaben deiner Lehrkraft“, lösen, in der Liste „gelöst“.
 - [ ] 📂 Materialien: Lehrkraft-PDF einer Doppelstunde öffnet sich.
 
 ## Löschung (Verbund)

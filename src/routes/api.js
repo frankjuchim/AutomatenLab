@@ -108,20 +108,28 @@ function apiRoutes(app, h) {
     next();
   };
 
+  // Eigene Aufgaben der Lehrkräfte (ID „eigen:<nr>“): nur für Mitglieder des Kurses (freigegeben) und dessen Lehrkräfte
+  const eigenZugang = (req, res, next) => {
+    const id = String(req.params.id);
+    if (!id.startsWith('eigen:')) return next();
+    if (!svc.eigene || !svc.eigene.darfLoesen(req.konto, id)) return res.status(404).json({ error: 'Aufgabe nicht gefunden.' });
+    next();
+  };
+
   // Öffentliche Aufgabenliste (Titel, Stufe, Punkte – keine Lösungen), z. B. für Übersichten
   api.get('/katalog', (req, res) => res.json({ aufgaben: svc.lernen.katalog(req.query.modul ? String(req.query.modul) : null) }));
 
   api.get('/lernstand', darfUeben, (req, res) => res.json(svc.lernen.lernstand(req.konto.sub)));
-  api.get('/aufgaben/:id', darfUeben, (req, res) => res.json(svc.lernen.abrufen(req.konto.sub, req.params.id)));
+  api.get('/aufgaben/:id', darfUeben, eigenZugang, (req, res) => res.json(svc.lernen.abrufen(req.konto.sub, req.params.id)));
   // Aufgaben-Vorschau: prüfen, Tipps, Lösung – ohne Speichern (Stand kommt vom Browser, src/lernen.js vorschau)
-  api.post('/lehrer/vorschau/:id/:aktion', nurLehrkraft, begrenzt, (req, res) => {
+  api.post('/lehrer/vorschau/:id/:aktion', nurLehrkraft, eigenZugang, begrenzt, (req, res) => {
     const aktion = String(req.params.aktion);
     if (!['abrufen', 'pruefen', 'tipp', 'aufdecken'].includes(aktion)) return res.status(404).json({ error: 'Diese Vorschau-Aktion gibt es nicht.' });
     res.json(svc.lernen.vorschau(req.params.id, aktion, req.body || {}));
   });
-  api.post('/aufgaben/:id/pruefen', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.pruefen(req.konto.sub, req.params.id, (req.body || {}).antwort)));
-  api.post('/aufgaben/:id/tipp', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.tipp(req.konto.sub, req.params.id)));
-  api.post('/aufgaben/:id/aufdecken', darfUeben, begrenzt, (req, res) => res.json(svc.lernen.aufdecken(req.konto.sub, req.params.id)));
+  api.post('/aufgaben/:id/pruefen', darfUeben, eigenZugang, begrenzt, (req, res) => res.json(svc.lernen.pruefen(req.konto.sub, req.params.id, (req.body || {}).antwort)));
+  api.post('/aufgaben/:id/tipp', darfUeben, eigenZugang, begrenzt, (req, res) => res.json(svc.lernen.tipp(req.konto.sub, req.params.id)));
+  api.post('/aufgaben/:id/aufdecken', darfUeben, eigenZugang, begrenzt, (req, res) => res.json(svc.lernen.aufdecken(req.konto.sub, req.params.id)));
 
   // Training (Arena, „Unterscheide!“): Runde vom Server, Antworten am Ende, 1 Punkt je richtiger Antwort, Tageshöchstwert
   api.get('/training', darfUeben, (req, res) => res.json(svc.training.info(req.konto.sub)));
@@ -141,6 +149,15 @@ function apiRoutes(app, h) {
   api.post('/boss/:welt/start', darfUeben, ohneBoss, begrenzt, (req, res) => res.status(201).json(svc.boss.starten(req.konto, req.params.welt)));
   // Lehrkraft: Pool eines Bosses mit richtigen Antworten (Vorschau wie Algo Quest)
   api.get('/lehrer/boss/:welt', nurLehrkraft, ohneBoss, (req, res) => res.json(svc.boss.pool(req.params.welt)));
+
+  // Aufgaben-Editor (PR 10): eigene Aufgaben je Kurs anlegen, ändern, freigeben, löschen; Schüler sehen die freigegebenen
+  const ohneEigene = (req, res, next) => (svc.eigene ? next() : res.status(404).json({ error: 'Eigene Aufgaben gibt es hier nicht.' }));
+  api.get('/eigene', nurAngemeldet, ohneEigene, (req, res) => res.json(svc.eigene.fuerSchueler(req.konto.sub)));
+  api.get('/lehrer/kurse/:id/eigene', nurLehrkraft, meinKurs, ohneEigene, (req, res) => res.json(svc.eigene.liste(req.kurs.id)));
+  api.post('/lehrer/kurse/:id/eigene', nurLehrkraft, meinKurs, ohneEigene, begrenzt, (req, res) => res.status(201).json(svc.eigene.anlegen(req.konto, req.kurs.id, req.body || {})));
+  api.get('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, (req, res) => res.json(svc.eigene.lesen(req.konto, req.params.nr)));
+  api.patch('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, begrenzt, (req, res) => res.json(svc.eigene.aendern(req.konto, req.params.nr, req.body || {})));
+  api.delete('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, (req, res) => res.json(svc.eigene.loeschen(req.konto, req.params.nr)));
 
   app.use('/api', api);
 }

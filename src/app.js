@@ -13,6 +13,7 @@ const { schluesselListe } = require('./jwt');
 const { createKonten } = require('./konten');
 const { createAuswertung } = require('./auswertung');
 const { createBoss } = require('./boss');
+const { createEigene } = require('./eigene');
 const { createLernen } = require('./lernen');
 const { createTraining } = require('./training');
 const { ssoRoutes } = require('./routes/sso');
@@ -131,7 +132,8 @@ function createApp(opts) {
   const bossPunkte = (subs, welt) => (boss ? boss.bestePunkte(subs, welt) : new Map());
   const auswertung = createAuswertung(ctx, { konten, katalog, aufgaben: opts.aufgaben, training, bossPunkte });
   boss = opts.aufgaben?.boss ? createBoss(ctx, { aufgaben: opts.aufgaben, konten, katalog, auswertung }) : null;
-  const svc = { konten, auswertung, training, boss, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training, bossPunkte }) };
+  const eigene = opts.aufgaben?.typen ? createEigene(ctx, { aufgaben: opts.aufgaben, konten }) : null;
+  const svc = { konten, auswertung, training, boss, eigene, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training, bossPunkte, eigene }) };
 
   const app = express();
   app.disable('x-powered-by');

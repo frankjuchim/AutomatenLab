@@ -11,13 +11,14 @@ function punkteFuer(punkte, fehlversuche, tipps) {
 
 const fehler = (status, text) => Object.assign(new Error(text), { status });
 
-function createLernen(ctx, { aufgaben, training = null, bossPunkte = null }) {
+function createLernen(ctx, { aufgaben, training = null, bossPunkte = null, eigene = null }) {
   const { db } = ctx;
   const iso = () => new Date(ctx.now()).toISOString();
   const titelAbzeichen = aufgaben.abzeichen; // Titel und Text aus app/js/data/badges.js
 
   function aufgabe(id) {
-    const a = aufgaben.map.get(String(id));
+    // eigene Aufgaben der Lehrkräfte (src/eigene.js) liegen in der Datenbank, alle anderen im Katalog
+    const a = aufgaben.map.get(String(id)) ?? (eigene && String(id).startsWith('eigen:') ? eigene.aufgabe(id) : null);
     if (!a) throw fehler(404, 'Aufgabe nicht gefunden.');
     return a;
   }
@@ -137,7 +138,7 @@ function createLernen(ctx, { aufgaben, training = null, bossPunkte = null }) {
   }
 
   /** Aufgaben ohne „Lösung zeigen“: Die Lösung erscheint dort nach jeder Antwort (Quiz-artig). */
-  const ohneAufdecken = (a) => a.modul === 'quiz' || a.id.endsWith(':vorhersage') || a.id.endsWith(':raetsel') || a.id === 'ueberliste:bonus';
+  const ohneAufdecken = (a) => a.modul === 'quiz' || a.art === 'eigen-quiz' || a.id.endsWith(':vorhersage') || a.id.endsWith(':raetsel') || a.id === 'ueberliste:bonus';
 
   function aufdecken(sub, id) {
     const a = aufgabe(id);
