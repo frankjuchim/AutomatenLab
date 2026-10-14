@@ -126,8 +126,10 @@ Bisher liegen alle Inhalte samt Lösungen als JavaScript in `app/js/data` und we
 Freie Modi und Simulatoren (Baukasten frei, Grammatik frei, Turing-Programme, NEA-/Keller-Simulation ohne Aufgabe)
 bringen keine Punkte und bleiben im Browser.
 
-**Stand:** Level-Quiz, Sprach-Detektiv und Automaten-Baukasten prüfen auf dem Server (PR 3); Format, IDs, Punkte und
-API: `docs/AUFGABENFORMAT.md`. Die übrigen Module folgen in PR 4/5.
+**Stand:** Level-Quiz, Sprach-Detektiv und Automaten-Baukasten prüfen auf dem Server (PR 3), der Minimierer seit
+PR 4a (jede Runde des Markierungsverfahrens), die Mealy-Maschine seit PR 4b (Vorhersage, Bug-Jagd), Akzeptor-Arena und „Unterscheide!“ als Training seit PR 4c
+(1 Punkt je richtiger Antwort, höchstens 30 je Tag; Manifest-Fähigkeit `training`); Format, IDs, Punkte und API: `docs/AUFGABENFORMAT.md`. Die übrigen
+Module folgen in PR 4b/4c und 5.
 
 ## 7. Weitere Vertragspunkte
 

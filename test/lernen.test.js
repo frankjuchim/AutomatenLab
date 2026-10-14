@@ -106,6 +106,100 @@ test('Baukasten: Gegenbeispiel, Tipp kostet Punkte, richtiger DEA → Punkte; un
   }
 });
 
+test('Minimierer: Runden auf dem Server, falsche Runde = Fehlversuch, Stand-Fehler 409, Lösung erst danach', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const id = 'minimierer:smiley';
+  const k = (await s.get('/api/katalog?modul=minimierer')).body.aufgaben;
+  assert.equal(k.length, 7);
+  assert.deepEqual(k[0], { id, modul: 'minimierer', nr: 1, titel: 'Smiley-Erkenner', stufe: 1, punkte: 10, levels: [5], schluessel: 'smiley' });
+  const a = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.ok(a.aufgabe.automat && a.aufgabe.frage);
+  assert.doesNotMatch(JSON.stringify(a), /klassen|merke|Kein Wort kann sie unterscheiden/);
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // Runde 0 mit einem falschen Paar: Fehlversuch, keine Lösung
+  let r = (await pr({ runde: 0, markiert: ['S3|S4'] })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.deepEqual(r.rueckmeldung.falsch, ['S3|S4']);
+  assert.ok(r.rueckmeldung.fehlendAnzahl > 0);
+  assert.equal(r.zustand.fehlversuche, 1);
+  assert.equal(r.loesung, undefined);
+  // falsche Runde → 409, unbekanntes Paar → 400
+  assert.equal((await pr({ runde: 3, markiert: [] })).status, 409);
+  assert.equal((await pr({ runde: 0, markiert: ['S0|X9'] })).status, 400);
+  // richtige Runden: Paare aus der Rückmeldung des Servers (Runde 0) und per Engine (Folgerunden)
+  const { markierungsTabelle, loesung } = await import('../app/js/engine/markierung.js');
+  const { dfa } = await import('../app/js/engine/dfa.js');
+  const L = loesung(markierungsTabelle(dfa(a.aufgabe.automat)));
+  let runde = 0;
+  for (;;) {
+    const markiert = [...L.marked].filter(([, x]) => x === runde).map(([key]) => key);
+    r = (await pr({ runde, markiert })).body;
+    assert.equal(r.rueckmeldung.richtig, true, `Runde ${runde}`);
+    if (r.rueckmeldung.fertig) break;
+    assert.equal(r.loesung, undefined);
+    runde = r.rueckmeldung.naechsteRunde;
+  }
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 1, 0));
+  assert.deepEqual(r.loesung.klassen, [['S3', 'S4']]);
+  assert.equal(r.loesung.nachher, 5);
+  assert.match(r.loesung.merke, /S3 und S4/);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'minimierer-erste'));
+  // nach dem Lösen: neuer Durchgang ab Runde 0 ist Übung ohne Punkte
+  r = (await pr({ runde: 0, markiert: L.marked.size ? [...L.marked].filter(([, x]) => x === 0).map(([key]) => key) : [] })).body;
+  assert.equal(r.rueckmeldung.richtig, true);
+  assert.equal(r.punkteErhalten, 0);
+  assert.ok((await s.get('/api/lernstand')).body.solved[id]);
+});
+
+test('Mealy: Vorhersage wie ein Quiz (erster Versuch zählt), Bug-Jagd mit Test ohne Wertung und Reparatur', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=mealy')).body.aufgaben;
+  assert.equal(k.length, 14);
+  const v = k.find((a) => a.id === 'mealy:suessigkeiten:vorhersage');
+  assert.deepEqual([v.art, v.schluessel, v.punkte], ['vorhersage', 'suessigkeiten:vorhersage', 10]);
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // Vorhersage: Süßigkeitenautomat, Wörter MH, HMHH, MHMHM, MMHH → B, B, BB, B
+  const va = (await s.get('/api/aufgaben/mealy:suessigkeiten:vorhersage')).body.aufgabe;
+  assert.deepEqual(va.worte, ['MH', 'HMHH', 'MHMHM', 'MMHH']);
+  let r = (await pr(v.id, { wort: 0, ausgabe: 'ε' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.rueckmeldung.ausgabe, undefined, 'Lösung erst nach dem zweiten Versuch');
+  assert.equal(r.zustand.fehlversuche, 0, 'Vorhersage zählt keine Fehlversuche');
+  r = (await pr(v.id, { wort: 0, ausgabe: 'B' })).body;
+  assert.equal(r.rueckmeldung.richtig, true);
+  for (const [i, aus] of [[1, 'B'], [2, 'BB']]) assert.equal((await pr(v.id, { wort: i, ausgabe: aus })).body.rueckmeldung.richtig, true);
+  r = (await pr(v.id, { wort: 3, ausgabe: 'B' })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, Math.round(10 * 3 / 4));
+  assert.deepEqual(r.loesung.ergebnis, { ersterVersuch: 3, von: 4 });
+  assert.equal((await post(s, `/api/aufgaben/${v.id}/aufdecken`)).status, 400);
+  assert.equal((await pr(v.id, { wort: 9, ausgabe: 'B' })).status, 400);
+  assert.equal((await pr(v.id, { wort: 0, ausgabe: 'X' })).status, 400);
+  // Bug-Jagd: öffentlich nur der fehlerhafte Automat (S0 –H / B→), keine Fehlerliste
+  const id = 'mealy:suessigkeiten';
+  const b = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.deepEqual(b.aufgabe.automat.delta.S0.H, ['S0', 'B']);
+  assert.doesNotMatch(JSON.stringify(b.aufgabe), /fehler"|"ausgabe"/);
+  r = (await pr(id, { test: 'HH', urteil: 'bug' })).body;
+  assert.equal(r.rueckmeldung.bug, true); assert.equal(r.rueckmeldung.richtigeAusgabe, '');
+  assert.equal(r.zustand.fehlversuche, 0, 'Testen kostet nichts');
+  r = (await pr(id, { ausgaben: {} })).body;
+  assert.equal(r.ok, false); assert.deepEqual(r.rueckmeldung.gegenbeispiel.wort, ['H']);
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr(id, { ausgaben: { S0: { H: 'ε' } } })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 1, 0));
+  assert.deepEqual(r.loesung.fehler, [{ von: 'S0', zeichen: 'H', falsch: 'B', richtig: 'ε' }]);
+  assert.ok(r.neueAbzeichen.some((x) => x.id === 'mealy-bugjaeger'));
+  assert.equal(r.rueckmeldung.gefunden, true);
+  assert.equal((await pr(id, { ausgaben: { S0: { H: 'Q' } } })).status, 400);
+  const ls = (await s.get('/api/lernstand')).body;
+  assert.ok(ls.solved[id] && ls.solved[v.id]);
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

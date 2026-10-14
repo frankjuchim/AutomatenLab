@@ -3,12 +3,15 @@
 //   liste(modul) · aufgabe(id) · pruefen(id, antwort) · tipp(id) · aufdecken(id)
 // • serverQuelle(): angemeldet – Lösungen bleiben auf dem Server, Punkte vergibt nur der Server.
 // • demoQuelle(): Gastmodus – eigene Demo-Aufgaben (app/js/data/demo.js), im Browser geprüft, ohne Punkte.
+// Training (Arena, „Unterscheide!“): quelle.training = { lokal, neu(modul, optionen), ende(id, antworten) } – auf dem
+// Server gezählt (1 Punkt je richtiger Antwort, Tageshöchstwert) bzw. mit lokalesTraining() im Browser ohne Punkte.
 
 import { api as apiRoh } from './api.js';
 import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten } from '../engine/pruefer.js';
+import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } from '../engine/pruefer.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -29,9 +32,21 @@ async function nachPruefen(r) {
   return r;
 }
 
+/** Nach einer Trainingsrunde: Lernstand neu laden (Punkte, Rekorde, Abzeichen) und neue Abzeichen anzeigen. */
+async function nachTraining(r) {
+  try { progress._server(await api('GET', '/api/lernstand')); } catch { /* nächste Anzeige lädt neu */ }
+  progress._abzeichen(r?.neueAbzeichen);
+  return r;
+}
+
 export function serverQuelle() {
   return {
     demo: false,
+    training: {
+      lokal: false,
+      neu: (modul, optionen = {}) => api('POST', `/api/training/${encodeURIComponent(modul)}/neu`, optionen),
+      ende: async (id, antworten) => nachTraining(await api('POST', `/api/training/runde/${encodeURIComponent(id)}/ende`, { antworten })),
+    },
     liste: async (modul) => (await api('GET', `/api/katalog?modul=${encodeURIComponent(modul)}`)).aufgaben,
     aufgabe: (id) => api('GET', pfad(id)),
     pruefen: async (id, antwort) => nachPruefen(await api('POST', pfad(id, '/pruefen'), { antwort })),
@@ -58,11 +73,49 @@ function vorbereiten(d) {
   } else if (d.modul === 'detektiv') {
     const f = d.daten;
     oeffentlich = { titel: f.titel, nr: 0, automat: f.automat, vorschlaege: f.vorschlaege ?? [], optionen: mische(f.optionen.map((o, j) => ({ id: idVon(0, j), text: o.text }))) };
+  } else if (d.modul === 'mealy') {
+    const x = d.daten;
+    if (d.art === 'vorhersage') oeffentlich = { id: x.id, nr: 0, titel: x.titel, kontext: x.kontext, automat: x.automat, bedeutung: x.bedeutung ?? null, beispiele: x.beispiele, worte: x.vorhersage };
+    else {
+      const fehlerhaft = mealyFehlerVariante(x.automat, x.fehler);
+      const beispiele = x.beispiele.filter(([ein]) => !pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug).slice(0, 3);
+      oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele, worte: x.vorhersage };
+    }
+  } else if (d.modul === 'minimierer') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, frage: x.frage, automat: x.automat };
   } else {
     const c = d.daten;
     oeffentlich = { id: c.id, nr: 0, stufe: c.stufe, titel: c.titel, aufgabe: c.aufgabe, alphabet: c.referenz.alphabet, beispiele: c.beispiele, tippsAnzahl: c.tipp ? 1 : 0 };
   }
   return { d, idVon, oeffentlich, tipps: d.daten.tipp ? [d.daten.tipp] : [], angesehen: false, geloest: false, fehlversuche: 0, tippsGenutzt: 0, antworten: {} };
+}
+
+/**
+ * Training im Browser (Gastmodus, ohne Anmeldung): dieselben Runden und dieselbe Auswertung wie auf dem Server, aber
+ * ohne Punkte und ohne Speicherung. daten = { arena: ARENA_AUTOMATEN } bzw. { minimierer: [{ id, automat }] }.
+ */
+export function lokalesTraining(daten) {
+  const runden = new Map();
+  let naechste = 1;
+  return {
+    lokal: true,
+    async neu(modul, o = {}) {
+      const items = modul === 'arena'
+        ? erzeugeArenaRunde(daten.arena, { stufe: o.stufe ?? 1, nurId: o.automat ?? null })
+        : erzeugeUnterscheideRunde(daten.minimierer, { nurId: o.aufgabe ?? null });
+      const id = naechste++;
+      runden.set(id, { modul, items });
+      return { id, modul, items: items.map(({ akzeptiert, aequivalent, wort, ...rest }) => (modul === 'arena' ? { ...rest, wort } : rest)), heute: 0, maxProTag: 0 };
+    },
+    async ende(id, antworten) {
+      const r = runden.get(id);
+      if (!r) throw Object.assign(new Error('Diese Runde gibt es nicht (mehr).'), { status: 404 });
+      runden.delete(id);
+      const erg = r.modul === 'arena' ? werteArenaRunde(r.items, antworten) : werteUnterscheideRunde(daten.minimierer, r.items, antworten);
+      return { ...erg, punkteErhalten: 0, wertung: false, neueAbzeichen: [], heute: 0, maxProTag: 0 };
+    },
+  };
 }
 
 export function demoQuelle() {
@@ -73,12 +126,16 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
+  const loesung = (s) => (s.d.modul === 'mealy' ? (s.d.art === 'vorhersage'
+    ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.vorhersage.length } }
+    : mealyLoesung(s.d.daten.automat, s.d.daten.fehler))
+    : s.d.modul === 'minimierer' ? minimiererLoesung(s.d.daten.automat, s.d.daten.merke) : s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
     : s.d.modul === 'baukasten' ? { musterloesung: s.d.daten.referenz }
       : { ergebnis: { prozent: Math.round((100 * Object.values(s.antworten).reduce((a, b) => a + b, 0)) / s.d.daten.fragen.length) } });
   return {
     demo: true,
-    liste: async (modul) => DEMO.filter((d) => d.modul === modul).map((d) => ({ id: d.id, modul, titel: d.titel, stufe: d.daten.stufe ?? 1, punkte: 0 })),
+    training: null, // Module wählen lokalesTraining() mit ihren Daten
+    liste: async (modul) => DEMO.filter((d) => d.modul === modul).map((d) => ({ id: d.id, modul, titel: d.titel, stufe: d.daten.stufe ?? 1, punkte: 0, ...(d.art ? { art: d.art, schluessel: d.daten.id } : {}) })),
     aufgabe: async (id) => { const s = get(id); return { id, modul: s.d.modul, aufgabe: s.oeffentlich, zustand: zustand(s), ...(s.geloest || s.angesehen ? { loesung: loesung(s) } : {}) }; },
     async pruefen(id, antwort) {
       const s = get(id);
@@ -96,11 +153,27 @@ export function demoQuelle() {
         const j = s.d.daten.optionen.findIndex((_, k) => s.idVon(0, k) === antwort?.wahl);
         if (j < 0) throw Object.assign(new Error('Bitte wähle eine Beschreibung.'), { status: 400 });
         erg = pruefeDetektiv(s.d.daten, j);
+      } else if (s.d.modul === 'minimierer') {
+        erg = pruefeMinimiererRunde(s.d.daten.automat, s.stand, antwort);
+        s.stand = erg.stand;
+      } else if (s.d.modul === 'mealy' && s.d.art === 'vorhersage') {
+        const r = pruefeMealyVorhersage(s.d.daten.automat, s.d.daten.vorhersage, s.stand, antwort);
+        s.stand = r.stand;
+        erg = { ok: r.richtig, fertig: !s.geloest && r.fertig, zaehltFehler: false, rueckmeldung: r.rueckmeldung };
+      } else if (s.d.modul === 'mealy') {
+        if (antwort?.test !== undefined) {
+          const r = pruefeMealyTest(s.d.daten.automat, s.oeffentlich.automat, antwort);
+          s.gefunden = s.gefunden || (r.bug && antwort.urteil === 'bug');
+          erg = { ok: false, fertig: false, zaehltFehler: false, rueckmeldung: { ...r.rueckmeldung, gefunden: !!s.gefunden } };
+        } else {
+          erg = pruefeMealyReparatur(s.d.daten.automat, s.oeffentlich.automat, antwort?.ausgaben);
+          erg.rueckmeldung.gefunden = !!s.gefunden;
+        }
       } else {
         erg = pruefeBaukasten(s.d.daten.referenz, antwort?.automat);
       }
-      if (s.d.modul !== 'quiz') { if (erg.ok) s.geloest = true; else if (!s.geloest && !s.angesehen) s.fehlversuche++; }
       const fertig = erg.fertig ?? erg.ok;
+      if (s.d.modul !== 'quiz') { if (fertig) s.geloest = true; else if (!s.geloest && !s.angesehen && (erg.zaehltFehler ?? !erg.ok)) s.fehlversuche++; }
       return { ...erg, fertig, zustand: zustand(s), geloest: fertig, punkteErhalten: 0, neueAbzeichen: [], ...(fertig || s.angesehen ? { loesung: loesung(s) } : {}) };
     },
     async tipp(id) { const s = get(id); if (s.tippsGenutzt < s.tipps.length) s.tippsGenutzt++; return { zustand: zustand(s) }; },

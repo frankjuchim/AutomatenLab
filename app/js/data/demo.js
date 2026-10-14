@@ -3,7 +3,8 @@
 // Aufgabenkatalog – echte Aufgaben und ihre Lösungen liegen nur auf dem Server (inhalte/).
 // Notation nach docs/einheit/PLAN.md Abschnitt 1. Tests: app/tests/demo.test.js (gegen die Engine).
 //
-// Format wie in inhalte/: modul, id (Präfix „demo:“), titel, daten (Quiz: fragen; Detektiv: Fall; Baukasten: Challenge).
+// Format wie in inhalte/: modul, id (Präfix „demo:“), titel, daten (Quiz: fragen; Detektiv: Fall; Baukasten: Challenge;
+// Minimierer: Aufgabe mit Automat; Mealy: Automat mit vorhersage und fehler, art = vorhersage | bugjagd).
 
 const count = (w, s) => w.filter((x) => x === s).length;
 
@@ -52,4 +53,34 @@ export const DEMO = [
       pruefe: (w) => w.length % 2 === 0,
     },
   },
+  {
+    modul: 'minimierer', id: 'demo:minimierer', titel: 'Demo: Endet auf a – doppelt gemerkt',
+    daten: {
+      id: 'demo-endet-a', stufe: 1, titel: 'Endet auf a – doppelt gemerkt',
+      kontext: 'Der Automat akzeptiert alle Wörter über {a, b}, die auf a enden. Er unterscheidet aber, ob vor dem letzten a schon ein b kam.',
+      frage: 'Bestimme mit dem Markierungsverfahren, welche Zustände zusammengefasst werden können.',
+      automat: { alphabet: ['a', 'b'], start: 'S0', accepting: ['S1', 'S3'],
+        delta: { S0: { a: 'S1', b: 'S2' }, S1: { a: 'S1', b: 'S2' }, S2: { a: 'S3', b: 'S2' }, S3: { a: 'S1', b: 'S2' } } },
+      klassen: [['S0', 'S2'], ['S1', 'S3']],
+      merke: 'Für die Sprache zählt nur das letzte Zeichen: S1 und S3 bedeuten beide „zuletzt a“, S0 und S2 „nicht auf a“. Zwei Zustände reichen.',
+    },
+  },
 ];
+
+// Mealy-Demo: ein Automat für beide Modi („Was kommt raus?“ und Bug-Jagd)
+const PARITAET = {
+  id: 'demo-paritaet', stufe: 1, titel: 'Paritäts-Melder',
+  kontext: 'Nach jedem gelesenen Bit meldet der Automat, ob er bisher eine gerade (G) oder ungerade (U) Anzahl Einsen gelesen hat.',
+  automat: { inputAlphabet: ['0', '1'], outputAlphabet: ['G', 'U'], start: 'S0',
+    delta: { S0: { 0: ['S0', 'G'], 1: ['S1', 'U'] }, S1: { 0: ['S1', 'U'], 1: ['S0', 'G'] } } },
+  bedeutung: { S0: 'bisher gerade Anzahl Einsen', S1: 'bisher ungerade Anzahl Einsen' },
+  beispiele: [['011', 'GUG'], ['1101', 'UGGU'], ['000', 'GGG'], ['10', 'UU'], ['', 'ε']],
+  vorhersage: ['011', '1101', '100'],
+  fehler: [{ von: 'S1', zeichen: '0', ausgabe: 'G' }],
+  fehlerText: 'Der Automat soll nach jedem Bit melden, ob bisher gerade (G) oder ungerade (U) viele Einsen gelesen wurden. Bei manchen Eingaben meldet er das Falsche.',
+  pruefe: (w) => { let n = 0; return w.map((c) => { if (c === '1') n++; return n % 2 ? 'U' : 'G'; }).join(''); },
+};
+DEMO.push(
+  { modul: 'mealy', art: 'vorhersage', id: 'demo:mealy:vorhersage', titel: 'Demo: Paritäts-Melder – Was kommt raus?', daten: PARITAET },
+  { modul: 'mealy', art: 'bugjagd', id: 'demo:mealy', titel: 'Demo: Paritäts-Melder – Bug-Jagd', daten: PARITAET },
+);

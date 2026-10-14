@@ -36,6 +36,8 @@ findet er einen, schlägt die Prüfung fehl.
 | Automaten-Baukasten | 18 Challenges | Basis 1 / Standard 2 / Profi 3 → 10/20/30 | 20/30/40 |
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
+| Mealy-Maschine | 7 × „Was kommt raus?“ + 7 Bug-Jagden | Vorhersage 10 (Anteil im ersten Versuch); Bug-Jagd Basis/Standard/Profi → 10/20/30 | 10 je Wort, 10 gefunden, 30 repariert |
+| Minimierer | 7 Aufgaben (Markierungsverfahren) | Basis 1 (Smiley, gerade Anzahl a) / Standard 2 / Profi 3 (Prüfnummern) → 10/20/30 | 30 je Aufgabe, „Unterscheide!“ 5 je Paar |
 
 ## 3. Interaktionen
 
@@ -58,6 +60,48 @@ findet er einen, schlägt die Prüfung fehl.
   Geprüft wird die **Sprache** (jeder äquivalente DEA ist richtig); falsch → kürzestes Gegenbeispiel.
 * Tipps einzeln abrufbar (kosten Punkte). Lösungsteil: Musterlösung (DEA).
 
+### Minimierer (`minimierer`)
+* Öffentlich: Aufgabentext, Auftrag, der Automat (er ist Gegenstand der Aufgabe). ID = `minimierer:<schlüssel>`
+  (`minimierer:smiley` …), Deep-Links unverändert `#/minimierer?aufgabe=n`.
+* Antwort je Runde: `{ runde, markiert: ["p|q", …] }` – die in dieser Runde neu markierten Paare. Den Stand
+  (bestätigte Paare mit Runde) hält der Server in `fortschritt.daten`; `runde: 0` beginnt neu, eine andere Runde als
+  die erwartete → 409 (die App beginnt dann neu). Großzügig wie im Unterricht: in derselben Runde schon begründbare
+  Paare gelten als richtig („vorgezogen“).
+* Rückmeldung: `richtig`, `fertig`, `naechsteRunde`, `bestaetigt`, `falsch` (zu Unrecht markierte Paare),
+  `fehlendAnzahl`; ab dem zweiten falschen Versuch derselben Runde auch `fehlend` (Paare). Jede falsch geprüfte
+  Runde ist ein Fehlversuch (Punkteformel §2). Gelöst ist die Aufgabe, wenn keine Runde mehr etwas markiert.
+* Lösungsteil: vollständige Markierung (Paar → Runde), Klassen, Zustandszahl vorher/nachher, zusammengefasster
+  Automat, Merksatz. „Lösung zeigen“ wie bei allen Aufgaben.
+* „Unterscheide!“ ist Training (Abschnitt Training).
+
+### Mealy-Maschine (`mealy`)
+* Je Automat zwei Aufgaben: `mealy:<schlüssel>:vorhersage` („Was kommt raus?“) und `mealy:<schlüssel>` (Bug-Jagd).
+  Deep-Links unverändert `#/mealy?aufgabe=n&modus=vorhersage|bugjagd|frei`. Der Katalog nennt `art` und `schluessel`.
+* Vorhersage – öffentlich: Referenzautomat (Gegenstand der Aufgabe), Bedeutungen, Beispiele, Eingabewörter.
+  Antwort `{ wort: Index, ausgabe }`; gewertet wird wie beim Quiz der erste Versuch je Wort (keine Fehlversuche,
+  Punkte = Anteil × 10), die richtige Ausgabe kommt nach dem richtigen oder dem zweiten falschen Versuch.
+  Kein „Lösung zeigen“.
+* Bug-Jagd – öffentlich: der **fehlerhafte** Automat, Auftrag, Beispiele, die schon stimmen. Schritt 1
+  `{ test, urteil: 'bug'|'stimmt', ausgaben? }` prüft ein Wort am (teilweise reparierten) Arbeitsstand – ohne Wertung,
+  die richtige Ausgabe erst mit dem Urteil. Schritt 2 `{ ausgaben: { S0: { M: 'B' } } }` vergleicht mit der Referenz
+  (kürzestes Gegenbeispiel), falsch = Fehlversuch. Lösungsteil: die falschen Kanten mit richtiger Ausgabe.
+* Grenze: Die Referenz steht in „Was kommt raus?“ und in der freien Simulation – wer vergleicht, findet die Bugs
+  schneller. Das ist didaktisch in Ordnung (Vergleichen ist eine Strategie) und lässt sich nicht verbergen.
+
+### Training (`arena`, `unterscheide`)
+Wie der Trainingsplatz von Algo Quest (Umsetzung von `docs/VERBUND.md` §6): Spielrunden statt Aufgaben mit IDs.
+* `POST /api/training/<modul>/neu` erzeugt die Runde auf dem Server und speichert sie samt Lösungen (Tabelle
+  `training`). Arena `{ stufe: 1–3, automat?, ueben? }` → 150 Items `{ automat, wort }`; Unterscheide `{ aufgabe? }`
+  (Minimierer-Schlüssel) → bis zu 8 Paare `{ aufgabe, p, q }`. Nur eine offene Runde je Modul.
+* Die App spielt die Runde (die Automaten sind sichtbar, die sofortige Rückmeldung kommt aus der Engine) und schickt
+  am Ende alle Antworten: `POST /api/training/runde/:id/ende { antworten }` – Arena `[true|false, …]` in Reihenfolge,
+  Unterscheide `[{ wort } | { aequivalent: true } | null, …]`. Der Server zählt (`app/js/engine/training.js`).
+* Punkte: **1 je richtiger Antwort**, höchstens **30 je Kalendertag** (Europe/Berlin) über alle Trainings. Arena-Rekord
+  je Stufe (`best["arena:s"]` im Lernstand) nur für Zeitrunden einer Stufe, die spätestens 90 s nach dem Start enden.
+* Abzeichen: Arena wie bisher (erste Runde, Zehnerserie, 100 Punkte in einer Zeitrunde, 120 in Stufe 3),
+  „Unterscheider“ ab 10 richtig beurteilten Paaren.
+* Gäste spielen dieselben Runden lokal (`lokalesTraining()` in `app/js/core/aufgaben.js`), ohne Punkte.
+
 ## 4. API (angemeldet; Schüler nur mit freigeschaltetem Kurs, Vertrag §4)
 
 ```
@@ -67,6 +111,9 @@ GET  /api/aufgaben/:id                öffentlicher Teil + Zustand (+ Lösungste
 POST /api/aufgaben/:id/pruefen        { antwort } → { ok, fertig, rueckmeldung, zustand, geloest, nachgeloest, punkteErhalten, neueAbzeichen, loesung? }
 POST /api/aufgaben/:id/tipp           nächster Tipp
 POST /api/aufgaben/:id/aufdecken      „Lösung zeigen“ (0 Punkte; nicht beim Quiz)
+GET  /api/training                    Trainingspunkte heute und Tageshöchstwert
+POST /api/training/:modul/neu         neue Trainingsrunde (arena | unterscheide)
+POST /api/training/runde/:id/ende     { antworten } → { richtig, score?, besteSerie?, punkteErhalten, rekord?, neueAbzeichen, heute }
 ```
 
 Schreibende Anfragen nur mit gleicher Herkunft und als JSON; höchstens 120 Prüfungen pro Minute und Konto.

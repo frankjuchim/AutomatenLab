@@ -111,6 +111,7 @@ function createKonten(ctx) {
       let n = db.prepare('DELETE FROM kurs_mitglieder WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM fortschritt WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM abzeichen WHERE sub = ?').run(sub).changes;
+      n += db.prepare('DELETE FROM training WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM konten WHERE sub = ?').run(sub).changes;
       return n;
     })();

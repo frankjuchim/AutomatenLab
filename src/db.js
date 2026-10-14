@@ -70,6 +70,28 @@ const MIGRATIONEN = [
     at         TEXT NOT NULL,
     PRIMARY KEY (sub, schluessel)
   );
+  `,
+  `
+  -- Training (wie der Trainingsplatz von Algo Quest): Spielrunden der Akzeptor-Arena und von „Unterscheide!“.
+  -- Der Server erzeugt die Runde (daten, mit Lösungen), zählt die Antworten und vergibt 1 Punkt je richtiger Antwort,
+  -- höchstens TRAINING_MAX_TAG Punkte je Kalendertag (Europe/Berlin).
+  CREATE TABLE training (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    sub        TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    modul      TEXT NOT NULL CHECK (modul IN ('arena', 'unterscheide')),
+    art        TEXT NOT NULL DEFAULT '',      -- z. B. „stufe-2“, „stufe-1-ueben“, „automat-lol“, „aufgabe-smiley“
+    daten      TEXT NOT NULL,                 -- erzeugte Runde samt Lösungen
+    status     TEXT NOT NULL DEFAULT 'offen' CHECK (status IN ('offen', 'fertig')),
+    richtig    INTEGER NOT NULL DEFAULT 0,
+    score      INTEGER NOT NULL DEFAULT 0,    -- Arena: Rundenpunkte (Rekord je Stufe), sonst 0
+    serie      INTEGER NOT NULL DEFAULT 0,    -- längste Serie richtiger Antworten
+    wertung    INTEGER NOT NULL DEFAULT 0,    -- 1 = zählt für Rekorde (Arena: Zeitrunde einer Stufe, rechtzeitig beendet)
+    punkte     INTEGER NOT NULL DEFAULT 0,    -- vergebene Trainingspunkte
+    tag        TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    ended_at   TEXT
+  );
+  CREATE INDEX idx_training_sub ON training(sub, tag);
   `
 ];
 

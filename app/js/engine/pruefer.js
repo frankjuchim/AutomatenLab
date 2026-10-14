@@ -1,7 +1,10 @@
 // Prüffunktionen der Aufgabentypen – DOM-frei, ohne Lösungsdaten. Genutzt vom Server (echte Aufgaben, Lösungen in
 // inhalte/) und im Browser nur für die Demo-Aufgaben des Gastmodus. So prüfen beide genau gleich.
 
-import { dfa, runDFA, normalizeDFA, equivalent } from './dfa.js';
+import { dfa, runDFA, normalizeDFA, equivalent, minimizeDFA } from './dfa.js';
+import * as MK from './markierung.js';
+import { mealy, runMealy, mealyEquivalent } from './mealy.js';
+import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -63,4 +66,156 @@ export function pruefeBaukasten(referenz, automat) {
   const r = equivalent(A, ref);
   if (r.equivalent) return { ok: true, rueckmeldung: { richtig: true, zustaende: A.states.length } };
   return { ok: false, rueckmeldung: { richtig: false, gegenbeispiel: { wort: wordToString(r.counterexample, A.alphabet), symbole: r.counterexample, akzeptiertVonDir: r.acceptedByA } } };
+}
+
+/**
+ * Minimierer: eine Runde des Markierungsverfahrens prüfen.
+ * stand = { runde, bestaetigt: { "p|q": Runde }, versuche, fertig } (gespeichert vom Server bzw. von der Demo-Quelle),
+ * antwort = { runde, markiert: ["p|q", …] } – die in dieser Runde neu markierten Paare. Runde 0 beginnt neu.
+ * Liefert { ok (= Verfahren beendet), fertig, zaehltFehler, stand, rueckmeldung } oder wirft (400; 409 = Stand passt nicht).
+ */
+export function pruefeMinimiererRunde(automat, stand0, antwort) {
+  const ungueltig = (t, status = 400) => Object.assign(new Error(t), { status });
+  const runde = antwort?.runde;
+  if (!Number.isInteger(runde) || runde < 0) throw ungueltig('Die Runde fehlt.');
+  if (!Array.isArray(antwort.markiert) || antwort.markiert.length > 500) throw ungueltig('Die Markierungen fehlen.');
+  const T = MK.markierungsTabelle(dfa(automat));
+  const stand = runde === 0 ? { runde: 0, bestaetigt: {}, versuche: 0, fertig: false }
+    : { runde: stand0?.runde ?? 0, bestaetigt: { ...(stand0?.bestaetigt ?? {}) }, versuche: stand0?.versuche ?? 0, fertig: !!stand0?.fertig };
+  if (stand.fertig || runde !== stand.runde) throw ungueltig('Der Stand passt nicht mehr zu dieser Aufgabe – bitte beginne neu.', 409);
+  const markiert = new Set();
+  for (const k of antwort.markiert) {
+    const [p, q] = typeof k === 'string' ? k.split('|') : [];
+    if (!p || !q || p === q || !T.states.includes(p) || !T.states.includes(q)) throw ungueltig('Unbekanntes Zustandspaar.');
+    const key = T.key(p, q);
+    if (!(key in stand.bestaetigt)) markiert.add(key);
+  }
+  const r = MK.pruefeRunde(T, new Set(Object.keys(stand.bestaetigt)), markiert, runde);
+  stand.versuche++;
+  if (r.ok) {
+    for (const k of markiert) stand.bestaetigt[k] = runde;
+    stand.fertig = r.fertig || Object.keys(stand.bestaetigt).length === T.pairs.length;
+    stand.runde = runde + 1;
+    stand.versuche = 0;
+  }
+  return {
+    ok: stand.fertig, fertig: stand.fertig, zaehltFehler: !r.ok, stand,
+    rueckmeldung: { runde, richtig: r.ok, fertig: stand.fertig, naechsteRunde: stand.runde, bestaetigt: stand.bestaetigt, neu: r.ok ? markiert.size : 0,
+      vorgezogen: r.ok ? r.vorgezogen.length : 0, falsch: r.ok ? [] : r.falsch, fehlendAnzahl: r.ok ? 0 : r.fehlend.length,
+      fehlend: !r.ok && stand.versuche >= 2 ? r.fehlend : [] },
+  };
+}
+
+/** Minimierer: Lösungsteil – vollständige Markierung, Klassen, zusammengefasster Automat (Fehlerzustand wieder implizit). */
+export function minimiererLoesung(automat, merke) {
+  const A = dfa(automat);
+  const T = MK.markierungsTabelle(A);
+  const m = minimizeDFA(A, { mergedName: (c) => c.join('/') });
+  let M = m.dfa;
+  const err = m.addedErrorState;
+  if (err && M.states.includes(err)) {
+    const delta = {};
+    for (const s of M.states) if (s !== err) { delta[s] = {}; for (const c of M.alphabet) if (M.delta[s][c] !== err) delta[s][c] = M.delta[s][c]; }
+    M = { ...M, states: M.states.filter((s) => s !== err), delta, implicitError: true };
+  }
+  return { klassen: m.classes.filter((c) => c.length > 1), vorher: T.states.length, nachher: m.dfa.states.length, mitFehlerzustand: !!err,
+    automat: M, markierung: Object.fromEntries(MK.loesung(T).marked), merke: merke ?? null };
+}
+
+/* ───────────── Mealy-Maschine ───────────── */
+
+const ungueltig400 = (t) => Object.assign(new Error(t), { status: 400 });
+
+/** Mealy-Automat (normalisiert) zurück ins Datenformat { delta: { S0: { M: ['S1', 'ε'] } } } – JSON-sicher. */
+export function mealySpec(M) {
+  const delta = {};
+  for (const s of M.states) { delta[s] = {}; for (const c of M.inputAlphabet) { const t = M.delta[s]?.[c]; if (t) delta[s][c] = [t.to, t.out === '' ? 'ε' : t.out]; } }
+  return { inputAlphabet: M.inputAlphabet, outputAlphabet: M.outputAlphabet, states: M.states, start: M.start, delta };
+}
+
+/** Bug-Jagd: fehlerhafte Variante der Referenz (Liste { von, zeichen, ausgabe }) im Datenformat. */
+export function mealyFehlerVariante(automat, fehler) {
+  const F = mealy(automat);
+  for (const f of fehler) F.delta[f.von][f.zeichen] = { ...F.delta[f.von][f.zeichen], out: f.ausgabe === 'ε' ? '' : f.ausgabe };
+  return mealySpec(F);
+}
+
+/** Ausgabe-Eingabe lesen: Leerzeichen egal, ε/leer = leere Ausgabe, sonst Wort über Ω. → { ok, text } | { ok: false, message } */
+export function leseMealyAusgabe(raw, outputAlphabet) {
+  const t = String(raw ?? '').replace(/\s+/g, '');
+  if (isEpsilon(t)) return { ok: true, text: '' };
+  const tk = tokenizeWort(t, outputAlphabet);
+  if (!tk.ok) return { ok: false, message: tk.message.replace('Eingabealphabet Σ', 'Ausgabealphabet Ω') };
+  return { ok: true, text: tk.tokens.join('') };
+}
+
+/**
+ * „Was kommt raus?“: Ausgabe zu Wort Nr. i vorhersagen. Gewertet wird der erste Versuch je Wort (wie beim Quiz);
+ * nach dem zweiten falschen Versuch erscheint die richtige Ausgabe. stand = { antworten: { i: 0|1 }, versuche: { i: n } }.
+ */
+export function pruefeMealyVorhersage(automat, worte, stand0, antwort) {
+  const i = Number.isInteger(antwort?.wort) ? antwort.wort : -1;
+  if (!worte[i] && worte[i] !== '') throw ungueltig400('Dieses Wort gibt es nicht.');
+  const M = mealy(automat);
+  const r = leseMealyAusgabe(antwort.ausgabe, M.outputAlphabet);
+  if (!r.ok) throw ungueltig400(r.message);
+  const soll = runMealy(M, worte[i]).output;
+  const richtig = r.text === soll;
+  const stand = { antworten: { ...(stand0?.antworten ?? {}) }, versuche: { ...(stand0?.versuche ?? {}) } };
+  const k = String(i);
+  if (!(k in stand.antworten)) stand.antworten[k] = richtig ? 1 : 0;
+  stand.versuche[k] = (stand.versuche[k] ?? 0) + 1;
+  const zeigen = richtig || stand.versuche[k] >= 2;
+  const fertig = Object.keys(stand.antworten).length === worte.length && worte.every((_, j) => stand.antworten[j] === 1 || (stand.versuche[j] ?? 0) >= 2);
+  const summe = Object.values(stand.antworten).reduce((a, b) => a + b, 0);
+  return { richtig, fertig, anteil: summe / worte.length, stand,
+    rueckmeldung: { wort: i, richtig, versuche: stand.versuche[k], ...(zeigen ? { ausgabe: soll } : {}), fertig, ersterVersuch: summe, von: worte.length } };
+}
+
+/** Bug-Jagd: Arbeitsstand = fehlerhafter Automat mit den (teilweise) reparierten Ausgaben { S0: { M: 'B' } }. */
+function mealyArbeit(fehlerhaft, outputAlphabet, ausgaben) {
+  const W = mealy(fehlerhaft);
+  if (ausgaben === undefined || ausgaben === null) return W;
+  if (typeof ausgaben !== 'object' || JSON.stringify(ausgaben).length > 20000) throw ungueltig400('Die Ausgaben fehlen.');
+  for (const s of W.states) for (const c of W.inputAlphabet) {
+    if (!W.delta[s][c]) continue;
+    const raw = ausgaben[s]?.[c];
+    if (raw === undefined) continue;
+    const r = leseMealyAusgabe(raw, outputAlphabet);
+    if (!r.ok) throw ungueltig400(`Ausgabe bei ${s} mit ${c}: ${r.message}`);
+    W.delta[s][c] = { ...W.delta[s][c], out: r.text };
+  }
+  return W;
+}
+
+/**
+ * Bug-Jagd Schritt 1: Eingabewort am Arbeitsstand testen und urteilen („bug“ oder „stimmt“). Ohne Wertung; die
+ * richtige Ausgabe kommt erst mit dem Urteil zurück. antwort = { test, urteil, ausgaben? }.
+ */
+export function pruefeMealyTest(referenz, fehlerhaft, antwort) {
+  const R = mealy(referenz);
+  if (typeof antwort?.test !== 'string' || antwort.test.length > 60) throw ungueltig400('Bitte gib ein Eingabewort ein.');
+  if (!['bug', 'stimmt'].includes(antwort.urteil)) throw ungueltig400('Bitte urteile: Bug oder richtig?');
+  const tk = tokenizeWort(antwort.test, R.inputAlphabet);
+  if (!tk.ok) throw ungueltig400(tk.message);
+  const W = mealyArbeit(fehlerhaft, R.outputAlphabet, antwort.ausgaben);
+  const ist = runMealy(W, tk.tokens).output; const soll = runMealy(R, tk.tokens).output;
+  const bug = ist !== soll;
+  return { bug, rueckmeldung: { test: tk.tokens, ausgabe: ist, richtigeAusgabe: soll, bug, urteilRichtig: bug === (antwort.urteil === 'bug') } };
+}
+
+/** Bug-Jagd Schritt 2: reparierte Ausgaben { S0: { M: 'B' } } gegen die Referenz (kürzestes Gegenbeispiel). */
+export function pruefeMealyReparatur(referenz, fehlerhaft, ausgaben) {
+  const R = mealy(referenz);
+  if (!ausgaben || typeof ausgaben !== 'object') throw ungueltig400('Die Ausgaben fehlen.');
+  const W = mealyArbeit(fehlerhaft, R.outputAlphabet, ausgaben);
+  const d = mealyEquivalent(W, R);
+  if (d.equivalent) return { ok: true, rueckmeldung: { richtig: true } };
+  return { ok: false, rueckmeldung: { richtig: false, gegenbeispiel: { wort: d.word, deine: d.outA, richtig: d.outB } } };
+}
+
+/** Bug-Jagd: Lösungsteil – die falschen Kanten mit richtiger Ausgabe. */
+export function mealyLoesung(referenz, fehler) {
+  const R = mealy(referenz);
+  return { fehler: fehler.map((f) => ({ von: f.von, zeichen: f.zeichen, falsch: f.ausgabe, richtig: R.delta[f.von][f.zeichen].out === '' ? 'ε' : R.delta[f.von][f.zeichen].out })) };
 }

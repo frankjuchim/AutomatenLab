@@ -10,10 +10,13 @@
 //   klassen   erwartete Zusammenfassung (nur Klassen mit ≥ 2 Zuständen) – wird in tests/teil2.test.js geprüft
 //   beispiele Wörter, die akzeptiert (ja) bzw. abgelehnt (nein) werden – ebenfalls getestet
 //   merke     Satz, der nach dem Lösen erscheint (Bezug zum Abitur)
+//   stufe     1 Basis, 2 Standard, 3 Profi (Punkte 10/20/30, Vertrag §9)
+//
+// Liegt in inhalte/ (nur Server, Vertrag InfoLabs §9): Geprüft wird jede Runde auf dem Server (src/aufgaben).
 
 export const MINIMIERER_AUFGABEN = [
   {
-    id: 'smiley', titel: 'Smiley-Erkenner',
+    id: 'smiley', stufe: 1, titel: 'Smiley-Erkenner',
     kontext: 'Der Automat erkennt genau die beiden Smileys „:-)“ und „:)“. Mit dem Fehlerzustand hat er sechs Zustände.',
     frage: 'Untersuche, ob es einen Automaten mit weniger Zuständen gibt, der dieselbe Aufgabe löst.',
     automat: { alphabet: [':', '-', ')'], start: 'S0', accepting: ['S3', 'S4'], implicitError: true,
@@ -23,7 +26,7 @@ export const MINIMIERER_AUFGABEN = [
     merke: 'S3 und S4 sind beide Endzustände, aus denen jedes weitere Zeichen in den Fehlerzustand führt. Kein Wort kann sie unterscheiden – also reicht ein Zustand.',
   },
   {
-    id: 'gerade-a', titel: 'Doppelt gemoppelt: gerade Anzahl a',
+    id: 'gerade-a', stufe: 1, titel: 'Doppelt gemoppelt: gerade Anzahl a',
     kontext: 'Der Automat akzeptiert alle Wörter über {a, b} mit einer geraden Anzahl a. Er merkt sich aber mehr, als er braucht.',
     frage: 'Bestimme mit dem Markierungsverfahren einen minimalen Automaten.',
     automat: { alphabet: ['a', 'b'], start: 'S0', accepting: ['S0', 'S2'],
@@ -33,7 +36,7 @@ export const MINIMIERER_AUFGABEN = [
     merke: 'Der Automat zählt zusätzlich die b mit – für die Sprache ist das egal. Zwei Zustände (gerade/ungerade Anzahl a) reichen.',
   },
   {
-    id: 'barcode', titel: 'Barcode 110 mit Ballast',
+    id: 'barcode', stufe: 2, titel: 'Barcode 110 mit Ballast',
     kontext: 'Ein gültiger Barcode beginnt mit dem Startzeichen 110, danach folgen beliebige Bits. Der Entwurf hat zwei Fehlerzustände und zwei „Alles-gut“-Zustände.',
     frage: 'Untersuche, inwieweit Zustände zusammengefasst werden können, ohne die Funktionalität einzuschränken.',
     automat: { alphabet: ['0', '1'], start: 'S0', accepting: ['S3', 'S4'],
@@ -44,7 +47,7 @@ export const MINIMIERER_AUFGABEN = [
     merke: 'Zwei Zustände, aus denen man nie wieder einen Endzustand erreicht, sind immer äquivalent – ein Fehlerzustand genügt.',
   },
   {
-    id: 'binaer-3', titel: 'Binärzahl durch 3 teilbar',
+    id: 'binaer-3', stufe: 2, titel: 'Binärzahl durch 3 teilbar',
     kontext: 'Gelesen wird eine Binärzahl (höchstwertiges Bit zuerst). Akzeptiert wird, wenn ihr Wert durch 3 teilbar ist.',
     frage: 'Begründe mit dem Markierungsverfahren, dass der Automat bereits minimal ist.',
     automat: { alphabet: ['0', '1'], start: 'S0', accepting: ['S0'],
@@ -54,7 +57,7 @@ export const MINIMIERER_AUFGABEN = [
     merke: 'Am Ende sind alle Paare markiert: Je zwei Zustände sind unterscheidbar. Also braucht man mindestens drei Zustände.',
   },
   {
-    id: 'endet-ab', titel: 'Endet auf ab – zu viele Erinnerungen',
+    id: 'endet-ab', stufe: 2, titel: 'Endet auf ab – zu viele Erinnerungen',
     kontext: 'Akzeptiert werden alle Wörter über {a, b}, die auf „ab“ enden. Der Entwurf unterscheidet, wie das letzte a erreicht wurde.',
     frage: 'Bestimme die Zustände, die zusammengefasst werden können, und gib den minimalen Automaten an.',
     automat: { alphabet: ['a', 'b'], start: 'S0', accepting: ['S2'],
@@ -64,7 +67,7 @@ export const MINIMIERER_AUFGABEN = [
     merke: 'S1, S3 und S4 bedeuten alle „zuletzt ein a gelesen“. Mehr muss sich der Automat dafür nicht merken.',
   },
   {
-    id: 'kaffee', titel: 'Kaffeeautomat 40 ct',
+    id: 'kaffee', stufe: 2, titel: 'Kaffeeautomat 40 ct',
     kontext: 'Bezahlt wird mit 10- und 20-ct-Münzen, akzeptiert wird bei genau 40 ct. Der Entwurf unterscheidet, ob 20 ct als eine Münze oder als 10 + 10 eingeworfen wurden.',
     frage: 'Begründe, welche Zustände zusammengefasst werden können.',
     automat: { alphabet: ['10', '20'], start: 'S0', accepting: ['S5'], implicitError: true,
@@ -74,7 +77,7 @@ export const MINIMIERER_AUFGABEN = [
     merke: 'Für den Automaten zählt nur der bisher bezahlte Betrag, nicht die Münzen. 20 ct ist 20 ct.',
   },
   {
-    id: 'quersumme', titel: 'Prüfnummern: Kriterium X (angelehnt an Abitur 2025)',
+    id: 'quersumme', stufe: 3, titel: 'Prüfnummern: Kriterium X (angelehnt an Abitur 2025)',
     kontext: 'Prüfnummern bestehen aus zwei Ziffernfolgen über {1, 2, 3}, getrennt durch „-“. Kriterium X: Die Quersummen beider Ziffernfolgen sind beide gerade oder beide ungerade (z. B. 113-22133).',
     frage: 'Untersuche, inwieweit die Zustände S3 bis S8 zusammengefasst werden können, ohne die Funktionalität des Automaten einzuschränken.',
     automat: { alphabet: ['1', '2', '3', '-'], start: 'S0', accepting: ['S4', 'S8'], implicitError: true,

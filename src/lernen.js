@@ -11,7 +11,7 @@ function punkteFuer(punkte, fehlversuche, tipps) {
 
 const fehler = (status, text) => Object.assign(new Error(text), { status });
 
-function createLernen(ctx, { aufgaben }) {
+function createLernen(ctx, { aufgaben, training = null }) {
   const { db } = ctx;
   const iso = () => new Date(ctx.now()).toISOString();
   const titelAbzeichen = aufgaben.abzeichen; // Titel und Text aus app/js/data/badges.js
@@ -129,7 +129,7 @@ function createLernen(ctx, { aufgaben }) {
 
   function aufdecken(sub, id) {
     const a = aufgabe(id);
-    if (a.modul === 'quiz') throw fehler(400, 'Beim Quiz gibt es kein „Lösung zeigen“ – die Lösung erscheint nach jeder Antwort.');
+    if (a.modul === 'quiz' || a.id.endsWith(':vorhersage')) throw fehler(400, 'Hier gibt es kein „Lösung zeigen“ – die Lösung erscheint nach jeder Antwort.');
     const r = sichereZeile(sub, a.id);
     if (r.status === 'offen') db.prepare("UPDATE fortschritt SET status = 'angesehen', punkte = 0, updated_at = ? WHERE sub = ? AND aufgabe_id = ?").run(iso(), sub, a.id);
     const r2 = zeile(sub, a.id);
@@ -152,6 +152,12 @@ function createLernen(ctx, { aufgaben }) {
       if (r.status === 'geloest' || r.nachgeloest) solved[a.id] = Date.parse(r.geloest_at || r.updated_at) || 0;
       if (a.modul === 'quiz' && r.status === 'geloest') best[a.id] = a.typ.loesungsteil(a, zinfo(r)).ergebnis.prozent;
     }
+    // Training (Arena, „Unterscheide!“): Trainingspunkte und Arena-Rekorde je Stufe
+    if (training) {
+      const t = training.stand(sub);
+      punkte += t.punkte;
+      Object.assign(best, t.best);
+    }
     const badges = db.prepare('SELECT schluessel FROM abzeichen WHERE sub = ? ORDER BY at').all(sub).map((r) => r.schluessel);
     return { module: [...aufgaben.module], punkte, solved, best, badges };
   }
@@ -160,7 +166,7 @@ function createLernen(ctx, { aufgaben }) {
   function katalog(modul) {
     return aufgaben.liste
       .filter((a) => !modul || a.modul === modul)
-      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.modul === 'baukasten' ? { schluessel: a.daten.id } : {}) }));
+      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(['baukasten', 'minimierer'].includes(a.modul) ? { schluessel: a.daten.id } : {}), ...(a.modul === 'mealy' ? { schluessel: a.id.slice('mealy:'.length), art: a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd' } : {}) }));
   }
 
   return { abrufen, pruefen, tipp, aufdecken, lernstand, katalog, punkteFuer };

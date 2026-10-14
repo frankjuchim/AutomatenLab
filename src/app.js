@@ -13,6 +13,7 @@ const { schluesselListe } = require('./jwt');
 const { createKonten } = require('./konten');
 const { createAuswertung } = require('./auswertung');
 const { createLernen } = require('./lernen');
+const { createTraining } = require('./training');
 const { ssoRoutes } = require('./routes/sso');
 const { verbundRoutes } = require('./routes/verbund');
 const { apiRoutes } = require('./routes/api');
@@ -123,7 +124,8 @@ function createApp(opts) {
 
   const ctx = { db, now, log };
   const konten = createKonten(ctx);
-  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog }), lernen: createLernen(ctx, { aufgaben: opts.aufgaben }) };
+  const training = createTraining(ctx, { aufgaben: opts.aufgaben });
+  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog }), training, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training }) };
 
   const app = express();
   app.disable('x-powered-by');
@@ -195,7 +197,7 @@ function createApp(opts) {
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
     umfang: katalog.umfang,
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
-    faehigkeiten: ['gast', 'themen', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
+    faehigkeiten: ['gast', 'themen', 'training', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
 
   app.get('/api/plattform', (req, res) => {

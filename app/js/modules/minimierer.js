@@ -1,32 +1,49 @@
 // Minimierer (#/minimierer, DS05): Markierungsverfahren interaktiv + Spiel „Unterscheide!“.
 // Deep-Links: #/minimierer?aufgabe=n (Markierungsverfahren, n = 1 …),
 //             #/minimierer?aufgabe=n&modus=unterscheide (Spiel zu dieser Aufgabe),
-//             #/minimierer?modus=unterscheide (gemischte Runde aus allen Aufgaben)
+//             #/minimierer?modus=unterscheide (gemischte Runde aus allen Aufgaben),
+//             #/minimierer?demo=1 (Demo-Aufgabe im Gastmodus)
+// Geprüft wird jede Runde von der Quelle (Server, angemeldet; Demo im Gastmodus) – Punkte vergibt nur der Server.
+// „Unterscheide!“ ist Training: Angemeldet erzeugt der Server die Runde und zählt am Ende die Antworten (1 Punkt je
+// richtigem Paar, Tageshöchstwert); in der Demo läuft dieselbe Runde lokal ohne Punkte.
 
 import { h, clear, quote } from '../core/dom.js';
-import { MINIMIERER_AUFGABEN } from '../data/minimierer.js';
-import { dfa, minimizeDFA, runToText } from '../engine/dfa.js';
-import { tokenize, wordToString, makeRng } from '../engine/tokenize.js';
+import { dfa, runToText } from '../engine/dfa.js';
+import { tokenize, wordToString } from '../engine/tokenize.js';
+import { lokalesTraining } from '../core/aufgaben.js';
 import * as MK from '../engine/markierung.js';
 import { GraphView } from '../components/graph-view.js';
 
-const AUFGABEN = MINIMIERER_AUFGABEN.map((a, i) => ({ ...a, nr: i + 1, A: dfa(a.automat) }));
-const PUNKTE = 30;
-const PUNKTE_PAAR = 5;
 const pairText = (k) => `{${k.split('|').join(', ')}}`;
-const mergedName = (members) => members.join('/');
 
 export default {
   title: 'Minimierer',
   mount(el, ctx) {
+    const q = ctx.quelle; // Server (angemeldet) oder Demo (Gastmodus) – erwartete Klassen und Merksätze kennt nur die Quelle
     const p = ctx.params;
-    const n = Number(p.get('aufgabe'));
-    const a = n >= 1 && n <= AUFGABEN.length ? AUFGABEN[n - 1] : null;
-    const modus = p.get('modus');
-    if (modus === 'unterscheide') return unterscheide(a);
-    if (a) return markieren(a);
-    overview();
-    return null;
+    let aktiv = true;
+    let LISTE = [];
+    const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
+    const laden = async (eintrag) => {
+      const d = await q.aufgabe(eintrag.id);
+      return { ...d.aufgabe, aufgabeId: eintrag.id, nr: eintrag.nr ?? 0, punkte: eintrag.punkte ?? 0, A: dfa(d.aufgabe.automat), zustand: d.zustand, loesung: d.loesung ?? null };
+    };
+    clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    (async () => {
+      LISTE = await q.liste('minimierer');
+      if (!aktiv) return;
+      const n = Number(p.get('aufgabe'));
+      const eintrag = q.demo ? LISTE[0] : LISTE.find((c) => c.nr === n);
+      if (p.get('modus') === 'unterscheide') {
+        const pool = eintrag ? [await laden(eintrag)] : await Promise.all(LISTE.map(laden));
+        if (aktiv) unterscheide(eintrag ? pool[0] : null, pool);
+        return;
+      }
+      if (!eintrag) { overview(); return; }
+      const x = await laden(eintrag);
+      if (aktiv) markieren(x);
+    })().catch(fehler);
+    return () => { aktiv = false; };
 
     // ───────────────────────── Übersicht ─────────────────────────
     function overview() {
@@ -34,46 +51,50 @@ export default {
       clear(el,
         h('p', { class: 'lead' }, 'Zwei Zustände sind unterscheidbar, wenn es ein Wort gibt, das vom einen in einen Endzustand und vom anderen in einen Nicht-Endzustand führt. Nicht unterscheidbare (äquivalente) Zustände dürfen zusammengefasst werden.'),
         h('h2', { class: 'mz-h2' }, 'Markierungsverfahren'),
-        h('ol', { class: 'case-grid' }, AUFGABEN.map((x) => {
-          const solved = ctx.progress.isSolved('minimierer', x.id);
-          const T = MK.markierungsTabelle(x.A);
+        h('ol', { class: 'case-grid' }, LISTE.map((x) => {
+          const solved = ctx.progress.isSolved('minimierer', x.schluessel);
           return h('li', null, h('a', { class: ['case-card', solved && 'is-solved'], href: ctx.link('minimierer', { aufgabe: x.nr }) },
-            h('span', { class: 'case-nr' }, `Aufgabe ${x.nr} · ${T.states.length} Zustände${T.addedErrorState ? ' (mit Fehlerzustand)' : ''}`),
+            h('span', { class: 'case-nr' }, `Aufgabe ${x.nr} · ${['', 'Basis', 'Standard', 'Profi'][x.stufe] ?? ''}`),
             h('span', { class: 'case-title' }, x.titel),
-            h('span', { class: 'case-state' }, solved ? 'gelöst' : `${PUNKTE} Punkte`)));
+            h('span', { class: 'case-state' }, solved ? 'gelöst' : `${x.punkte} Punkte`)));
         })),
         h('section', { class: 'panel mz-teaser' },
           h('h2', null, 'Spiel: Unterscheide!'),
-          h('p', null, 'Zwei Zustände leuchten auf. Finde ein Wort, das sie unterscheidet – oder begründe, dass sie äquivalent sind.'),
+          h('p', null, 'Zwei Zustände leuchten auf. Finde ein Wort, das sie unterscheidet – oder begründe, dass sie äquivalent sind. Zum Üben, ohne Punkte.'),
           h('a', { class: 'btn btn-primary', href: ctx.link('minimierer', { modus: 'unterscheide' }) }, 'Gemischte Runde starten')));
     }
 
     function modeTabs(x, active) {
+      const par = (extra) => (q.demo ? { demo: 1, ...extra } : { aufgabe: x.nr, ...extra });
       return h('nav', { class: 'mode-tabs', 'aria-label': 'Modus' },
-        h('a', { href: ctx.link('minimierer', { aufgabe: x.nr }), 'aria-current': active === 'markieren' ? 'page' : null }, 'Markierungsverfahren'),
-        h('a', { href: ctx.link('minimierer', { aufgabe: x.nr, modus: 'unterscheide' }), 'aria-current': active === 'unterscheide' ? 'page' : null }, 'Unterscheide!'));
+        h('a', { href: ctx.link('minimierer', par({})), 'aria-current': active === 'markieren' ? 'page' : null }, 'Markierungsverfahren'),
+        h('a', { href: ctx.link('minimierer', par({ modus: 'unterscheide' })), 'aria-current': active === 'unterscheide' ? 'page' : null }, 'Unterscheide!'));
     }
 
     function caseNav(x, modusParam) {
-      const q = (nr) => ({ aufgabe: nr, modus: modusParam });
+      if (q.demo) return h('nav', { class: 'case-nav', 'aria-label': 'Aufgaben' }, h('a', { class: 'btn btn-ghost', href: ctx.link('gast') }, 'Weitere Demo-Aufgaben'));
+      const par = (nr) => ({ aufgabe: nr, modus: modusParam });
       return h('nav', { class: 'case-nav', 'aria-label': 'Aufgaben' },
-        x.nr > 1 ? h('a', { class: 'btn btn-ghost', href: ctx.link('minimierer', q(x.nr - 1)) }, `‹ Aufgabe ${x.nr - 1}`) : h('span'),
+        x.nr > 1 ? h('a', { class: 'btn btn-ghost', href: ctx.link('minimierer', par(x.nr - 1)) }, `‹ Aufgabe ${x.nr - 1}`) : h('span'),
         h('a', { class: 'btn btn-ghost', href: ctx.link('minimierer') }, 'Alle Aufgaben'),
-        x.nr < AUFGABEN.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('minimierer', q(x.nr + 1)) }, `Aufgabe ${x.nr + 1} ›`) : h('span'));
+        x.nr < LISTE.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('minimierer', par(x.nr + 1)) }, `Aufgabe ${x.nr + 1} ›`) : h('span'));
     }
 
     // ───────────────────────── Markierungsverfahren ─────────────────────────
     function markieren(x) {
-      ctx.setSubtitle(`Aufgabe ${x.nr} von ${AUFGABEN.length}: ${x.titel}`);
+      ctx.setSubtitle(q.demo ? `Demo-Aufgabe: ${x.titel} (ohne Punkte)` : `Aufgabe ${x.nr} von ${LISTE.length}: ${x.titel}`);
       const T = MK.markierungsTabelle(x.A);
       const S = T.states;
-      const confirmed = new Map(); // key → Runde
+      let zustand = x.zustand;
+      let loesung = x.loesung;
+      let confirmed = new Map(); // key → Runde
       let pending = new Set();
       let round = 0;
       let attempts = 0;
       let totalAttempts = 0;
       let selected = null;
       let finished = false;
+      let busy = false;
       let lookOnly = false;
       let showMissing = new Set();
       let wrongMarks = new Set();
@@ -88,7 +109,9 @@ export default {
       const feedback = h('div', { class: 'mz-feedback', 'aria-live': 'polite' });
       const checkBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => check() }, 'Runde prüfen');
       const lookBox = h('input', { type: 'checkbox', id: 'mz-look', onchange: (e) => { lookOnly = e.target.checked; } });
+      const showBtn = h('button', { type: 'button', class: 'btn btn-ghost btn-small', onclick: () => aufdecken() }, 'Lösung zeigen');
       const resultSlot = h('div', { class: 'mz-result' });
+      const statusLine = h('p', { class: 'muted' });
       const cells = new Map();
 
       // Dreieckstabelle: Zeilen S1 … Sn-1, Spalten S0 … Sn-2 (Beschriftung unten, wie im Unterricht)
@@ -122,6 +145,12 @@ export default {
             : `Runde ${round}: Markiere alle noch freien Paare, die mit einem Zeichen in ein bereits markiertes Paar übergehen. Kannst du keins mehr markieren, prüfe ohne neue Markierung.`;
         checkBtn.textContent = round > 0 && pending.size === 0 ? 'Prüfen: kein weiteres Paar' : 'Runde prüfen';
         checkBtn.hidden = finished;
+        checkBtn.disabled = busy;
+        showBtn.hidden = finished;
+        statusLine.textContent = !zustand || q.demo ? ''
+          : zustand.status === 'geloest' ? 'Diese Aufgabe hast du schon gelöst – zum Üben kannst du sie wiederholen.'
+            : zustand.status === 'angesehen' ? 'Du hast dir die Lösung schon angesehen – Punkte gibt es hier nicht mehr, selbst lösen zählt aber als gelöst.'
+              : `Jede falsch geprüfte Runde kostet Punkte – jetzt noch ${zustand.moeglich} von ${zustand.maxPunkte} Punkten möglich.`;
       }
 
       function tap(key) {
@@ -153,74 +182,90 @@ export default {
           h('tbody', null, rows))));
       }
 
-      function check() {
-        if (finished) return;
+      function neuBeginnen(text) {
+        confirmed = new Map(); pending = new Set(); round = 0; attempts = 0; wrongMarks = new Set(); showMissing = new Set(); finished = false;
+        clear(resultSlot);
+        clear(feedback, h('p', { class: 'notice' }, text));
+        paint();
+      }
+
+      async function check() {
+        if (finished || busy) return;
+        busy = true; paint();
+        let r;
+        try {
+          r = await q.pruefen(x.aufgabeId, { runde: round, markiert: [...pending] });
+        } catch (e) {
+          busy = false;
+          if (e.status === 409) neuBeginnen('Der gespeicherte Stand passte nicht mehr (z. B. in einem anderen Fenster weitergearbeitet). Beginne bitte mit Runde 0 neu.');
+          else { clear(feedback, h('p', { class: 'notice notice-error' }, e.message)); paint(); }
+          return;
+        }
+        busy = false;
         attempts++; totalAttempts++;
-        const r = MK.pruefeRunde(T, new Set(confirmed.keys()), pending, round);
-        wrongMarks = new Set(r.falsch);
-        showMissing = new Set();
-        if (r.ok) {
-          for (const k of pending) confirmed.set(k, round);
-          const n0 = pending.size;
+        zustand = r.zustand ?? zustand;
+        const rm = r.rueckmeldung;
+        wrongMarks = new Set(rm.falsch);
+        showMissing = new Set(rm.fehlend);
+        if (rm.richtig) {
+          const n0 = rm.neu;
+          confirmed = new Map(Object.entries(rm.bestaetigt));
           pending = new Set(); attempts = 0;
-          if (r.fertig || confirmed.size === T.pairs.length) { finish(); return; }
+          if (rm.fertig) { if (r.punkteErhalten) ctx.toast(`+${r.punkteErhalten} Punkte`, { type: 'success' }); finish(r.loesung ?? loesung); return; }
           clear(feedback, h('div', { class: 'notice notice-success' },
-            h('p', null, h('strong', null, `Runde ${round} stimmt. `), n0 ? `${n0} ${n0 === 1 ? 'Paar' : 'Paare'} markiert${r.vorgezogen.length ? ` (davon ${r.vorgezogen.length} schon vorgezogen – auch richtig)` : ''}.` : 'In dieser Runde war nichts zu markieren.'),
+            h('p', null, h('strong', null, `Runde ${round} stimmt. `), n0 ? `${n0} ${n0 === 1 ? 'Paar' : 'Paare'} markiert${rm.vorgezogen ? ` (davon ${rm.vorgezogen} schon vorgezogen – auch richtig)` : ''}.` : 'In dieser Runde war nichts zu markieren.'),
             h('p', null, 'Weiter mit der nächsten Runde: Prüfe für jedes freie Paar die Folgepaare.')));
-          round++;
+          round = rm.naechsteRunde;
         } else {
           const parts = [];
-          if (r.falsch.length) {
-            const k = r.falsch[0];
+          if (rm.falsch.length) {
+            const k = rm.falsch[0];
             const why = round === 0 ? 'Beide Zustände sind Endzustände oder beide sind keine.'
               : `Mit keinem Zeichen geht es in ein markiertes Paar: ${MK.folgepaare(T, k).map((f) => `${f.symbol} → ${f.key ? pairText(f.key) : 'gleicher Zustand'}`).join(', ')}.`;
-            parts.push(h('p', null, h('strong', null, `${r.falsch.length === 1 ? 'Ein Paar ist' : `${r.falsch.length} Paare sind`} zu Unrecht markiert`), ` (rot umrandet), z. B. ${pairText(k)}. ${why}`));
+            parts.push(h('p', null, h('strong', null, `${rm.falsch.length === 1 ? 'Ein Paar ist' : `${rm.falsch.length} Paare sind`} zu Unrecht markiert`), ` (rot umrandet), z. B. ${pairText(k)}. ${why}`));
           }
-          if (r.fehlend.length) {
-            parts.push(h('p', null, h('strong', null, r.fehlend.length === 1 ? 'Es fehlt noch ein Paar.' : `Es fehlen noch ${r.fehlend.length} Paare.`),
-              attempts >= 2 ? ' Die fehlenden Paare sind jetzt gestrichelt markiert.' : ' Tipp: Tippe ein freies Paar an und sieh dir die Folgepaare an.'));
-            if (attempts >= 2) showMissing = new Set(r.fehlend);
+          if (rm.fehlendAnzahl) {
+            parts.push(h('p', null, h('strong', null, rm.fehlendAnzahl === 1 ? 'Es fehlt noch ein Paar.' : `Es fehlen noch ${rm.fehlendAnzahl} Paare.`),
+              rm.fehlend.length ? ' Die fehlenden Paare sind jetzt gestrichelt markiert.' : ' Tipp: Tippe ein freies Paar an und sieh dir die Folgepaare an.'));
           }
           clear(feedback, h('div', { class: 'notice notice-error' }, parts));
         }
         paint();
       }
 
-      function finish() {
+      /** „Lösung zeigen“: vollständige Markierung und Ergebnis – danach gibt es für diese Aufgabe keine Punkte mehr. */
+      async function aufdecken() {
+        if (!loesung) {
+          if (!q.demo && zustand?.status === 'offen' && !window.confirm('Wenn du die Lösung ansiehst, bekommst du für diese Aufgabe keine Punkte mehr. Trotzdem anzeigen?')) return;
+          try { const r = await q.aufdecken(x.aufgabeId); zustand = r.zustand; loesung = r.loesung; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+        }
+        confirmed = new Map(Object.entries(loesung.markierung));
+        pending = new Set(); wrongMarks = new Set(); showMissing = new Set();
+        finish(loesung, true);
+      }
+
+      function finish(L, angezeigt = false) {
         finished = true;
         selected = null;
         gv.clearHighlight();
-        const m = minimizeDFA(x.A, { mergedName });
-        const classes = m.classes.filter((c) => c.length > 1);
-        const { first } = ctx.progress.solve('minimierer', x.id, PUNKTE);
-        ctx.progress.award('minimierer-erste');
-        if (AUFGABEN.every((y) => ctx.progress.isSolved('minimierer', y.id))) ctx.progress.award('minimierer-alle');
-        if (first) ctx.toast(`+${PUNKTE} Punkte`, { type: 'success' });
-        // Anzeige: zusammengefasster Automat; ergänzten Fehlerzustand wieder implizit machen
-        let M = m.dfa;
-        const err = m.addedErrorState;
-        if (err && M.states.includes(err)) {
-          const delta = {};
-          for (const s of M.states) if (s !== err) { delta[s] = {}; for (const c of M.alphabet) if (M.delta[s][c] !== err) delta[s][c] = M.delta[s][c]; }
-          M = { ...M, states: M.states.filter((s) => s !== err), delta, implicitError: true };
-        }
-        const before = T.states.length; const after = m.dfa.states.length;
+        loesung = L;
         clear(feedback); clear(help);
-        const next = AUFGABEN[x.nr];
+        const next = LISTE.find((y) => y.nr === x.nr + 1);
         const resultGraph = h('div', { class: 'mz-result-graph' });
+        const merged = L.klassen;
         clear(resultSlot, h('section', { class: 'panel mz-done' },
-          h('h2', null, classes.length ? 'Zusammenfassen' : 'Schon minimal!'),
-          h('p', null, classes.length
-            ? `Nicht markierte Paare sind äquivalent. Zusammengefasst werden: ${classes.map((c) => `${c.join(', ')} → ${mergedName(c)}`).join(' · ')}. Aus ${before} werden ${after} Zustände${err ? ' (jeweils mit Fehlerzustand gezählt)' : ''}.`
-            : `Alle Paare sind markiert: Je zwei Zustände sind unterscheidbar. Der Automat braucht mindestens ${after} Zustände${err ? ' (mit Fehlerzustand)' : ''}.`),
-          h('p', { class: 'muted' }, `${round} ${round === 1 ? 'Runde' : 'Runden'} mit Markierungen, ${totalAttempts} ${totalAttempts === 1 ? 'Prüfung' : 'Prüfungen'}.`),
+          h('h2', null, angezeigt ? 'Lösung' : merged.length ? 'Zusammenfassen' : 'Schon minimal!'),
+          h('p', null, merged.length
+            ? `Nicht markierte Paare sind äquivalent. Zusammengefasst werden: ${merged.map((c) => `${c.join(', ')} → ${c.join('/')}`).join(' · ')}. Aus ${L.vorher} werden ${L.nachher} Zustände${L.mitFehlerzustand ? ' (jeweils mit Fehlerzustand gezählt)' : ''}.`
+            : `Alle Paare sind markiert: Je zwei Zustände sind unterscheidbar. Der Automat braucht mindestens ${L.nachher} Zustände${L.mitFehlerzustand ? ' (mit Fehlerzustand)' : ''}.`),
+          angezeigt ? null : h('p', { class: 'muted' }, `${Math.max(0, round)} ${round === 1 ? 'Runde' : 'Runden'} mit Markierungen, ${totalAttempts} ${totalAttempts === 1 ? 'Prüfung' : 'Prüfungen'}.`),
           resultGraph,
-          h('p', { class: 'notice' }, x.merke),
+          L.merke ? h('p', { class: 'notice' }, L.merke) : null,
           h('div', { class: 'start-actions' },
-            next ? h('a', { class: 'btn btn-primary', href: ctx.link('minimierer', { aufgabe: next.nr }) }, `Weiter zu Aufgabe ${next.nr}`) : null,
-            h('a', { class: 'btn', href: ctx.link('minimierer', { aufgabe: x.nr, modus: 'unterscheide' }) }, 'Unterscheide! mit diesem Automaten'),
-            h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => ctx.navigate('minimierer', { aufgabe: x.nr }) }, 'Nochmal'))));
-        if (classes.length) new GraphView(resultGraph, { label: 'Zusammengefasster Automat' }).render(M);
+            next && !q.demo ? h('a', { class: 'btn btn-primary', href: ctx.link('minimierer', { aufgabe: next.nr }) }, `Weiter zu Aufgabe ${next.nr}`) : null,
+            h('a', { class: 'btn', href: ctx.link('minimierer', q.demo ? { demo: 1, modus: 'unterscheide' } : { aufgabe: x.nr, modus: 'unterscheide' }) }, 'Unterscheide! mit diesem Automaten'),
+            h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => neuBeginnen(angezeigt ? 'Jetzt selbst: Beginne mit Runde 0.' : 'Neuer Durchgang: Beginne mit Runde 0.') }, angezeigt ? 'Selbst lösen' : 'Nochmal'))));
+        if (merged.length) new GraphView(resultGraph, { label: 'Zusammengefasster Automat' }).render(L.automat);
         paint();
         resultSlot.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
@@ -230,6 +275,7 @@ export default {
         : null;
 
       clear(el, modeTabs(x, 'markieren'),
+        q.demo ? h('p', { class: 'notice gast-hinweis' }, h('strong', null, 'Demo. '), 'Eine eigene Aufgabe zum Ausprobieren – ohne Punkte. Die sieben Minimierer-Aufgaben gibt es nach der Anmeldung.') : null,
         h('div', { class: 'panel mz-task' },
           h('p', { class: 'task-text' }, x.kontext),
           h('p', null, h('strong', null, 'Auftrag: '), x.frage),
@@ -240,35 +286,23 @@ export default {
             roundHead,
             h('div', { class: 'table-scroll mz-scroll' }, table),
             h('div', { class: 'check-row mz-actions' }, checkBtn,
-              h('label', { class: 'check', for: 'mz-look' }, lookBox, ' Nur ansehen (nicht markieren)')),
-            feedback, help)),
+              h('label', { class: 'check', for: 'mz-look' }, lookBox, ' Nur ansehen (nicht markieren)'), showBtn),
+            statusLine, feedback, help)),
         resultSlot,
         caseNav(x, null));
-      if (ctx.progress.isSolved('minimierer', x.id)) feedback.append(h('p', { class: 'muted' }, 'Diese Aufgabe hast du schon gelöst – zum Üben kannst du sie wiederholen.'));
       clear(help, h('p', { class: 'muted' }, 'Tippe ein Feld an: Es wird markiert, und unten siehst du, wohin beide Zustände mit jedem Zeichen übergehen.'));
       paint();
       return null;
     }
 
     // ───────────────────────── Unterscheide! ─────────────────────────
-    function unterscheide(only) {
-      ctx.setSubtitle(only ? `Unterscheide! – Aufgabe ${only.nr}: ${only.titel}` : 'Unterscheide! – gemischte Runde');
-      const rng = makeRng();
-      const items = [];
-      const pool = only ? [only] : AUFGABEN;
-      for (const x of pool) {
-        const st = x.A.states;
-        const pairs = [];
-        for (let i = 0; i < st.length; i++) for (let j = i + 1; j < st.length; j++) {
-          const w = MK.unterscheidendesWort(x.A, st[i], st[j]);
-          pairs.push({ x, p: st[i], q: st[j], word: w, equiv: w === null });
-        }
-        const eq = rng.shuffle(pairs.filter((y) => y.equiv));
-        const ne = rng.shuffle(pairs.filter((y) => !y.equiv));
-        if (only) items.push(...eq.slice(0, 2), ...ne.slice(0, 4));
-        else items.push(...rng.shuffle([...eq.slice(0, 1), ...ne.slice(0, 1)]).slice(0, 1 + (rng() < 0.4 ? 1 : 0)));
-      }
-      const round = rng.shuffle(items).slice(0, 8);
+    function unterscheide(only, alle) {
+      ctx.setSubtitle(only ? (q.demo ? `Unterscheide! – Demo: ${only.titel}` : `Unterscheide! – Aufgabe ${only.nr}: ${only.titel}`) : 'Unterscheide! – gemischte Runde');
+      const pool = only ? [only] : alle;
+      const T = q.demo ? lokalesTraining({ minimierer: pool.map((x) => ({ id: x.id, automat: x.automat })) }) : q.training;
+      let round = [];
+      let runde = null;
+      let antworten = [];
       let idx = 0; let right = 0;
 
       const stage = h('div', { class: 'mz-u-stage' });
@@ -276,6 +310,7 @@ export default {
         h('p', { class: 'lead mz-u-lead' }, 'Unterscheidbar heißt: Es gibt ein Wort, das von einem der beiden Zustände in einen Endzustand führt, vom anderen aber nicht. Gibt es kein solches Wort, sind die Zustände äquivalent.'),
         stage,
         only ? caseNav(only, 'unterscheide') : null);
+      clear(stage, h('p', { class: 'muted' }, 'Runde wird vorbereitet …'));
 
       function show() {
         if (idx >= round.length) return summary();
@@ -299,9 +334,6 @@ export default {
           done = true;
           if (ok) {
             right++;
-            const { first } = ctx.progress.solve('minimierer-u', `${it.x.id}:${it.p}|${it.q}`, PUNKTE_PAAR);
-            if (first) out.querySelector('.notice')?.append(h('p', { class: 'mz-points' }, `+${PUNKTE_PAAR} Punkte`));
-            if (ctx.progress.solvedIds('minimierer-u').length >= 10) ctx.progress.award('minimierer-unterscheider');
           }
           nextBtn.hidden = false; nextBtn.focus({ preventScroll: true });
           input.disabled = true; form.querySelectorAll('button').forEach((b) => { b.disabled = true; });
@@ -318,6 +350,7 @@ export default {
             clear(out, h('div', { class: 'notice notice-success' },
               h('p', null, h('strong', null, 'Richtig! '), `${shown} unterscheidet ${it.p} und ${it.q}:`),
               h('ul', { class: 'mz-runs' }, lauf(it.p, w), lauf(it.q, w))));
+            antworten[idx] = { wort: w };
             solved(true);
           } else {
             clear(out, h('div', { class: 'notice notice-error' },
@@ -328,6 +361,7 @@ export default {
         };
         const claimEquiv = () => {
           if (done) return;
+          antworten[idx] = { aequivalent: true };
           if (it.equiv) {
             clear(out, h('div', { class: 'notice notice-success' },
               h('p', null, h('strong', null, 'Richtig, äquivalent! '), `Von ${it.p} und von ${it.q} aus führt jedes Wort entweder in beiden Fällen in einen Endzustand oder in beiden nicht. Die beiden Zustände können zusammengefasst werden.`)));
@@ -355,17 +389,33 @@ export default {
         input.focus({ preventScroll: true });
       }
 
-      function summary() {
+      async function summary() {
+        clear(stage, h('p', { class: 'muted' }, 'Auswertung …'));
+        let erg;
+        try { erg = await T.ende(runde.id, antworten); } catch (e) { erg = { fehler: e.message }; }
         clear(stage, h('div', { class: 'panel arena-result' },
           h('h2', null, 'Runde beendet'),
           h('p', { class: 'result-big' }, h('span', { class: 'num' }, `${right}`), ` von ${round.length} richtig`),
-          h('p', { class: 'muted' }, 'Für jedes Paar, das du zum ersten Mal richtig beurteilst, gibt es Punkte.'),
+          erg.fehler ? h('p', { class: 'notice notice-error' }, `Die Runde konnte nicht gezählt werden: ${erg.fehler}`)
+            : T.lokal ? h('p', { class: 'muted' }, 'Demo ohne Punkte.')
+              : h('p', { class: 'muted' }, `+${erg.punkteErhalten} Trainingspunkte (heute ${erg.heute} von höchstens ${erg.maxProTag}).`),
           h('div', { class: 'start-actions' },
-            h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => ctx.navigate('minimierer', { aufgabe: only?.nr, modus: 'unterscheide' }) }, 'Neue Runde'),
-            h('a', { class: 'btn', href: ctx.link('minimierer') }, 'Zur Übersicht'))));
+            h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => ctx.navigate('minimierer', q.demo ? { demo: 1, modus: 'unterscheide' } : { aufgabe: only?.nr, modus: 'unterscheide' }) }, 'Neue Runde'),
+            h('a', { class: 'btn', href: q.demo ? ctx.link('gast') : ctx.link('minimierer') }, q.demo ? 'Weitere Demo-Aufgaben' : 'Zur Übersicht'))));
       }
 
-      show();
+      T.neu('unterscheide', only ? { aufgabe: only.id } : {}).then((r) => {
+        if (!aktiv) return;
+        runde = r;
+        const byId = new Map(pool.map((x) => [x.id, x]));
+        round = r.items.map((it) => {
+          const x = byId.get(it.aufgabe);
+          const word = MK.unterscheidendesWort(x.A, it.p, it.q); // sofortige Rückmeldung aus dem sichtbaren Automaten
+          return { x, p: it.p, q: it.q, word, equiv: word === null };
+        });
+        antworten = round.map(() => null);
+        show();
+      }).catch(fehler);
       return null;
     }
   },

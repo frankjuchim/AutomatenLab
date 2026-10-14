@@ -37,7 +37,7 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/baukasten?modus=frei` | Freier Modus (eigenes Σ, Export als JSON/DOT, Import) – für DS04-Stationen und Bug-Bounty |
 | `#/minimierer` | Minimierer, Aufgabenübersicht |
 | `#/minimierer?aufgabe=1` … `?aufgabe=7` | Markierungsverfahren (1 Smiley-Erkenner :-) / :) 6→5, 2 Doppelt gemoppelt: gerade Anzahl a 4→2, 3 Barcode 110 mit Ballast 7→5, 4 Binärzahl durch 3 teilbar (schon minimal), 5 Endet auf ab 5→3, 6 Kaffeeautomat 40 ct, 7 Prüfnummern Kriterium X über {1,2,3,-} – S3…S8 zusammenfassen, Abi 2025) |
-| `#/minimierer?aufgabe=n&modus=unterscheide` · `#/minimierer?modus=unterscheide` | Spiel „Unterscheide!“ zu Aufgabe n bzw. gemischte Runde aus allen Aufgaben |
+| `#/minimierer?aufgabe=n&modus=unterscheide` · `#/minimierer?modus=unterscheide` | Spiel „Unterscheide!“ zu Aufgabe n bzw. gemischte Runde aus allen Aufgaben (Übung ohne Punkte) |
 | `#/mealy` | Mealy-Maschine, Übersicht |
 | `#/mealy?aufgabe=1` … `?aufgabe=7` | „Was kommt raus?“ (1 Süßigkeitenautomat M/H→B, 2 Kartoffelautomat 4 € mit Rückgeld, 3 Ziffernaddierer 0–3, 4 Lauflängen-Kompressor Frog hdddhhhhhdhh# → 1h3d3h2h1d2h# (Abi 2022), 5 Palindrom-Generator 011 → 01110, 6 Caesar-Verschiebung {A,B,C,D}, 7 wechselnde Verschiebung 1/2) |
 | `#/mealy?aufgabe=n&modus=vorhersage` · `…&modus=bugjagd` · `…&modus=frei` | Ausgabe vorhersagen · Bug-Jagd (fehlerhafte Kantenausgaben finden und reparieren) · freie Simulation |
@@ -62,7 +62,7 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/quiz?welt=A` … `?welt=D` | Quiz je Welt (8–10 Fragen) |
 | `#/quiz?ds=1` … `?ds=16` | Mini-Exit-Ticket je Doppelstunde (3 Fragen) |
 | `#/gast` | Ausprobieren ohne Anmeldung: je Modul eine Aufgabe (Gastmodus) – auch `BASE_URL/gast` |
-| `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
+| `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` · `#/minimierer?demo=1` · `#/minimierer?demo=1&modus=unterscheide` · `#/mealy?demo=1` · `#/mealy?demo=1&modus=bugjagd` · `#/mealy?demo=1&modus=frei` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
 | `#/themen` | Themen der Einheit: Welten, Level, Module und je Level Arbeitsblatt, Folien, Merkblatt als PDF (öffentlich, ohne Lösungen; PDFs je Rolle, sonst 🔒) – auch `BASE_URL/themen` |
 | `#/material` | Zusätzliches Material als PDF (Arbeitsblätter, Folien, Merkblätter; Lehrkräfte zusätzlich Lösungen und Klausuren, Admin die Originale) – ohne Anmeldung nur die Demo (Level 1: Schüler- und Lehrkraftfassung), zählt nicht für Punkte – auch `BASE_URL/material` |
 | `#/themen?teil=niveaus` | Niveau-Übersicht: was ist für Grundkurs (gA), Leistungskurs (eA) und Zusatz (öffentlich) – auch `BASE_URL/niveaus` |
@@ -100,16 +100,19 @@ Tipp für den Beamer: Knopf „A A“ oben rechts schaltet die Großansicht ein.
 
 ## Challenges und Inhalte ergänzen
 
-Alle Inhalte stehen als kommentierte Daten in `js/data/`:
+Alle Inhalte stehen als kommentierte Daten in `js/data/`. **Ausnahme:** Module mit Prüfung auf dem Server (Level-Quiz,
+Sprach-Detektiv, Automaten-Baukasten, Minimierer, Mealy-Maschine) haben ihre Daten samt Lösungen in `../inhalte/` (nie ausgeliefert,
+Format: `docs/AUFGABENFORMAT.md`); `minimierer.js` dort enthält die DEAs fürs Markierungsverfahren (`klassen` =
+erwartete Zusammenfassung, `stufe`, `merke`, getestet in `tests/teil2.test.js`).
 
 * `arena.js` – Automaten der Akzeptor-Arena (`id`, `titel`, `kontext`, `level` = Stufen, `automat`, `bedeutung`, `beispiele`).
-* `detektiv.js` – Fälle (4 Optionen, **die erste ist richtig**, jede mit Prüffunktion `pruefe(w)`).
-* `baukasten.js` – Challenges (`id`, `stufe`, `titel`, `aufgabe`, `referenz` = Musterlösung, `beispiele`, `tipp`, optional `pruefe`). Neue Challenges hinten anhängen, damit vorhandene `?level=n`-Links gleich bleiben – oder in QR-Codes `?aufgabe=<id>` verwenden.
+* `detektiv.js` (in `inhalte/`) – Fälle (4 Optionen, **die erste ist richtig**, jede mit Prüffunktion `pruefe(w)`).
+* `baukasten.js` (in `inhalte/`) – Challenges (`id`, `stufe`, `titel`, `aufgabe`, `referenz` = Musterlösung, `beispiele`, `tipp`, optional `pruefe`). Neue Challenges hinten anhängen, damit vorhandene `?level=n`-Links gleich bleiben – oder in QR-Codes `?aufgabe=<id>` verwenden.
 * `ueberliste.js` – Stufen von „Überliste den Automaten“ (Sprache, Kapazität c, Bauplan `bau(c)`, Prädikat, Tipps).
 * `rallye.js` – Rallye-Aufgaben (Grammatiktext in Abi-Notation, Zielwort, `modus: 'baum'` für Mehrdeutigkeit).
 * `grammatik.js` – Grammatik-Challenges (Σ, Prädikat `pruefe`, `regulaer`, Musterlösung – im Test gegen das Prädikat geprüft). Geprüft wird die Sprache bis `maxLen`; auch Grammatiken mit vielen ε-Regeln werden vollständig ausgewertet (`tests/grammar-nullable.test.js`).
 * `sortierer.js` – Sprachkarten (`typ` 3/2/0 + Begründung); `turing.js` – TM-Programme (Übergang `[Folgezustand, geschrieben, L|R|N]`) und Tabellen-Challenges; `quiz.js` – Quizfragen (mc/wf/zuordnung, erste Option richtig).
-* `minimierer.js` – DEAs fürs Markierungsverfahren (`klassen` = erwartete Zusammenfassung, wird getestet); `mealy.js` – Mealy-Automaten mit `beispiele`, `vorhersage`, Bug-Jagd-Fehlern `fehler: [{von, zeichen, ausgabe}]` und Prädikat `pruefe(w)` → Ausgabe; `parallelwelten.js` – NEAs (`raetsel`, `teilmengen`); `keller.js` – Kellerautomaten (Notation `'S0 -> S1 : (#, a) : A#'`, Prädikat, Wörter für Simulator/Tabelle/Rückwärts). Alle in `tests/teil2.test.js` gegen alle Wörter bis Länge 7–8 geprüft.
+* `mealy.js` (in `inhalte/`) – Mealy-Automaten mit `beispiele`, `vorhersage`, Bug-Jagd-Fehlern `fehler: [{von, zeichen, ausgabe}]` und Prädikat `pruefe(w)` → Ausgabe; `parallelwelten.js` – NEAs (`raetsel`, `teilmengen`); `keller.js` – Kellerautomaten (Notation `'S0 -> S1 : (#, a) : A#'`, Prädikat, Wörter für Simulator/Tabelle/Rückwärts). Alle in `tests/teil2.test.js` gegen alle Wörter bis Länge 7–8 geprüft.
 * `badges.js` – Abzeichen; `worlds.js` – Welten und Level.
 
 Automaten-Format (DEA):

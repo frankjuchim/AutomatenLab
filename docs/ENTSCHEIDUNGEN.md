@@ -2,6 +2,31 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Training: Arena und „Unterscheide!“ (PR 4c)
+Wie der Trainingsplatz von Algo Quest: Der Server erzeugt die Runde, die App spielt sie und schickt die Antworten am
+Ende gesammelt (keine Anfrage je Klick – die Arena ist ein Tempo-Spiel). 1 Punkt je richtiger Antwort, höchstens 30
+Trainingspunkte je Tag (wie Algo Quest), damit Aufgaben mit Prüfung die Hauptquelle der Punkte bleiben. Der Rundenstand
+der Arena (10 + Serienbonus) bleibt als Spielwertung und Rekord je Stufe; ein Rekord zählt nur, wenn die Zeitrunde
+spätestens 90 s nach dem Start endet. Bisher gab es Arena-Punkte nur für Rekordverbesserungen im Browser. Gäste spielen
+lokal ohne Punkte. Verworfen: Prüfung je Antwort auf dem Server (zu träge im Unterricht mit vielen iPads im WLAN).
+
+## 2026-10-14 · Mealy-Maschine auf dem Server (PR 4b)
+Zwei Aufgaben je Automat: „Was kommt raus?“ wird wie ein Exit-Ticket gewertet (erster Versuch je Wort, 10 Punkte ×
+Anteil), die Bug-Jagd nach Stufe (Süßigkeiten, Kartoffel, Caesar 10; Addierer, Wechselnde Verschiebung 20; Frog,
+Palindrom 30), falsche Reparaturen kosten Punkte. Das Finden des Bugs (Schritt 1) bringt keine eigenen Punkte mehr –
+es ist Teil der Bug-Jagd; die Rückmeldung „Tipp für die Klausur“ bleibt. Die Fehlerliste ist das Geheimnis und liegt
+in `inhalte/mealy.js`; die Referenz ist in der Vorhersage sichtbar (Gegenstand der Aufgabe) – bewusst hingenommen.
+Gäste bekommen den eigenen Demo-Automaten „Paritäts-Melder“ für alle drei Modi.
+
+## 2026-10-14 · Minimierer auf dem Server (PR 4a)
+Jede Runde des Markierungsverfahrens prüft der Server; er hält den Stand (bestätigte Paare) und zählt jede falsch
+geprüfte Runde als Fehlversuch. Punkte nach Stufe statt pauschal 30: Smiley und „gerade Anzahl a“ Basis (10), fünf
+Aufgaben Standard (20), Prüfnummern (Abi 2025) Profi (30). „Unterscheide!“ bringt vorerst keine Punkte: Die Antworten
+folgen aus dem sichtbaren Automaten, und 5 Punkte je Paar (über 100 Paare) hätten die Punkte verzerrt; es wird in PR 4c
+zum Training (1 Punkt je Aufgabe, Tageshöchstwert, Vertrag-Umsetzung `docs/VERBUND.md` §6). Gäste bekommen eine eigene
+Demo-Aufgabe („Endet auf a – doppelt gemerkt“) statt Aufgabe 1. Verworfen: Prüfung nur des Endergebnisses (Klassen) –
+das Verfahren Runde für Runde ist der Lerninhalt und Abi-relevant.
+
 ## 2026-10-14 · Lösungsfolien markiert (Schüler-Handouts)
 Alle 16 Foliensätze durchgesehen: Zusätzlich zu den vier per Titel erkannten Folien tragen 18 Folien den Vermerk
 `[NUR LEHRKRAFT]`, weil sie Aufgaben des Arbeitsblatts lösen (z. B. AB09 1a/1b/2, AB07 1a/3, AB08 1, AB12 2, AB16 1b)
