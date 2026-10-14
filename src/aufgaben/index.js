@@ -42,7 +42,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD, turingC, turingP, sortiererD] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD, turingC, turingP, sortiererD, fallenM] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -60,7 +60,8 @@ async function ladeAufgaben(secret) {
     lade(path.join(INHALTE, 'grammatik.js')),
     lade(path.join(INHALTE, 'turing.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'turing.js')),
-    lade(path.join(INHALTE, 'sortierer.js'))
+    lade(path.join(INHALTE, 'sortierer.js')),
+    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'fallen.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
   const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } = pruefer;
@@ -456,11 +457,16 @@ async function ladeAufgaben(secret) {
     liste.push({ id: `turing:${x.id}`, typ: TURING, modul: 'turing', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [16], daten: x, programm, zustaende: T.states, bandalphabet: T.tapeAlphabet, tipps: [] });
   });
 
+  // Fallen P1–P10 je Aufgabentyp (app/js/data/fallen.js, freigegeben 14.10.2026) – für das Fallen-Profil der Lehrkraft
+  for (const a of liste) {
+    const art = a.modul === 'mealy' ? (a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd') : a.id === 'ueberliste:bonus' ? 'bonus' : a.art;
+    a.fallen = fallenM.FALLEN_JE_TYP[`${a.modul}:${art}`] ?? fallenM.FALLEN_JE_TYP[a.modul] ?? [];
+  }
   const map = new Map(liste.map((a) => [a.id, a]));
 
   // Training (src/training.js): Arena-Automaten (öffentlich), Minimierer-Automaten für „Unterscheide!“, Sortierer-Karten
   const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })), sortierer: sortiererD.SORTIERER_KARTEN };
-  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
+  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training, fallen: fallenM.FALLEN };
 }
 
 module.exports = { ladeAufgaben, PUNKTE_STUFE };

@@ -63,6 +63,22 @@
      "demo": [
       "lehrkraft"
      ]
+    },
+    {
+     "titel": "Erklärvideo V1: Wie ein Automat ein Wort prüft",
+     "art": "video",
+     "schueler": "schueler/V1_DEA-lesen_Folien.pdf",
+     "lehrkraft": "lehrkraft/V1_DEA-lesen_Folien_Notizen.pdf",
+     "original": "original/V1_DEA-lesen_Folien.pptx",
+     "bytes": {
+      "schueler": 1026354,
+      "lehrkraft": 642885,
+      "original": 1031264
+     },
+     "demo": [
+      "schueler",
+      "lehrkraft"
+     ]
     }
    ]
   },
@@ -157,6 +173,18 @@
       "lehrkraft": 674312,
       "original": 966656
      }
+    },
+    {
+     "titel": "Erklärvideo V2: DEA entwickeln in 5 Schritten",
+     "art": "video",
+     "schueler": "schueler/V2_DEA-entwickeln_Folien.pdf",
+     "lehrkraft": "lehrkraft/V2_DEA-entwickeln_Folien_Notizen.pdf",
+     "original": "original/V2_DEA-entwickeln_Folien.pptx",
+     "bytes": {
+      "schueler": 437531,
+      "lehrkraft": 411825,
+      "original": 390856
+     }
     }
    ]
   },
@@ -250,6 +278,18 @@
       "lehrkraft": 473336,
       "original": 515960
      }
+    },
+    {
+     "titel": "Erklärvideo O1: Minimierung: weniger Zustände, gleiche Sprache",
+     "art": "video",
+     "schueler": "schueler/Extra1_Minimierung_Folien.pdf",
+     "lehrkraft": "lehrkraft/Extra1_Minimierung_Folien_Notizen.pdf",
+     "original": "original/Extra1_Minimierung_Folien.pptx",
+     "bytes": {
+      "schueler": 389123,
+      "lehrkraft": 421099,
+      "original": 378877
+     }
     }
    ]
   },
@@ -301,6 +341,18 @@
      "bytes": {
       "lehrkraft": 445320,
       "original": 722228
+     }
+    },
+    {
+     "titel": "Erklärvideo V3: Mealy-Automaten: Automaten, die antworten",
+     "art": "video",
+     "schueler": "schueler/V3_Mealy-Automaten_Folien.pdf",
+     "lehrkraft": "lehrkraft/V3_Mealy-Automaten_Folien_Notizen.pdf",
+     "original": "original/V3_Mealy-Automaten_Folien.pptx",
+     "bytes": {
+      "schueler": 1234041,
+      "lehrkraft": 500697,
+      "original": 954327
      }
     }
    ]
@@ -381,6 +433,18 @@
      "bytes": {
       "lehrkraft": 473309,
       "original": 691552
+     }
+    },
+    {
+     "titel": "Erklärvideo V4: Grenzen: Was ein endlicher Automat nicht kann",
+     "art": "video",
+     "schueler": "schueler/V4_Grenzen_Folien.pdf",
+     "lehrkraft": "lehrkraft/V4_Grenzen_Folien_Notizen.pdf",
+     "original": "original/V4_Grenzen_Folien.pptx",
+     "bytes": {
+      "schueler": 399220,
+      "lehrkraft": 268010,
+      "original": 278917
      }
     }
    ]
@@ -486,6 +550,18 @@
       "lehrkraft": 468088,
       "original": 337272
      }
+    },
+    {
+     "titel": "Erklärvideo V5: Kellerautomaten: Notation und Abi-Tabelle",
+     "art": "video",
+     "schueler": "schueler/V5_Kellerautomaten_Folien.pdf",
+     "lehrkraft": "lehrkraft/V5_Kellerautomaten_Folien_Notizen.pdf",
+     "original": "original/V5_Kellerautomaten_Folien.pptx",
+     "bytes": {
+      "schueler": 276777,
+      "lehrkraft": 228209,
+      "original": 233306
+     }
     }
    ]
   },
@@ -527,6 +603,18 @@
      "bytes": {
       "lehrkraft": 248545,
       "original": 23110
+     }
+    },
+    {
+     "titel": "Erklärvideo O2: Kellerautomat mit Raten: Palindrome",
+     "art": "video",
+     "schueler": "schueler/Extra2_Keller-mit-Raten_Folien.pdf",
+     "lehrkraft": "lehrkraft/Extra2_Keller-mit-Raten_Folien_Notizen.pdf",
+     "original": "original/Extra2_Keller-mit-Raten_Folien.pptx",
+     "bytes": {
+      "schueler": 578452,
+      "lehrkraft": 331486,
+      "original": 452365
      }
     }
    ]
@@ -608,6 +696,18 @@
       "lehrkraft": 284908,
       "original": 189254
      }
+    },
+    {
+     "titel": "Erklärvideo V6: Grammatiken: Wie man eine Sprache erzeugt",
+     "art": "video",
+     "schueler": "schueler/V6_Grammatiken_Folien.pdf",
+     "lehrkraft": "lehrkraft/V6_Grammatiken_Folien_Notizen.pdf",
+     "original": "original/V6_Grammatiken_Folien.pptx",
+     "bytes": {
+      "schueler": 190233,
+      "lehrkraft": 207676,
+      "original": 84772
+     }
     }
    ]
   },
@@ -660,6 +760,18 @@
       "lehrkraft": 448383,
       "original": 487693
      }
+    },
+    {
+     "titel": "Erklärvideo V7: Reguläre Grammatik und endlicher Automat",
+     "art": "video",
+     "schueler": "schueler/V7_Regulaere-Grammatik_Folien.pdf",
+     "lehrkraft": "lehrkraft/V7_Regulaere-Grammatik_Folien_Notizen.pdf",
+     "original": "original/V7_Regulaere-Grammatik_Folien.pptx",
+     "bytes": {
+      "schueler": 375417,
+      "lehrkraft": 350583,
+      "original": 278619
+     }
     }
    ]
   },
@@ -711,6 +823,18 @@
       "lehrkraft": 484190,
       "original": 518013
      }
+    },
+    {
+     "titel": "Erklärvideo V8: Kontextfreie Grammatiken und Mehrdeutigkeit",
+     "art": "video",
+     "schueler": "schueler/V8_Kontextfreie-Grammatiken_Folien.pdf",
+     "lehrkraft": "lehrkraft/V8_Kontextfreie-Grammatiken_Folien_Notizen.pdf",
+     "original": "original/V8_Kontextfreie-Grammatiken_Folien.pptx",
+     "bytes": {
+      "schueler": 487606,
+      "lehrkraft": 324468,
+      "original": 368284
+     }
     }
    ]
   },
@@ -752,6 +876,18 @@
      "bytes": {
       "lehrkraft": 375402,
       "original": 653282
+     }
+    },
+    {
+     "titel": "Erklärvideo V9: Abi-Check: Antworten, die volle Punkte bringen",
+     "art": "video",
+     "schueler": "schueler/V9_Abi-Check_Folien.pdf",
+     "lehrkraft": "lehrkraft/V9_Abi-Check_Folien_Notizen.pdf",
+     "original": "original/V9_Abi-Check_Folien.pptx",
+     "bytes": {
+      "schueler": 168949,
+      "lehrkraft": 151332,
+      "original": 64851
      }
     }
    ]

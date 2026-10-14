@@ -112,7 +112,7 @@ test('Minimierer: Runden auf dem Server, falsche Runde = Fehlversuch, Stand-Fehl
   const id = 'minimierer:smiley';
   const k = (await s.get('/api/katalog?modul=minimierer')).body.aufgaben;
   assert.equal(k.length, 7);
-  assert.deepEqual(k[0], { id, modul: 'minimierer', nr: 1, titel: 'Smiley-Erkenner', stufe: 1, punkte: 10, levels: [5], schluessel: 'smiley' });
+  assert.deepEqual(k[0], { id, modul: 'minimierer', nr: 1, titel: 'Smiley-Erkenner', stufe: 1, punkte: 10, levels: [5], fallen: ['P4', 'P1'], schluessel: 'smiley' });
   const a = (await s.get(`/api/aufgaben/${id}`)).body;
   assert.ok(a.aufgabe.automat && a.aufgabe.frage);
   assert.doesNotMatch(JSON.stringify(a), /klassen|merke|Kein Wort kann sie unterscheiden/);

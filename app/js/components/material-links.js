@@ -11,7 +11,7 @@ export function materialLinks(dateien) {
     const teile = [];
     if (d.schueler) teile.push(pdf(d.schueler.url, d.titel, `${d.titel} (PDF)`));
     if (d.lehrkraft) {
-      const t = d.art === 'folien' ? 'mit Notizen' : 'Lehrkraftfassung';
+      const t = d.art === 'folien' ? 'mit Notizen' : d.art === 'video' ? 'mit Sprechertext' : 'Lehrkraftfassung';
       teile.push(d.schueler ? [' ', pdf(d.lehrkraft.url, `(${t})`, `${d.titel}: ${t} (PDF)`, 'material-link-lk')] : pdf(d.lehrkraft.url, d.titel, `${d.titel} (PDF, Lehrkraft)`, 'material-link-lk'));
     }
     return h('li', null, teile);

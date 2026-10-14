@@ -1,7 +1,7 @@
-# Fallen P1–P10 – Automaten und formale Sprachen (Entwurf)
+# Fallen P1–P10 – Automaten und formale Sprachen
 
 Entwurf für AutomatenLab nach Vertrag §9 (Fallen-Liste P1–P10, gleiches Schema wie Algo Quest: Nummer, Kurztitel, Erläuterung).
-Stand: 11.10.2026. **Entwurf – zur Freigabe durch Frank** (fachlich und didaktisch). Erst nach der Freigabe wird die Liste in Aufgaben (Feld `fallen`), Quiz, Material und Fallen-Profil eingebaut.
+Stand: 14.10.2026. **Von Frank freigegeben am 14.10.2026.** Umgesetzt (1.14.0): Konstante `FALLEN` und Zuordnung je Aufgabentyp in `app/js/data/fallen.js`, Feld `fallen` an jeder Aufgabe (Katalog), Fallen-Profil des Kurses und Spalte „Fallen“ in der Aufgabenstatistik (Lehrkraft-Bereich, CSV). Noch offen: Fallen je Quizfrage und in den Materialien.
 
 - **Grundlage Notation:** `docs/einheit/PLAN.md` Abschnitt 1 (Ergänzende Hinweise 2025), `docs/einheit/STYLEGUIDE.md`.
 - **Grundlage Fehlerbilder:** Quiz (`app/js/data/quiz.js`), Tipps in den Modul-Daten, Warnkästen „Darauf achten“ / „Typische Fehler“ in allen Lehrkraft-Handreichungen DS01–DS16 und Merkblättern M02–M12, Bewertungshinweise der Übungsklausur (`materials/content/abschluss/build_klausur.js`).

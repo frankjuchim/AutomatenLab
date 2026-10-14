@@ -14,6 +14,7 @@ import { sitzung, anmeldeLink, istLehrkraft } from '../core/sitzung.js';
 import { WORLDS, LEVELS, LEVEL_TYPE_LABEL } from '../data/worlds.js';
 import { LEVEL_NIVEAU, NIVEAUS } from '../data/niveaus.js';
 import { MODULES } from './manifest.js';
+import { FALLEN } from '../data/fallen.js';
 
 const REITER = [
   ['schueler', '👥 Schüler'],
@@ -25,6 +26,7 @@ const REITER = [
 const KURSART = { eA: 'Leistungskurs (eA)', gA: 'Grundkurs (gA)' };
 const MODUL_TITEL = Object.fromEntries(MODULES.map((m) => [m.route, m.title]));
 const STUFE = { 1: 'Basis', 2: 'Standard', 3: 'Profi' };
+const FALLE = Object.fromEntries(FALLEN.map((f) => [f.p, f]));
 
 /** Deep-Link einer Katalog-Aufgabe (Parameter wie in app/README.md) – für die Vorschau mit &vorschau=1. */
 export function aufgabenLink(a) {
@@ -215,6 +217,7 @@ export default {
       const zeichneStat = () => clear(statBody, a.aufgaben.filter((x) => !welt || x.welt === welt).map((x) => h('tr', null,
         h('td', null, x.titel, h('span', { class: 'muted klein' }, ` · ${MODUL_TITEL[x.modul] ?? x.modul}`)),
         h('td', null, x.level == null ? '–' : String(x.level)),
+        h('td', null, x.fallen.length ? x.fallen.map((p) => h('span', { class: 'lk-falle', title: FALLE[p]?.titel ?? p }, p)) : '–'),
         h('td', null, STUFE[x.stufe] ?? String(x.stufe)),
         h('td', { class: 'zahl' }, String(x.versucht)),
         h('td', { class: 'zahl' }, prozent(x.quote)),
@@ -229,21 +232,37 @@ export default {
       zeichneStat();
 
       return [
-        h('div', { class: 'panel lk-karte' }, h('h3', null, 'Export'), h('p', { class: 'start-actions' }, csv('uebersicht', 'Übersicht (CSV)'), csv('matrix', 'Matrix (CSV)'), csv('aufgaben', 'Aufgaben (CSV)'))),
+        h('div', { class: 'panel lk-karte' }, h('h3', null, 'Export'), h('p', { class: 'start-actions' }, csv('uebersicht', 'Übersicht (CSV)'), csv('matrix', 'Matrix (CSV)'), csv('aufgaben', 'Aufgaben (CSV)'), csv('fallen', 'Fallen (CSV)'))),
         h('div', { class: 'panel lk-karte' },
           h('h3', null, 'Lernstand-Matrix (% der Level-Punkte)'),
           h('p', { class: 'muted klein' }, 'Zeile = Schüler, Spalte = Level (Doppelstunde). Ohne Zahl: noch nichts erreicht. Trainingspunkte (Arena, Unterscheide!, Sortierer) zählen hier nicht.',
             gA ? ' Gestrichelte Level gehören nicht zum Grundkurs-Umfang (freiwillig).' : ' Gestrichelte Level sind Zusatz über das Kerncurriculum hinaus.'),
           matrix,
           h('p', { class: 'lk-legende muted klein', 'aria-hidden': 'true' }, 'Legende: ', [0, 1, 2, 3, 4].map((s, i) => h('span', { class: ['lk-heat', `heat-${s}`] }, ['nichts', '< 25', '< 50', '< 75', '≥ 75'][i])))),
+        fallenProfil(a.fallen),
         h('div', { class: 'panel lk-karte' },
           h('h3', null, 'Aufgabenstatistik'),
           filter,
           h('div', { class: 'tabelle-scroll' }, h('table', { class: 'lk-tabelle' },
-            h('thead', null, h('tr', null, ['Aufgabe', 'Level', 'Stufe', 'versucht', 'Lösungsquote', 'Ø Fehlversuche', 'Ø Tipps', 'angesehen', 'häufige falsche Antworten'].map((k) => h('th', { scope: 'col' }, k)))),
+            h('thead', null, h('tr', null, ['Aufgabe', 'Level', 'Fallen', 'Stufe', 'versucht', 'Lösungsquote', 'Ø Fehlversuche', 'Ø Tipps', 'angesehen', 'häufige falsche Antworten'].map((k) => h('th', { scope: 'col' }, k)))),
             statBody)),
           h('p', { class: 'muted klein' }, '„versucht“ = mindestens einmal geprüft oder einen Tipp geholt; „angesehen“ = „Lösung zeigen“ benutzt (0 Punkte).')),
       ];
+    }
+
+    /** Fallen-Profil des Kurses (wie Algo Quest): Balken je Falle P1–P10 mit Fehlversuchen und betroffenen Schülern. */
+    function fallenProfil(fallen) {
+      if (!fallen?.length) return null;
+      const max = Math.max(1, ...fallen.map((f) => f.fehlversuche));
+      return h('div', { class: 'panel lk-karte' },
+        h('h3', null, 'Fallen-Profil des Kurses'),
+        h('p', { class: 'muted klein' }, 'Fehlversuche in Aufgaben, die diese typische Abitur-Falle üben (P1–P10, ',
+          h('a', { href: '#/lehrkraft?teil=aufgaben' }, 'Zuordnung bei den Aufgaben'), '). „Betrifft“ zählt Schülerinnen und Schüler mit mindestens einem Fehlversuch oder einer angesehenen Lösung dort. Das Level-Quiz fließt noch nicht ein.'),
+        h('ul', { class: 'lk-fallen' }, fallen.map((f) => h('li', { title: f.text },
+          h('span', { class: 'lk-falle-kopf' }, h('strong', null, f.p), ' ', f.titel),
+          h('span', { class: 'lk-balken', role: 'img', 'aria-label': `${f.fehlversuche} Fehlversuche` },
+            h('span', { class: 'lk-balken-fuellung', style: { width: `${Math.round((100 * f.fehlversuche) / max)}%` } })),
+          h('span', { class: 'lk-falle-zahl' }, `${f.fehlversuche} Fehlversuche${f.angesehen ? ` · ${f.angesehen} × Lösung angesehen` : ''} · betrifft ${f.schueler} von ${f.schuelerGesamt}`)))));
     }
 
     /* 🏆 Rangliste */
@@ -327,8 +346,9 @@ export default {
               h('h4', null, `Level ${n}: ${LEVELS[n]} `, h('span', { class: ['niveau-pille', `niveau-${LEVEL_NIVEAU[n] === 'eA' ? 'ea' : LEVEL_NIVEAU[n]}`] }, NIVEAUS[LEVEL_NIVEAU[n]].kurz)),
               h('p', { class: 'muted klein' }, 'Module: ', module(n).map((m, i) => [i ? ', ' : '', h('a', { href: ctx.link(m.route) }, m.title)])),
               liste.length
-                ? tabelle(['Aufgabe', 'Modul', 'Stufe', 'Punkte', ''], liste.map((a) => h('tr', null,
+                ? tabelle(['Aufgabe', 'Modul', 'Fallen', 'Stufe', 'Punkte', ''], liste.map((a) => h('tr', null,
                   h('td', null, a.titel), h('td', null, h('a', { href: ctx.link(a.modul) }, MODUL_TITEL[a.modul] ?? a.modul)),
+                  h('td', null, (a.fallen ?? []).length ? a.fallen.map((p) => h('span', { class: 'lk-falle', title: FALLE[p]?.titel ?? p }, p)) : '–'),
                   h('td', null, STUFE[a.stufe] ?? String(a.stufe)), h('td', { class: 'zahl' }, String(a.punkte)),
                   h('td', null, h('a', { class: 'btn btn-small', href: aufgabenLink(a) }, 'Vorschau mit Lösung')))))
                 : h('p', { class: 'muted' }, 'Keine Aufgaben mit Punkten (Simulatoren, Training oder Material).'));
