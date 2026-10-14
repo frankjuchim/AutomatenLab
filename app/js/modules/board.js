@@ -38,6 +38,18 @@ export default {
                 h('span', { class: 'board-punkte' }, `${z.punkte} P.`))))
               : h('p', { class: 'muted' }, 'Noch niemand im Kurs.')),
           h('div', { class: 'board-rechts' },
+            ...(d.challenges ?? []).map((c) => h('div', { class: 'panel board-challenge' },
+              h('h2', null, `🎯 ${c.titel}`),
+              h('p', { class: 'muted' }, `Zählt: ${c.zaehlt} · bis ${new Date(c.ende).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} Uhr`),
+              c.teams
+                ? h('ol', { class: 'board-plaetze' }, c.teams.map((t) => h('li', null,
+                  h('span', { class: 'board-platz' }, (t.wert > 0 && MEDAILLE[t.platz]) || `${t.platz}.`),
+                  h('span', { class: 'board-name' }, `${t.name} (${t.mitglieder})`),
+                  h('span', { class: 'board-punkte' }, String(t.wert)))))
+                : h('ol', { class: 'board-plaetze' }, c.liste.map((z) => h('li', null,
+                  h('span', { class: 'board-platz' }, (z.wert > 0 && MEDAILLE[z.platz]) || `${z.platz}.`),
+                  h('span', { class: 'board-name' }, z.name),
+                  h('span', { class: 'board-punkte' }, String(z.wert))))))),
             h('div', { class: 'panel' },
               h('h2', null, '🗺️ Fortschritt des Kurses'),
               h('ul', { class: 'board-welten' }, d.welten.map((w) => h('li', null,

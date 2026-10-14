@@ -150,6 +150,13 @@ export default {
             h('span', { class: 'muted klein' }, ` · ${x.art === 'quiz' ? 'Quiz' : 'Baukasten'}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
           h('p', { class: 'muted klein' }, 'Diese Aufgaben hat deine Lehrkraft selbst erstellt. Sie geben keine Punkte – üben lohnt sich trotzdem.')));
       }).catch(() => {});
+      // Klassen-Challenges (PR 11): Hinweis, solange eine läuft oder geplant ist
+      api('GET', '/api/challenges').then((cs) => {
+        const offen = cs.filter((c) => c.phase !== 'beendet');
+        if (!offen.length || !auftragSlot.isConnected) return;
+        auftragSlot.after(h('p', { class: 'notice challenge-hinweis' }, h('strong', null, '🎯 Challenge: '), offen.map((c) => c.titel).join(' · '), ' ',
+          h('a', { class: 'btn btn-small', href: ctx.link('challenge') }, offen.length === 1 ? 'Ansehen' : 'Alle ansehen')));
+      }).catch(() => {});
       // Rangliste, wenn eine Lehrkraft sie für einen der Kurse eingeschaltet hat (PR 8)
       if (kurse.some((k) => k.scoreboard)) auftragSlot.after(h('p', { class: 'rangliste-link' }, h('a', { class: 'btn', href: ctx.link('rangliste') }, '🏆 Rangliste deines Kurses')));
       if (auftraege.length) clear(auftragSlot, h('section', { class: 'auftrag', 'aria-labelledby': 'auftrag-h' },

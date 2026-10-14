@@ -115,6 +115,8 @@ function createKonten(ctx) {
       n += db.prepare('DELETE FROM falsche_antworten WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM boss_versuche WHERE sub = ?').run(sub).changes;
       db.prepare('UPDATE eigene_aufgaben SET autor_sub = NULL WHERE autor_sub = ?').run(sub); // Aufgaben bleiben beim Kurs
+      n += db.prepare('DELETE FROM challenge_teams WHERE sub = ?').run(sub).changes;
+      db.prepare('UPDATE challenges SET autor_sub = NULL WHERE autor_sub = ?').run(sub);
       n += db.prepare('DELETE FROM konten WHERE sub = ?').run(sub).changes;
       return n;
     })();

@@ -159,6 +159,16 @@ function apiRoutes(app, h) {
   api.patch('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, begrenzt, (req, res) => res.json(svc.eigene.aendern(req.konto, req.params.nr, req.body || {})));
   api.delete('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, (req, res) => res.json(svc.eigene.loeschen(req.konto, req.params.nr)));
 
+  // Klassen-Challenges (PR 11): Lehrkraft legt je Kurs an; Schüler sehen die ihres Kurses
+  const ohneChallenges = (req, res, next) => (svc.challenges ? next() : res.status(404).json({ error: 'Challenges gibt es hier nicht.' }));
+  api.get('/challenges', nurAngemeldet, ohneChallenges, (req, res) => res.json(svc.challenges.fuerSchueler(req.konto.sub)));
+  api.get('/challenges/:cid', nurAngemeldet, ohneChallenges, (req, res) => res.json(svc.challenges.schuelerDetail(req.konto, req.params.cid)));
+  api.get('/lehrer/kurse/:id/challenges', nurLehrkraft, meinKurs, ohneChallenges, (req, res) => res.json(svc.challenges.liste(req.kurs.id)));
+  api.post('/lehrer/kurse/:id/challenges', nurLehrkraft, meinKurs, ohneChallenges, begrenzt, (req, res) => res.status(201).json(svc.challenges.anlegen(req.konto, req.kurs.id, req.body || {})));
+  api.get('/lehrer/challenges/:cid', nurLehrkraft, ohneChallenges, (req, res) => res.json(svc.challenges.lehrkraftDetail(req.konto, req.params.cid)));
+  api.post('/lehrer/challenges/:cid/beenden', nurLehrkraft, ohneChallenges, (req, res) => res.json(svc.challenges.beenden(req.konto, req.params.cid)));
+  api.delete('/lehrer/challenges/:cid', nurLehrkraft, ohneChallenges, (req, res) => res.json(svc.challenges.loeschen(req.konto, req.params.cid)));
+
   app.use('/api', api);
 }
 

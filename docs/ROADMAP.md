@@ -55,6 +55,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ Fallen-Profil P1–P10 (1.14.0): Feld `fallen` je Aufgabentyp, Fallen-Profil des Kurses (Fehlversuche, Lösung angesehen, betroffene Schüler) wie Algo Quest, Spalte und CSV „Fallen“
 - ✅ Fallen je Quizfrage (1.15.0): alle 87 Fragen zugeordnet (`QUIZ_FALLEN` in `inhalte/quiz.js`), im ersten Durchgang falsch beantwortete Fragen zählen im Fallen-Profil
 - ✅ Fallen-Nummern in den Materialien (1.16.0): jeder Warnkasten der Lehrkraft-Handreichungen und Merkblätter nennt seine Fallen („Abitur-Fallen: P2 … · P7 …“), Merkblatt M12 mit der Übersicht „Die zehn Abitur-Fallen“
+- ✅ PR 11 (1.21.0): Klassen-Challenges – Einzel- oder Team-Wertung, Training oder Aufgaben-Auswahl, Zeitraum, nur Challenge-Liste, Beamer-Board, Abzeichen und Sieger-Urkunden
 - ✅ PR 10 (1.20.0): Aufgaben-Editor – eigene Quizze und Baukasten-Challenges je Kurs, Freigabe, Ergebnisse je Aufgabe, Vorschau; ohne Punkte
 - ✅ PR 9 (1.19.0): Boss-Kämpfe der Welten A–C wie Algo Quest – 45 eigene Aufgaben (gegen die Engine geprüft), Zeitlimit, Auswertung am Ende, 12-Stunden-Pause, bester Versuch zählt; Kurs-Einstellung automatisch/offen/gesperrt, Boss-Ergebnisse und Pool-Vorschau für Lehrkräfte
 - ✅ PR 8 (1.18.0): Rangliste für Schüler (gesamt/je Welt), Beamer-Board über Zufallslink, Urkunden zum Drucken – wie Algo Quest, je Kurs einschaltbar
@@ -69,4 +70,3 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 
 ## Ideen (später)
 - IServ-SSO: kommt später über das Portal, für AutomatenLab nichts zu tun
-- Klassen-Challenges (Vorschlag an Frank, siehe Antwort vom 14.10.)
