@@ -44,7 +44,7 @@ test('Keine ausgelieferte Datei enthält Lösungstexte, Tipps oder Erklärungen 
 
 test('Die Datendateien der Server-Module werden nicht ausgeliefert', async () => {
   const app = await H.makeApp();
-  for (const p of ['/js/data/quiz.js', '/js/data/detektiv.js', '/js/data/baukasten.js', '/js/data/minimierer.js', '/js/data/mealy.js', '/js/data/ueberliste.js', '/js/data/parallelwelten.js', '/js/data/keller.js', '/js/data/rallye.js', '/js/data/grammatik.js', '/inhalte/quiz.js', '/../inhalte/quiz.js']) {
+  for (const p of ['/js/data/quiz.js', '/js/data/detektiv.js', '/js/data/baukasten.js', '/js/data/minimierer.js', '/js/data/mealy.js', '/js/data/ueberliste.js', '/js/data/parallelwelten.js', '/js/data/keller.js', '/js/data/rallye.js', '/js/data/grammatik.js', '/inhalte/turing.js', '/inhalte/quiz.js', '/../inhalte/quiz.js']) {
     assert.equal((await request(app).get(p)).status, 404, p);
   }
 });

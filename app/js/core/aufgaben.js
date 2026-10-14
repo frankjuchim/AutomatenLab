@@ -11,7 +11,9 @@ import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
 import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge } from '../engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } from '../engine/pruefer.js';
+import { TURING_PROGRAMME } from '../data/turing.js';
+import { tm } from '../engine/turing.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -81,6 +83,12 @@ function vorbereiten(d) {
       const beispiele = x.beispiele.filter(([ein]) => !pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug).slice(0, 3);
       oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele, worte: x.vorhersage };
     }
+  } else if (d.modul === 'turing') {
+    const x = d.daten;
+    const p = TURING_PROGRAMME.find((y) => y.id === x.programm);
+    const T = tm(p.maschine);
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, programm: x.programm, programmTitel: p.titel, kontext: p.kontext,
+      maschine: turingOhneRegel(p.maschine, x.fehlt), fehlt: x.fehlt, zustaende: T.states, bandalphabet: T.tapeAlphabet, tests: x.tests };
   } else if (d.modul === 'grammatik') {
     const x = d.daten;
     oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, alphabet: x.alphabet, beispiele: x.beispiele, maxLen: x.maxLen ?? 8, regulaer: !!x.regulaer, tippsAnzahl: x.tipp ? 1 : 0 };
@@ -143,7 +151,9 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'grammatik' ? { musterloesung: s.d.daten.musterloesung }
+  const turingRef = (s) => TURING_PROGRAMME.find((y) => y.id === s.d.daten.programm).maschine;
+  const loesung = (s) => (s.d.modul === 'turing' ? (([to, write, move]) => ({ regel: { to, write, move } }))(turingRef(s).delta[s.d.daten.fehlt.from][s.d.daten.fehlt.read])
+    : s.d.modul === 'grammatik' ? { musterloesung: s.d.daten.musterloesung }
     : s.d.modul === 'rallye' ? rallyeLoesung(s.d.daten.grammatik, s.d.daten.ziel, s.d.daten.sep ?? '')
     : s.d.modul === 'keller' ? (s.d.art === 'tabelle' ? kellerTabellenLoesung(s.d.daten.automat, s.d.daten.tabelle) : kellerRueckwaertsLoesung(s.d.daten.automat, s.d.daten.rueckwaerts[0]))
     : s.d.modul === 'parallelwelten' ? (s.d.art === 'raetsel'
@@ -177,6 +187,8 @@ export function demoQuelle() {
         const j = s.d.daten.optionen.findIndex((_, k) => s.idVon(0, k) === antwort?.wahl);
         if (j < 0) throw Object.assign(new Error('Bitte wähle eine Beschreibung.'), { status: 400 });
         erg = pruefeDetektiv(s.d.daten, j);
+      } else if (s.d.modul === 'turing') {
+        erg = pruefeTuringRegel(turingRef(s), s.d.daten.fehlt, s.d.daten.tests, antwort);
       } else if (s.d.modul === 'grammatik') {
         erg = pruefeGrammatikChallenge(s.d.daten, antwort);
       } else if (s.d.modul === 'rallye') {

@@ -51,7 +51,7 @@ const STATUS = {
   rallye: async () => { const A = await katalog('rallye'); return geloest(solvedOf('rallye', A.map((x) => x.schluessel)), A.length); },
   grammatik: async () => { const A = await katalog('grammatik'); return geloest(solvedOf('grammatik', A.map((x) => x.schluessel)), A.length); },
   sortierer: async () => { const b = progress.best('sortierer:runde'); return b != null ? `Rekord ${b} richtig einsortiert` : ''; },
-  turing: async () => { const { TURING_CHALLENGES: C } = await import('../data/turing.js'); return geloest(solvedOf('turing', C.map((x) => x.id)), C.length); },
+  turing: async () => { const A = await katalog('turing'); return geloest(solvedOf('turing', A.map((x) => x.schluessel)), A.length); },
   quiz: async () => {
     const Q = await katalog('quiz');
     const done = (keys) => keys.filter((k) => progress.best(k) != null).length;

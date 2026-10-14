@@ -159,3 +159,14 @@ DEMO.push({
     musterloesung: 'S → aA\nA → aA | bA | ε',
   },
 });
+
+// Turing-Demo: Challenge am Fleißigen Biber (2 Zustände) – eine Regel fehlt
+DEMO.push({
+  modul: 'turing', id: 'demo:turing', titel: 'Demo: Fleißiger Biber – die fehlende Regel',
+  daten: {
+    id: 'demo-biber', stufe: 1, titel: 'Fleißiger Biber: die fehlende Regel', programm: 'biber-2',
+    fehlt: { from: 'B', read: '□' },
+    aufgabe: 'Beim Fleißigen Biber mit zwei Zuständen fehlt die Regel für B, wenn ein leeres Feld (□) gelesen wird. Die fertige Maschine schreibt auf leerem Band vier Einsen und hält.',
+    tests: [''],
+  },
+});

@@ -378,6 +378,25 @@ test('Grammatik-Tester: Sprache bis maxLen, rechtsregulär verlangt, Tipp kostet
   }
 });
 
+test('Turing-Labor: fehlende Regel auf dem Server gegen die Referenz geprüft, Regel bleibt verborgen', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const id = 'turing:binaer-luecke';
+  const a = (await s.get(`/api/aufgaben/${id}`)).body.aufgabe;
+  assert.equal(a.maschine.delta.S1['1'], undefined, 'fehlende Regel nicht ausgeliefert');
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr({ to: 'S1', write: '1', move: 'L' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.zustand.fehlversuche, 1);
+  assert.equal((await pr({ to: 'X', write: '1', move: 'L' })).status, 400);
+  const { TURING_PROGRAMME } = await import('../app/js/data/turing.js');
+  const [to, write, move] = TURING_PROGRAMME.find((p) => p.id === 'binaer-plus-1').maschine.delta.S1['1'];
+  r = (await pr({ to, write, move })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(20, 1, 0));
+  assert.deepEqual(r.loesung.regel, { to, write, move });
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

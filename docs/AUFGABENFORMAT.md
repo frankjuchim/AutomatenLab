@@ -37,6 +37,7 @@ findet er einen, schlägt die Prüfung fehl.
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
 | Mealy-Maschine | 7 × „Was kommt raus?“ + 7 Bug-Jagden | Vorhersage 10 (Anteil im ersten Versuch); Bug-Jagd Basis/Standard/Profi → 10/20/30 | 10 je Wort, 10 gefunden, 30 repariert |
+| Turing-Labor | 2 Challenges (fehlende Regel) | Standard 20 | 30 |
 | Grammatik-Tester | 11 Challenges | Standard 20 / Profi 30 | 30–40 |
 | Ableitungs-Rallye | 13 Aufgaben | nach Schwierigkeit 10/20/30 (Baum-Modus 30) | 10–25 (+5 für die kürzeste Ableitung) |
 | Keller-Labor | 10 × Tabellen-Trainer + 10 × Rückwärts | Tabellen 10 (alle Wörter eines Automaten), Rückwärts 20 | 20 je Tabelle bzw. Rückwärts-Wort |
@@ -101,6 +102,12 @@ findet er einen, schlägt die Prüfung fehl.
   erlaubt und kostet nichts; gelöst, sobald der Automat irrt. Tipps einzeln abrufbar (kosten Punkte nach §2).
   Lösungsteil: ein Beispielwort der Form Präfixⁿ Fortsetzungᵐ.
 * Bonus `ueberliste:bonus`: vier Fragen wie beim Quiz (erster Durchgang zählt, kein „Lösung zeigen“).
+
+### Turing-Labor (`turing`)
+* Challenge „Übergangstabelle vervollständigen“: öffentlich die Maschine **ohne** die fehlende Regel, welche Zelle fehlt,
+  Zustände und Bandalphabet der vollständigen Maschine, die Testeingaben. Antwort `{ to, write, move }`; der Server
+  vergleicht auf den Testeingaben mit der Referenz (Endlosschleife oder falsches Band = Fehlversuch). Lösungsteil: die
+  Regel. Die Programme des Simulators bleiben öffentlich in `app/js/data/turing.js`.
 
 ### Grammatik-Tester (`grammatik`)
 * Wie der Baukasten: öffentlich Aufgabentext, Σ, Beispiele, Vergleichslänge, ob rechtsregulär verlangt, Zahl der

@@ -4,14 +4,15 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, kellerFolge, pruefeKellerTabelle, pruefeKellerRueckwaerts, kellerTabellenLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, kellerFolge, pruefeKellerTabelle, pruefeKellerRueckwaerts, kellerTabellenLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel } from '../js/engine/pruefer.js';
+import { TURING_PROGRAMME } from '../js/data/turing.js';
 import { pda, runPDA } from '../js/engine/pda.js';
 import { nfa, runNFA, subsetConstruction } from '../js/engine/nfa.js';
 import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
-  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'grammatik', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'rallye', 'ueberliste']);
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'grammatik', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'rallye', 'turing', 'ueberliste']);
   assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
   assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
@@ -126,6 +127,14 @@ test('Demo-Grammatik: Musterlösung richtig und rechtsregulär, kontextfreie Lö
   assert.equal(pruefeGrammatikChallenge(c, { grammatik: c.musterloesung }).ok, true);
   assert.equal(pruefeGrammatikChallenge(c, { grammatik: 'S → aA\nA → AA | a | b | ε' }).rueckmeldung.grund, 'regulaer');
   assert.equal(pruefeGrammatikChallenge(c, { grammatik: 'S → bA\nA → aA | ε' }).ok, false);
+});
+
+test('Demo-Turing: fehlende Regel existiert, richtige Regel besteht die Tests, falsche nicht', () => {
+  const x = DEMO.find((d) => d.modul === 'turing').daten;
+  const p = TURING_PROGRAMME.find((y) => y.id === x.programm);
+  const [to, write, move] = p.maschine.delta[x.fehlt.from][x.fehlt.read];
+  assert.equal(pruefeTuringRegel(p.maschine, x.fehlt, x.tests, { to, write, move }).ok, true);
+  assert.equal(pruefeTuringRegel(p.maschine, x.fehlt, x.tests, { to, write, move: move === 'L' ? 'R' : 'L' }).ok, false);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD, turingC, turingP] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -56,10 +56,12 @@ async function ladeAufgaben(secret) {
     lade(path.join(INHALTE, 'parallelwelten.js')),
     lade(path.join(INHALTE, 'keller.js')),
     lade(path.join(INHALTE, 'rallye.js')),
-    lade(path.join(INHALTE, 'grammatik.js'))
+    lade(path.join(INHALTE, 'grammatik.js')),
+    lade(path.join(INHALTE, 'turing.js')),
+    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'turing.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge, pruefeTuringRegel, turingOhneRegel } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -405,6 +407,33 @@ async function ladeAufgaben(secret) {
   };
   grammatikD.GRAMMATIK_CHALLENGES.forEach((x, i) => {
     liste.push({ id: `grammatik:${x.id}`, typ: GRAMMATIK, modul: 'grammatik', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [12, 13, 15], daten: x, tipps: x.tipp ? [x.tipp] : [] });
+  });
+
+  /* ---------- Turing-Labor: fehlende Regel ergänzen (Prüfung mit Testeingaben gegen die Referenz) ---------- */
+  const TURING = {
+    modul: 'turing',
+    oeffentlich(a) {
+      const x = a.daten; const p = a.programm;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, programm: x.programm, programmTitel: p.titel, kontext: p.kontext,
+        maschine: turingOhneRegel(p.maschine, x.fehlt), fehlt: x.fehlt, zustaende: a.zustaende, bandalphabet: a.bandalphabet, tests: x.tests };
+    },
+    /** antwort: { to, write, move } */
+    pruefe(a, antwort) {
+      return pruefeTuringRegel(a.programm.maschine, a.daten.fehlt, a.daten.tests, antwort);
+    },
+    loesungsteil(a) {
+      const [to, write, move] = a.programm.maschine.delta[a.daten.fehlt.from][a.daten.fehlt.read];
+      return { regel: { to, write, move } };
+    },
+    abzeichen() {
+      return ['turing-regel'];
+    }
+  };
+  const { tm } = await lade(path.join(ENGINE, 'turing.js'));
+  turingC.TURING_CHALLENGES.forEach((x, i) => {
+    const programm = turingP.TURING_PROGRAMME.find((p) => p.id === x.programm);
+    const T = tm(programm.maschine);
+    liste.push({ id: `turing:${x.id}`, typ: TURING, modul: 'turing', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [16], daten: x, programm, zustaende: T.states, bandalphabet: T.tapeAlphabet, tipps: [] });
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));

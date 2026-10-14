@@ -8,6 +8,7 @@ import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
 import { nfa, runNFA, epsilonClosure, subsetConstruction } from './nfa.js';
 import { pda, runPDA, successors, initialConfig, runToTable, matchesConfigSequence } from './pda.js';
 import { parseGrammar, derive, symbolsToString, tokenizeWord, languageUpTo, isRightRegular } from './grammar.js';
+import { tm, runTM, BLANK, MOVES } from './turing.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -450,4 +451,29 @@ export function pruefeGrammatikChallenge(c, antwort) {
   if (zuviel || fehlt) return { ok: false, rueckmeldung: { richtig: false, grund: 'sprache', zuviel, fehlt, vollstaendig: lang.complete } };
   if (c.regulaer) { const rr = isRightRegular(g); if (!rr.regular) return { ok: false, rueckmeldung: { richtig: false, grund: 'regulaer', violations: rr.violations.slice(0, 6) } }; }
   return { ok: true, rueckmeldung: { richtig: true, anzahl: lang.words.length, maxLen, regulaer: !!c.regulaer } };
+}
+
+/* ───────────── Turing-Labor ───────────── */
+
+/** Maschine ohne die fehlende Regel (für die Challenge „Tabelle vervollständigen“). */
+export function turingOhneRegel(spec, { from, read }) {
+  const delta = Object.fromEntries(Object.entries(spec.delta).map(([z, row]) => [z, { ...row }]));
+  delete delta[from][read];
+  return { ...spec, delta };
+}
+
+/** Ergänzte Regel { to, write, move } gegen die Referenzmaschine auf den Testeingaben prüfen. Falsch = Fehlversuch. */
+export function pruefeTuringRegel(maschine, fehlt, tests, regel) {
+  const ref = tm(maschine);
+  if (!regel || !ref.states.includes(regel.to) || !ref.tapeAlphabet.includes(regel.write) || !MOVES.includes(regel.move)) throw ungueltig400('Fülle alle drei Felder der fehlenden Regel aus.');
+  const spec = turingOhneRegel(maschine, fehlt);
+  spec.delta[fehlt.from][fehlt.read] = [regel.to, regel.write, regel.move];
+  const T = tm(spec);
+  for (const w of tests) {
+    const soll = runTM(ref, w, { maxSteps: 3000 });
+    const ist = runTM(T, w, { maxSteps: 3000 });
+    if (!ist.halted) return { ok: false, rueckmeldung: { richtig: false, wort: w, endlos: true } };
+    if (ist.accepted !== soll.accepted || ist.output.join('') !== soll.output.join('')) return { ok: false, rueckmeldung: { richtig: false, wort: w, band: ist.output.join('') || BLANK, erwartet: soll.output.join('') } };
+  }
+  return { ok: true, rueckmeldung: { richtig: true, tests } };
 }

@@ -11,7 +11,8 @@ import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../../inhalte/u
 import { RALLYE_AUFGABEN } from '../../inhalte/rallye.js';
 import { GRAMMATIK_CHALLENGES } from '../../inhalte/grammatik.js';
 import { SORTIERER_KARTEN, FAECHER } from '../js/data/sortierer.js';
-import { TURING_PROGRAMME, TURING_CHALLENGES } from '../js/data/turing.js';
+import { TURING_PROGRAMME } from '../js/data/turing.js';
+import { TURING_CHALLENGES } from '../../inhalte/turing.js';
 import { QUIZ_WELTEN, QUIZ_DS } from '../../inhalte/quiz.js';
 import { MODULES } from '../js/modules/manifest.js';
 import { BADGES } from '../js/data/badges.js';
