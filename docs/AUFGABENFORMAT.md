@@ -72,8 +72,7 @@ findet er einen, schlägt die Prüfung fehl.
   Runde ist ein Fehlversuch (Punkteformel §2). Gelöst ist die Aufgabe, wenn keine Runde mehr etwas markiert.
 * Lösungsteil: vollständige Markierung (Paar → Runde), Klassen, Zustandszahl vorher/nachher, zusammengefasster
   Automat, Merksatz. „Lösung zeigen“ wie bei allen Aufgaben.
-* „Unterscheide!“ ist Übung ohne Punkte (Paare und unterscheidende Wörter folgen aus dem sichtbaren Automaten). Das
-  Abzeichen „Unterscheider“ kommt mit dem Training (Roadmap PR 4c).
+* „Unterscheide!“ ist Training (Abschnitt Training).
 
 ### Mealy-Maschine (`mealy`)
 * Je Automat zwei Aufgaben: `mealy:<schlüssel>:vorhersage` („Was kommt raus?“) und `mealy:<schlüssel>` (Bug-Jagd).
@@ -89,6 +88,20 @@ findet er einen, schlägt die Prüfung fehl.
 * Grenze: Die Referenz steht in „Was kommt raus?“ und in der freien Simulation – wer vergleicht, findet die Bugs
   schneller. Das ist didaktisch in Ordnung (Vergleichen ist eine Strategie) und lässt sich nicht verbergen.
 
+### Training (`arena`, `unterscheide`)
+Wie der Trainingsplatz von Algo Quest (Umsetzung von `docs/VERBUND.md` §6): Spielrunden statt Aufgaben mit IDs.
+* `POST /api/training/<modul>/neu` erzeugt die Runde auf dem Server und speichert sie samt Lösungen (Tabelle
+  `training`). Arena `{ stufe: 1–3, automat?, ueben? }` → 150 Items `{ automat, wort }`; Unterscheide `{ aufgabe? }`
+  (Minimierer-Schlüssel) → bis zu 8 Paare `{ aufgabe, p, q }`. Nur eine offene Runde je Modul.
+* Die App spielt die Runde (die Automaten sind sichtbar, die sofortige Rückmeldung kommt aus der Engine) und schickt
+  am Ende alle Antworten: `POST /api/training/runde/:id/ende { antworten }` – Arena `[true|false, …]` in Reihenfolge,
+  Unterscheide `[{ wort } | { aequivalent: true } | null, …]`. Der Server zählt (`app/js/engine/training.js`).
+* Punkte: **1 je richtiger Antwort**, höchstens **30 je Kalendertag** (Europe/Berlin) über alle Trainings. Arena-Rekord
+  je Stufe (`best["arena:s"]` im Lernstand) nur für Zeitrunden einer Stufe, die spätestens 90 s nach dem Start enden.
+* Abzeichen: Arena wie bisher (erste Runde, Zehnerserie, 100 Punkte in einer Zeitrunde, 120 in Stufe 3),
+  „Unterscheider“ ab 10 richtig beurteilten Paaren.
+* Gäste spielen dieselben Runden lokal (`lokalesTraining()` in `app/js/core/aufgaben.js`), ohne Punkte.
+
 ## 4. API (angemeldet; Schüler nur mit freigeschaltetem Kurs, Vertrag §4)
 
 ```
@@ -98,6 +111,9 @@ GET  /api/aufgaben/:id                öffentlicher Teil + Zustand (+ Lösungste
 POST /api/aufgaben/:id/pruefen        { antwort } → { ok, fertig, rueckmeldung, zustand, geloest, nachgeloest, punkteErhalten, neueAbzeichen, loesung? }
 POST /api/aufgaben/:id/tipp           nächster Tipp
 POST /api/aufgaben/:id/aufdecken      „Lösung zeigen“ (0 Punkte; nicht beim Quiz)
+GET  /api/training                    Trainingspunkte heute und Tageshöchstwert
+POST /api/training/:modul/neu         neue Trainingsrunde (arena | unterscheide)
+POST /api/training/runde/:id/ende     { antworten } → { richtig, score?, besteSerie?, punkteErhalten, rekord?, neueAbzeichen, heute }
 ```
 
 Schreibende Anfragen nur mit gleicher Herkunft und als JSON; höchstens 120 Prüfungen pro Minute und Konto.

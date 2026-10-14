@@ -22,6 +22,7 @@ test('Manifest erfüllt den Vertrag (pruefeManifest ohne Fehler), öffentlich mi
   assert.equal(r.body.basis, 'https://automatenlab.example');
   assert.equal(r.body.auth.portal, 'https://labs.example');
   assert.ok(r.body.faehigkeiten.includes('gast'));
+  assert.ok(r.body.faehigkeiten.includes('training'), 'Training (Arena, Unterscheide!) wie Algo Quest');
 });
 
 test('Manifest: Welten 1–4 mit Kennung A–D, Umfang aus den Inhalten, keine Kurs- oder Lösungsdaten', async () => {

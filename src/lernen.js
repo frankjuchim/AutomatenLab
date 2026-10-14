@@ -11,7 +11,7 @@ function punkteFuer(punkte, fehlversuche, tipps) {
 
 const fehler = (status, text) => Object.assign(new Error(text), { status });
 
-function createLernen(ctx, { aufgaben }) {
+function createLernen(ctx, { aufgaben, training = null }) {
   const { db } = ctx;
   const iso = () => new Date(ctx.now()).toISOString();
   const titelAbzeichen = aufgaben.abzeichen; // Titel und Text aus app/js/data/badges.js
@@ -151,6 +151,12 @@ function createLernen(ctx, { aufgaben }) {
       punkte += r.punkte;
       if (r.status === 'geloest' || r.nachgeloest) solved[a.id] = Date.parse(r.geloest_at || r.updated_at) || 0;
       if (a.modul === 'quiz' && r.status === 'geloest') best[a.id] = a.typ.loesungsteil(a, zinfo(r)).ergebnis.prozent;
+    }
+    // Training (Arena, „Unterscheide!“): Trainingspunkte und Arena-Rekorde je Stufe
+    if (training) {
+      const t = training.stand(sub);
+      punkte += t.punkte;
+      Object.assign(best, t.best);
     }
     const badges = db.prepare('SELECT schluessel FROM abzeichen WHERE sub = ? ORDER BY at').all(sub).map((r) => r.schluessel);
     return { module: [...aufgaben.module], punkte, solved, best, badges };

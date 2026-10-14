@@ -2,6 +2,14 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Training: Arena und „Unterscheide!“ (PR 4c)
+Wie der Trainingsplatz von Algo Quest: Der Server erzeugt die Runde, die App spielt sie und schickt die Antworten am
+Ende gesammelt (keine Anfrage je Klick – die Arena ist ein Tempo-Spiel). 1 Punkt je richtiger Antwort, höchstens 30
+Trainingspunkte je Tag (wie Algo Quest), damit Aufgaben mit Prüfung die Hauptquelle der Punkte bleiben. Der Rundenstand
+der Arena (10 + Serienbonus) bleibt als Spielwertung und Rekord je Stufe; ein Rekord zählt nur, wenn die Zeitrunde
+spätestens 90 s nach dem Start endet. Bisher gab es Arena-Punkte nur für Rekordverbesserungen im Browser. Gäste spielen
+lokal ohne Punkte. Verworfen: Prüfung je Antwort auf dem Server (zu träge im Unterricht mit vielen iPads im WLAN).
+
 ## 2026-10-14 · Mealy-Maschine auf dem Server (PR 4b)
 Zwei Aufgaben je Automat: „Was kommt raus?“ wird wie ein Exit-Ticket gewertet (erster Versuch je Wort, 10 Punkte ×
 Anteil), die Bug-Jagd nach Stufe (Süßigkeiten, Kartoffel, Caesar 10; Addierer, Wechselnde Verschiebung 20; Frog,

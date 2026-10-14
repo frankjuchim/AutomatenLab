@@ -1,18 +1,20 @@
 // Akzeptor-Arena (#/arena): Graph + Wort → „akzeptiert“ oder „abgelehnt“? 60-Sekunden-Runden.
 // Deep-Links: #/arena?stufe=1|2|3 (alias ?level=), #/arena?automat=<id> (nur dieser Automat),
 //             &ueben=1 (ohne Zeitlimit)
+// Training (docs/AUFGABENFORMAT.md): Angemeldet erzeugt der Server die Runde und zählt am Ende die Antworten
+// (1 Punkt je richtiger Antwort, Tageshöchstwert; Rekord je Stufe nur für Zeitrunden). Gäste spielen lokal ohne Punkte.
 
 import { h, clear, reducedMotion } from '../core/dom.js';
 import { ARENA_AUTOMATEN, ARENA_LEVELS } from '../data/arena.js';
-import { dfa, runDFA, randomWord } from '../engine/dfa.js';
-import { makeRng, wordToString } from '../engine/tokenize.js';
+import { dfa, runDFA } from '../engine/dfa.js';
+import { wordToString } from '../engine/tokenize.js';
+import { arenaPunkte, RUNDE_SEK } from '../engine/training.js';
+import { lokalesTraining } from '../core/aufgaben.js';
+import { sitzung } from '../core/sitzung.js';
 import { GraphView } from '../components/graph-view.js';
 import { WordTape } from '../components/word-tape.js';
 import { RunPlayer } from '../components/run-player.js';
 import { openDialog } from '../components/dialog.js';
-
-const RUNDE_SEK = 60;
-const WOERTER_PRO_AUTOMAT = 4;
 
 // Automaten einmal normalisieren
 const AUTOMATEN = ARENA_AUTOMATEN.map((a) => ({ ...a, A: dfa(a.automat) }));
@@ -26,6 +28,11 @@ export default {
     let stufe = clampStufe(p.get('stufe') ?? p.get('level') ?? (only ? only.level[0] : 1));
     let ueben = p.get('ueben') === '1';
     let cleanupRound = null;
+    let aktiv = true;
+    // Training: Server (angemeldet) oder lokal im Browser (Gast, Demo) – gleiche Runden, lokal ohne Punkte
+    let T = null;
+    const training = async () => (T ??= (ctx.quelle.demo || !(await sitzung()).konto) ? lokalesTraining({ arena: ARENA_AUTOMATEN }) : ctx.quelle.training);
+    const BY_ID = new Map(AUTOMATEN.map((a) => [a.id, a]));
 
     ctx.setSubtitle('Lies das Wort, verfolge den Graphen und entscheide schnell.');
 
@@ -57,11 +64,21 @@ export default {
       el.querySelector('.btn-primary')?.focus({ preventScroll: true });
     }
 
-    function play() {
-      const rng = makeRng();
-      const pool = only ? [only] : AUTOMATEN.filter((a) => a.level.includes(stufe));
-      const [minL, maxL] = ARENA_LEVELS[stufe].laenge;
-      const st = { score: 0, streak: 0, bestStreak: 0, right: 0, wrong: 0, mistakes: [], balance: 0, item: null, cur: null, left: WOERTER_PRO_AUTOMAT, locked: false, timeLeft: RUNDE_SEK, over: false };
+    async function play() {
+      cleanupRound?.(); cleanupRound = null;
+      clear(el, h('p', { class: 'muted' }, 'Runde wird vorbereitet …'));
+      let runde;
+      try {
+        const t = await training();
+        runde = await t.neu('arena', { stufe, ...(only ? { automat: only.id } : {}), ...(ueben ? { ueben: true } : {}) });
+      } catch (e) {
+        if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message), h('button', { type: 'button', class: 'btn', onclick: () => startScreen() }, 'Zurück'));
+        return;
+      }
+      if (!aktiv) return;
+      const items = runde.items.map((x) => ({ automat: BY_ID.get(x.automat), tokens: x.wort }));
+      const antworten = [];
+      const st = { score: 0, streak: 0, bestStreak: 0, right: 0, wrong: 0, mistakes: [], item: null, cur: null, k: -1, locked: false, timeLeft: RUNDE_SEK, over: false };
 
       const timeFill = h('span', { class: 'time-fill' });
       const timeText = h('span', { class: 'time-text' });
@@ -88,47 +105,34 @@ export default {
           graphBox, tapeBox, feedback),
         h('div', { class: 'decide-row' }, bNo, bYes)));
 
-      function nextAutomat() {
-        const others = pool.filter((a) => a !== st.cur);
-        st.cur = rng.pick(others.length ? others : pool);
-        st.left = WOERTER_PRO_AUTOMAT;
-        titleEl.textContent = st.cur.titel;
-        sigmaEl.textContent = `Σ = {${st.cur.A.alphabet.join(', ')}}`;
-        gv.render(st.cur.A, { label: `${st.cur.titel}. ${st.cur.kontext}` });
-        if (st.right + st.wrong > 0) { feedback.textContent = 'Neuer Automat!'; }
-      }
-
       function nextItem() {
-        if (st.left <= 0 || !st.cur) nextAutomat();
-        st.left--;
-        const A = st.cur.A;
-        let want = st.balance >= 2 ? false : st.balance <= -2 ? true : rng() < 0.5;
-        let tokens = null;
-        for (let tries = 0; tries < 30 && !tokens; tries++) {
-          const len = (stufe < 3 && rng() < 0.06) ? 0 : minL + rng.int(maxL - minL + 1);
-          const w = randomWord(A, { length: len, wantAccept: want, rng });
-          if (w && (!st.item || w.join('\u0001') !== st.item.tokens.join('\u0001'))) tokens = w;
-          if (tries === 15) want = !want;
+        st.k++;
+        if (st.k >= items.length) { finish(); return; }
+        const it = items[st.k];
+        if (it.automat !== st.cur) {
+          st.cur = it.automat;
+          titleEl.textContent = st.cur.titel;
+          sigmaEl.textContent = `Σ = {${st.cur.A.alphabet.join(', ')}}`;
+          gv.render(st.cur.A, { label: `${st.cur.titel}. ${st.cur.kontext}` });
+          if (st.right + st.wrong > 0) { feedback.textContent = 'Neuer Automat!'; }
         }
-        if (!tokens) tokens = randomWord(A, { length: minL, wantAccept: !want, rng }) ?? [];
-        const run = runDFA(A, tokens);
-        st.balance += run.accepted ? 1 : -1;
-        st.item = { automat: st.cur, tokens, accepted: run.accepted };
-        tape.set(tokens); tape.setHead(-1);
+        // sofortige Rückmeldung aus dem sichtbaren Automaten; gezählt wird am Ende von der Quelle
+        st.item = { automat: st.cur, tokens: it.tokens, accepted: runDFA(st.cur.A, it.tokens).accepted };
+        tape.set(it.tokens); tape.setHead(-1);
         st.locked = false;
       }
 
       function answer(saysYes) {
         if (st.locked || st.over || !st.item) return;
         st.locked = true;
+        antworten.push(saysYes);
         const ok = saysYes === st.item.accepted;
         if (ok) {
           st.right++; st.streak++;
           st.bestStreak = Math.max(st.bestStreak, st.streak);
-          st.score += 10 + 2 * Math.min(st.streak - 1, 5);
+          st.score += arenaPunkte(st.streak);
           tape.flash('good');
           feedback.textContent = st.streak >= 3 ? `Richtig! Serie ${st.streak}` : 'Richtig!';
-          if (st.streak === 10) ctx.progress.award('arena-serie-10');
         } else {
           st.wrong++; st.streak = 0;
           st.mistakes.push(st.item);
@@ -168,11 +172,13 @@ export default {
       function stop() { st.over = true; clearInterval(timer); window.removeEventListener('keydown', onKey); }
       cleanupRound = stop;
 
-      function finish() {
+      async function finish() {
         if (st.over) return;
         stop();
         cleanupRound = null;
-        result(st);
+        let erg = null;
+        try { erg = await (await training()).ende(runde.id, antworten); } catch (e) { erg = { fehler: e.message }; }
+        if (aktiv) result(st, erg);
       }
 
       nextItem();
@@ -181,18 +187,11 @@ export default {
       requestAnimationFrame(() => hud.scrollIntoView({ block: 'start', behavior: 'instant' }));
     }
 
-    function result(st) {
+    function result(st, erg) {
       const total = st.right + st.wrong;
-      const key = `arena:${stufe}`;
-      const prevBest = ctx.progress.best(key) ?? 0;
-      let record = false;
-      if (!ueben && !only) {
-        record = ctx.progress.setBest(key, st.score);
-        if (record) ctx.progress.addPoints(st.score - prevBest); // global zählt nur die Verbesserung
-        if (st.score >= 100) ctx.progress.award('arena-100');
-        if (stufe === 3 && st.score >= 120) ctx.progress.award('arena-profi');
-      }
-      if (total > 0) ctx.progress.award('arena-erste-runde');
+      const lokal = T?.lokal !== false;
+      const record = !!erg?.rekord;
+      const prevBest = erg?.rekordVorher ?? 0;
 
       const list = h('ul', { class: 'mistake-list' }, st.mistakes.map((m) =>
         h('li', null,
@@ -207,7 +206,11 @@ export default {
           h('p', null, `${st.right} von ${total} richtig`, total ? ` (${Math.round((100 * st.right) / total)} %)` : ''),
           h('p', null, `Längste Serie: ${st.bestStreak}`),
           record && prevBest > 0 ? h('p', { class: 'record' }, `Neuer Rekord in Stufe ${stufe}! Vorher: ${prevBest}`) : null,
-          record && prevBest === 0 && st.score > 0 ? h('p', { class: 'record' }, `Dein erster Rekord in Stufe ${stufe}.`) : null),
+          record && prevBest === 0 && st.score > 0 ? h('p', { class: 'record' }, `Dein erster Rekord in Stufe ${stufe}.`) : null,
+          erg?.fehler ? h('p', { class: 'notice notice-error' }, `Die Runde konnte nicht gezählt werden: ${erg.fehler}`) : null,
+          erg?.zuSpaet ? h('p', { class: 'muted' }, 'Die Runde wurde zu spät beendet – sie zählt nicht für den Rekord.') : null,
+          !lokal && erg && !erg.fehler ? h('p', { class: 'muted' }, `+${erg.punkteErhalten} Trainingspunkte (heute ${erg.heute} von höchstens ${erg.maxProTag}).`) : null,
+          lokal && !ctx.quelle.demo ? h('p', { class: 'muted' }, 'Ohne Anmeldung zählt die Runde nicht – Punkte und Rekorde gibt es nach der Anmeldung über InfoLabs.') : null),
         st.mistakes.length
           ? h('section', { class: 'mistakes' }, h('h3', null, 'Deine Fehler – schau dir den Lauf an'), list)
           : (total ? h('p', { class: 'notice notice-success' }, 'Kein einziger Fehler. Stark!') : null),
@@ -229,7 +232,7 @@ export default {
     const quoteWord = (item) => (item.tokens.length ? `„${wordToString(item.tokens, item.automat.A.alphabet)}“` : 'ε');
 
     startScreen();
-    return () => cleanupRound?.();
+    return () => { aktiv = false; cleanupRound?.(); };
   },
 };
 

@@ -3,11 +3,14 @@
 //   liste(modul) · aufgabe(id) · pruefen(id, antwort) · tipp(id) · aufdecken(id)
 // • serverQuelle(): angemeldet – Lösungen bleiben auf dem Server, Punkte vergibt nur der Server.
 // • demoQuelle(): Gastmodus – eigene Demo-Aufgaben (app/js/data/demo.js), im Browser geprüft, ohne Punkte.
+// Training (Arena, „Unterscheide!“): quelle.training = { lokal, neu(modul, optionen), ende(id, antworten) } – auf dem
+// Server gezählt (1 Punkt je richtiger Antwort, Tageshöchstwert) bzw. mit lokalesTraining() im Browser ohne Punkte.
 
 import { api as apiRoh } from './api.js';
 import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
+import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
 import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } from '../engine/pruefer.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
@@ -29,9 +32,21 @@ async function nachPruefen(r) {
   return r;
 }
 
+/** Nach einer Trainingsrunde: Lernstand neu laden (Punkte, Rekorde, Abzeichen) und neue Abzeichen anzeigen. */
+async function nachTraining(r) {
+  try { progress._server(await api('GET', '/api/lernstand')); } catch { /* nächste Anzeige lädt neu */ }
+  progress._abzeichen(r?.neueAbzeichen);
+  return r;
+}
+
 export function serverQuelle() {
   return {
     demo: false,
+    training: {
+      lokal: false,
+      neu: (modul, optionen = {}) => api('POST', `/api/training/${encodeURIComponent(modul)}/neu`, optionen),
+      ende: async (id, antworten) => nachTraining(await api('POST', `/api/training/runde/${encodeURIComponent(id)}/ende`, { antworten })),
+    },
     liste: async (modul) => (await api('GET', `/api/katalog?modul=${encodeURIComponent(modul)}`)).aufgaben,
     aufgabe: (id) => api('GET', pfad(id)),
     pruefen: async (id, antwort) => nachPruefen(await api('POST', pfad(id, '/pruefen'), { antwort })),
@@ -76,6 +91,33 @@ function vorbereiten(d) {
   return { d, idVon, oeffentlich, tipps: d.daten.tipp ? [d.daten.tipp] : [], angesehen: false, geloest: false, fehlversuche: 0, tippsGenutzt: 0, antworten: {} };
 }
 
+/**
+ * Training im Browser (Gastmodus, ohne Anmeldung): dieselben Runden und dieselbe Auswertung wie auf dem Server, aber
+ * ohne Punkte und ohne Speicherung. daten = { arena: ARENA_AUTOMATEN } bzw. { minimierer: [{ id, automat }] }.
+ */
+export function lokalesTraining(daten) {
+  const runden = new Map();
+  let naechste = 1;
+  return {
+    lokal: true,
+    async neu(modul, o = {}) {
+      const items = modul === 'arena'
+        ? erzeugeArenaRunde(daten.arena, { stufe: o.stufe ?? 1, nurId: o.automat ?? null })
+        : erzeugeUnterscheideRunde(daten.minimierer, { nurId: o.aufgabe ?? null });
+      const id = naechste++;
+      runden.set(id, { modul, items });
+      return { id, modul, items: items.map(({ akzeptiert, aequivalent, wort, ...rest }) => (modul === 'arena' ? { ...rest, wort } : rest)), heute: 0, maxProTag: 0 };
+    },
+    async ende(id, antworten) {
+      const r = runden.get(id);
+      if (!r) throw Object.assign(new Error('Diese Runde gibt es nicht (mehr).'), { status: 404 });
+      runden.delete(id);
+      const erg = r.modul === 'arena' ? werteArenaRunde(r.items, antworten) : werteUnterscheideRunde(daten.minimierer, r.items, antworten);
+      return { ...erg, punkteErhalten: 0, wertung: false, neueAbzeichen: [], heute: 0, maxProTag: 0 };
+    },
+  };
+}
+
 export function demoQuelle() {
   const cache = new Map();
   const get = (id) => {
@@ -92,6 +134,7 @@ export function demoQuelle() {
       : { ergebnis: { prozent: Math.round((100 * Object.values(s.antworten).reduce((a, b) => a + b, 0)) / s.d.daten.fragen.length) } });
   return {
     demo: true,
+    training: null, // Module wählen lokalesTraining() mit ihren Daten
     liste: async (modul) => DEMO.filter((d) => d.modul === modul).map((d) => ({ id: d.id, modul, titel: d.titel, stufe: d.daten.stufe ?? 1, punkte: 0, ...(d.art ? { art: d.art, schluessel: d.daten.id } : {}) })),
     aufgabe: async (id) => { const s = get(id); return { id, modul: s.d.modul, aufgabe: s.oeffentlich, zustand: zustand(s), ...(s.geloest || s.angesehen ? { loesung: loesung(s) } : {}) }; },
     async pruefen(id, antwort) {

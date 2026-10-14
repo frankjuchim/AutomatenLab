@@ -4,11 +4,13 @@
 //             #/minimierer?modus=unterscheide (gemischte Runde aus allen Aufgaben),
 //             #/minimierer?demo=1 (Demo-Aufgabe im Gastmodus)
 // Geprüft wird jede Runde von der Quelle (Server, angemeldet; Demo im Gastmodus) – Punkte vergibt nur der Server.
-// „Unterscheide!“ ist Übung ohne Punkte (der Automat ist Teil der Aufgabe, die Lösung lässt sich nicht verbergen).
+// „Unterscheide!“ ist Training: Angemeldet erzeugt der Server die Runde und zählt am Ende die Antworten (1 Punkt je
+// richtigem Paar, Tageshöchstwert); in der Demo läuft dieselbe Runde lokal ohne Punkte.
 
 import { h, clear, quote } from '../core/dom.js';
 import { dfa, runToText } from '../engine/dfa.js';
-import { tokenize, wordToString, makeRng } from '../engine/tokenize.js';
+import { tokenize, wordToString } from '../engine/tokenize.js';
+import { lokalesTraining } from '../core/aufgaben.js';
 import * as MK from '../engine/markierung.js';
 import { GraphView } from '../components/graph-view.js';
 
@@ -296,22 +298,11 @@ export default {
     // ───────────────────────── Unterscheide! ─────────────────────────
     function unterscheide(only, alle) {
       ctx.setSubtitle(only ? (q.demo ? `Unterscheide! – Demo: ${only.titel}` : `Unterscheide! – Aufgabe ${only.nr}: ${only.titel}`) : 'Unterscheide! – gemischte Runde');
-      const rng = makeRng();
-      const items = [];
       const pool = only ? [only] : alle;
-      for (const x of pool) {
-        const st = x.A.states;
-        const pairs = [];
-        for (let i = 0; i < st.length; i++) for (let j = i + 1; j < st.length; j++) {
-          const w = MK.unterscheidendesWort(x.A, st[i], st[j]);
-          pairs.push({ x, p: st[i], q: st[j], word: w, equiv: w === null });
-        }
-        const eq = rng.shuffle(pairs.filter((y) => y.equiv));
-        const ne = rng.shuffle(pairs.filter((y) => !y.equiv));
-        if (only) items.push(...eq.slice(0, 2), ...ne.slice(0, 4));
-        else items.push(...rng.shuffle([...eq.slice(0, 1), ...ne.slice(0, 1)]).slice(0, 1 + (rng() < 0.4 ? 1 : 0)));
-      }
-      const round = rng.shuffle(items).slice(0, 8);
+      const T = q.demo ? lokalesTraining({ minimierer: pool.map((x) => ({ id: x.id, automat: x.automat })) }) : q.training;
+      let round = [];
+      let runde = null;
+      let antworten = [];
       let idx = 0; let right = 0;
 
       const stage = h('div', { class: 'mz-u-stage' });
@@ -319,6 +310,7 @@ export default {
         h('p', { class: 'lead mz-u-lead' }, 'Unterscheidbar heißt: Es gibt ein Wort, das von einem der beiden Zustände in einen Endzustand führt, vom anderen aber nicht. Gibt es kein solches Wort, sind die Zustände äquivalent.'),
         stage,
         only ? caseNav(only, 'unterscheide') : null);
+      clear(stage, h('p', { class: 'muted' }, 'Runde wird vorbereitet …'));
 
       function show() {
         if (idx >= round.length) return summary();
@@ -358,6 +350,7 @@ export default {
             clear(out, h('div', { class: 'notice notice-success' },
               h('p', null, h('strong', null, 'Richtig! '), `${shown} unterscheidet ${it.p} und ${it.q}:`),
               h('ul', { class: 'mz-runs' }, lauf(it.p, w), lauf(it.q, w))));
+            antworten[idx] = { wort: w };
             solved(true);
           } else {
             clear(out, h('div', { class: 'notice notice-error' },
@@ -368,6 +361,7 @@ export default {
         };
         const claimEquiv = () => {
           if (done) return;
+          antworten[idx] = { aequivalent: true };
           if (it.equiv) {
             clear(out, h('div', { class: 'notice notice-success' },
               h('p', null, h('strong', null, 'Richtig, äquivalent! '), `Von ${it.p} und von ${it.q} aus führt jedes Wort entweder in beiden Fällen in einen Endzustand oder in beiden nicht. Die beiden Zustände können zusammengefasst werden.`)));
@@ -395,17 +389,33 @@ export default {
         input.focus({ preventScroll: true });
       }
 
-      function summary() {
+      async function summary() {
+        clear(stage, h('p', { class: 'muted' }, 'Auswertung …'));
+        let erg;
+        try { erg = await T.ende(runde.id, antworten); } catch (e) { erg = { fehler: e.message }; }
         clear(stage, h('div', { class: 'panel arena-result' },
           h('h2', null, 'Runde beendet'),
           h('p', { class: 'result-big' }, h('span', { class: 'num' }, `${right}`), ` von ${round.length} richtig`),
-          h('p', { class: 'muted' }, 'Übung ohne Punkte – Punkte gibt es für das Markierungsverfahren.'),
+          erg.fehler ? h('p', { class: 'notice notice-error' }, `Die Runde konnte nicht gezählt werden: ${erg.fehler}`)
+            : T.lokal ? h('p', { class: 'muted' }, 'Demo ohne Punkte.')
+              : h('p', { class: 'muted' }, `+${erg.punkteErhalten} Trainingspunkte (heute ${erg.heute} von höchstens ${erg.maxProTag}).`),
           h('div', { class: 'start-actions' },
             h('button', { type: 'button', class: 'btn btn-primary btn-large', onclick: () => ctx.navigate('minimierer', q.demo ? { demo: 1, modus: 'unterscheide' } : { aufgabe: only?.nr, modus: 'unterscheide' }) }, 'Neue Runde'),
             h('a', { class: 'btn', href: q.demo ? ctx.link('gast') : ctx.link('minimierer') }, q.demo ? 'Weitere Demo-Aufgaben' : 'Zur Übersicht'))));
       }
 
-      show();
+      T.neu('unterscheide', only ? { aufgabe: only.id } : {}).then((r) => {
+        if (!aktiv) return;
+        runde = r;
+        const byId = new Map(pool.map((x) => [x.id, x]));
+        round = r.items.map((it) => {
+          const x = byId.get(it.aufgabe);
+          const word = MK.unterscheidendesWort(x.A, it.p, it.q); // sofortige Rückmeldung aus dem sichtbaren Automaten
+          return { x, p: it.p, q: it.q, word, equiv: word === null };
+        });
+        antworten = round.map(() => null);
+        show();
+      }).catch(fehler);
       return null;
     }
   },

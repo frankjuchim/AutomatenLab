@@ -37,10 +37,10 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 
 ## Phase 4 – Prüfung und Lernstand auf dem Server (V1) und Gastmodus (V2)
 - ✅ PR 3 – Grundlage: Aufgabenkatalog mit stabilen IDs, `inhalte/` (Lösungen, nicht ausgeliefert), Lernstand-Tabellen, Punkteformel §9, API Aufgabe/Prüfen/Tipp/Lösung zeigen, `progress.js`-Adapter für Angemeldete; Gastmodus `#/gast` mit Demo-Aufgaben und Login-Hinweis für alle übrigen Routen; erste Module: Level-Quiz, Sprach-Detektiv, Automaten-Baukasten; `docs/AUFGABENFORMAT.md`; QA angemeldet und als Gast
-- [ ] PR 4 – Welt A:
+- ✅ PR 4 – Welt A:
   - ✅ PR 4a – Minimierer: jede Runde des Markierungsverfahrens auf dem Server, Stufen 10/20/30, Demo-Aufgabe; „Unterscheide!“ vorerst Übung ohne Punkte
   - ✅ PR 4b – Mealy-Maschine: „Was kommt raus?“ wie ein Quiz, Bug-Jagd mit Test ohne Wertung und Reparatur auf dem Server, Demo-Automat
-  - [ ] PR 4c – Training wie der Algo-Quest-Trainingsplatz: Akzeptor-Arena und „Unterscheide!“ (1 Punkt je Aufgabe, Tageshöchstwert), Abzeichen serverseitig
+  - ✅ PR 4c – Training wie der Algo-Quest-Trainingsplatz: Akzeptor-Arena und „Unterscheide!“ (1 Punkt je richtiger Antwort, höchstens 30 je Tag), Rekorde und Abzeichen serverseitig; Chomsky-Sortierer folgt mit PR 5
 - [ ] PR 5 – Welten B–D: Parallelwelten, Keller-Labor, Überliste, Ableitungs-Rallye, Grammatik-Tester, Turing-Labor, Chomsky-Sortierer (Training); Test „keine Lösung in ausgelieferten Dateien“; Abzeichen serverseitig
 
 ## Grund- und Leistungskurs (Vertrag v1.2)

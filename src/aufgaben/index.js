@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -49,7 +49,9 @@ async function ladeAufgaben(secret) {
     lade(path.join(INHALTE, 'mealy.js')),
     lade(path.join(ENGINE, 'dfa.js')),
     lade(path.join(ENGINE, 'pruefer.js')),
-    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js'))
+    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js')),
+    lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'arena.js')),
+    lade(path.join(ENGINE, 'training.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
   const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } = pruefer;
@@ -240,7 +242,9 @@ async function ladeAufgaben(secret) {
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));
-  return { liste, map, module: new Set(liste.map((a) => a.modul)), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])) };
+  // Training (src/training.js): Arena-Automaten (öffentlich) und Minimierer-Automaten für „Unterscheide!“
+  const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })) };
+  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
 }
 
 module.exports = { ladeAufgaben, PUNKTE_STUFE };
