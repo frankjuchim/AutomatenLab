@@ -21,6 +21,7 @@ Dauer: etwa 30 Minuten mit einem Lehrkraft-Konto und einem Test-Schülerkonto im
 - [ ] Anderes Gerät: Lernstand ist derselbe.
 
 ## Als Lehrkraft (`/lehrer`)
+- [ ] Anmeldung über den Knopf auf der Startseite führt in den Lehrkraft-Bereich; die Startseite zeigt „Zum Lehrkraft-Bereich“.
 - [ ] Navigation 📚 Kurse · 📖 Aufgaben · 📂 Materialien · 🗺️ Themen · ⌂ Portal wie in Algo Quest.
 - [ ] Kurs öffnen: 👥 Schüler zeigt das Test-Konto mit Punkten; 🏆 Rangliste; 🔗 Beitritt verweist aufs Portal.
 - [ ] 📊 Auswertung: Lernstand-Matrix, Aufgabenstatistik mit häufigen falschen Antworten, drei CSV-Exporte öffnen sich in Excel/LibreOffice.
@@ -33,5 +34,5 @@ Dauer: etwa 30 Minuten mit einem Lehrkraft-Konto und einem Test-Schülerkonto im
 - [ ] Test-Kurs im Portal löschen → Kurs verschwindet aus „Meine Kurse“.
 
 ## Offen nach der Abnahme
-- Fallen-Profil P1–P10 (wartet auf die Freigabe von `docs/einheit/FALLEN.md`).
-- Phase 6: Erklärvideos verlinken, Release-Workflow für das Materialpaket.
+- Erklärvideos aufnehmen und in `app/js/data/videos.js` verlinken (Bonus, später).
+- Release v1.0 mit dem Materialpaket, sobald GitHub Actions wieder läuft (`.github/workflows/materialpaket.yml`).

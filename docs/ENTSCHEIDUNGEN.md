@@ -2,6 +2,12 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Ziel nach der Anmeldung passt zur Rolle (1.17.1)
+Angleichung an Algo Quest 2.8.3: Wer sich mit Ziel „/“ anmeldet (Knopf auf der Startseite) und Lehrkraft oder Admin
+ist, landet im Lehrkraft-Bereich (`/#/lehrkraft`); Schüler, deren Ziel der Lehrkraft-Bereich wäre, landen auf der
+Startseite. Alle anderen Ziele – vor allem die Deep-Links der QR-Codes – bleiben für jede Rolle unverändert
+(Regel 1). Die Startseite zeigt angemeldeten Lehrkräften einen Hinweis mit „Zum Lehrkraft-Bereich“.
+
 ## 2026-10-14 · Lizenz: Code MIT, Material CC BY-SA 4.0 (1.17.0)
 Frank hat entschieden: Programmcode unter MIT (`LICENSE`, `package.json`), Unterrichtsmaterial unter CC BY-SA 4.0
 (`materials/LIZENZ.md`). Jedes erzeugte Dokument trägt „CC BY-SA 4.0 Frank Juchim“ in der Fußzeile, jede Folie rechts
