@@ -210,7 +210,7 @@ async function folien() {
     ['Wort', 'Zustandsfolge', 'Ergebnis'],
     ['XLOLX', 'S0 –X→ S0 –L→ S1 –O→ S2 –L→ S3 –X→ S3', 'akzeptiert (S3 ist Endzustand)'],
     ['LOOL', 'S0 –L→ S1 –O→ S2 –O→ S0 –L→ S1', 'abgelehnt (S1 ist kein Endzustand)'],
-  ], colW: [1.7, 6.6, 3.8], size: 20, notes: 'Wichtig: Entscheidend ist der Zustand NACH dem letzten Zeichen. Im Abitur: „Stellen Sie die Verarbeitung … dar“.' });
+  ], colW: [1.7, 6.6, 3.8], size: 20, notes: '[NUR LEHRKRAFT] Wichtig: Entscheidend ist der Zustand NACH dem letzten Zeichen. Im Abitur: „Stellen Sie die Verarbeitung … dar“.' });
   d.bullets({ title: 'Zweites Modell: der Kaffeeautomat', items: [
     'Ein Kaffee kostet **40 ct**',
     'Akzeptiert werden nur **10-ct- und 20-ct-Münzen**: Σ = {10, 20}',

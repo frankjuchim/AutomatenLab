@@ -245,7 +245,7 @@ async function folien() {
   d.section({ phase: 'Erarbeitung', title: 'Raten im Keller' });
   d.image({ title: 'w c wᴿ – deterministisch (DKA)', img: IMG + 'palindrom_c.png', sigma: 'Σ = {a, b, c}   ·   Γ = {#, A, B}', caption: HINT, notes: 'Bis c: ablegen (oben = zuletzt gelesen). Nach c: vergleichen und abbauen. Tabelle für abcba in AB10, Aufgabe 1.' });
   d.image({ title: 'w wᴿ – nichtdeterministisch (NKA)', img: IMG + 'palindrom.png', sigma: 'Unterschied: ε-Übergänge von S0 nach S1 – „Hier ist die Mitte“', caption: HINT, notes: 'Der Automat darf in S0 jederzeit raten, dass die Mitte erreicht ist. Gleiche Kellerzeichen – deshalb mehrere Möglichkeiten.' });
-  d.table({ title: 'Rate-Tabelle für abba', phase: 'Erarbeitung', rows: [['Wechsel nach S1 …', 'Lauf akzeptiert?', 'Grund'], ...J.guess.abba], colW: [2.8, 2.4, 6.93], size: 20, notes: 'Gemeinsam an der Tafel. Nur der Wechsel nach 2 Zeichen führt zum Ziel – und das reicht.' });
+  d.table({ title: 'Rate-Tabelle für abba', phase: 'Erarbeitung', rows: [['Wechsel nach S1 …', 'Lauf akzeptiert?', 'Grund'], ...J.guess.abba], colW: [2.8, 2.4, 6.93], size: 20, notes: '[NUR LEHRKRAFT] Gemeinsam an der Tafel. Nur der Wechsel nach 2 Zeichen führt zum Ziel – und das reicht.' });
   d.merke({ title: 'Akzeptanz beim NKA', phase: 'Erarbeitung', items: [
     'Akzeptiert, wenn es **eine Möglichkeit** gibt, nach vollständiger Eingabe in einem Endzustand zu sein.',
     'Dokumentation im Abi: **einen** akzeptierenden Lauf als Tabelle angeben.',

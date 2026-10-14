@@ -200,7 +200,7 @@ async function folien() {
     { head: 'top()', text: 'Das oberste Zeichen wird gelesen (bleibt liegen).', icon: 'LuEye' },
     { head: 'Notation', text: 'Belegung als Zeichenkette, **oben = links**: BA# heißt B liegt oben, # ganz unten.', icon: 'LuLayers' },
   ], notes: 'Bezug zur Datenstruktur Stapel aus dem Q-Phasen-Unterricht. # = Vorbelegungszeichen, markiert den Boden.' });
-  d.table({ title: 'Aufwärmen: Stapeln (AB09, Aufgabe 1a)', phase: 'Erarbeitung', rows: [['Operation', ...J.stapel.map((r) => r[0])], ['Belegung', ...J.stapel.map((r) => r[1])], ['geliefert', ...J.stapel.map((r) => r[2])]], colW: [1.9, 1.46, 1.46, 1.46, 1.46, 1.46, 1.46, 1.46], size: 20, notes: 'Erst ausfüllen lassen, dann aufdecken. Belegung immer mit # am Ende.' });
+  d.table({ title: 'Aufwärmen: Stapeln (AB09, Aufgabe 1a)', phase: 'Erarbeitung', rows: [['Operation', ...J.stapel.map((r) => r[0])], ['Belegung', ...J.stapel.map((r) => r[1])], ['geliefert', ...J.stapel.map((r) => r[2])]], colW: [1.9, 1.46, 1.46, 1.46, 1.46, 1.46, 1.46, 1.46], size: 20, notes: '[NUR LEHRKRAFT] Erst ausfüllen lassen, dann aufdecken. Belegung immer mit # am Ende.' });
   const sU = d.bullets({ title: 'Ein Übergang des Kellerautomaten', phase: 'Erarbeitung', size: 22, items: [
     'Kantenbeschriftung: **(oberstes Kellerzeichen, Eingabezeichen) : Ablage**',
     'Das gelesene Kellerzeichen wird **entfernt**, dann wird die Ablage abgelegt – **rechtes Zeichen zuerst**',
@@ -209,7 +209,7 @@ async function folien() {
     '(#, ε) : #   →   ε-Übergang: kein Eingabezeichen, # bleibt',
   ], notes: 'Typischer Fehler: Ablage von links nach rechts. Merkhilfe: Die Ablage steht so da, wie sie danach oben im Keller aussieht (oben = links).' });
   { const f = d.fit(IMG + 'uebergang_stapel.png', 8.6, 2.5); sU.addImage({ path: IMG + 'uebergang_stapel.png', x: 13.333 - 0.6 - f.w, y: 4.35, w: f.w, h: f.h }); }
-  d.table({ title: 'Ablageregel üben (AB09, Aufgabe 1b)', phase: 'Erarbeitung', rows: [['Übergang', 'Belegung vorher', 'Belegung nachher'], ...J.ablage], colW: [4.04, 4.04, 4.05], size: 22, notes: 'Zeilenweise aufdecken. (A, c) : BCA auf AB#: A weg → B#; dann A, C, B ablegen → BCAB#.' });
+  d.table({ title: 'Ablageregel üben (AB09, Aufgabe 1b)', phase: 'Erarbeitung', rows: [['Übergang', 'Belegung vorher', 'Belegung nachher'], ...J.ablage], colW: [4.04, 4.04, 4.05], size: 22, notes: '[NUR LEHRKRAFT] Zeilenweise aufdecken. (A, c) : BCA auf AB#: A weg → B#; dann A, C, B ablegen → BCAB#.' });
   d.image({ title: 'Kellerautomat für aⁿbⁿ (n ≥ 1)', phase: 'Erarbeitung', img: (__MAT + '/build/img/ds09/anbn.png'), sigma: 'Σ = {a, b}   ·   Γ = {#, A}   ·   Vorbelegung #', caption: HINT, notes: 'Idee: Für jedes a ein A in den Keller, jedes b entfernt ein A. Am Ende muss # oben liegen → ε-Übergang in den Endzustand S2.' });
   d.merke({ title: 'Akzeptanz (Abitur-Definition)', phase: 'Erarbeitung', items: [
     'Eine Eingabe wird genau dann **akzeptiert**, wenn es **eine Möglichkeit** gibt, dass sich der Automat nach **vollständiger Verarbeitung** der Eingabe in einem **Endzustand** befindet.',
@@ -221,8 +221,8 @@ async function folien() {
     d.tb(sl, d.rich(text, { fontSize: 22, color: S.H.tealDark }), { x: 0.6, y: 2.75 + 0.5 * t.rows.length, w: 12.1, h: 0.8 });
     return sl;
   };
-  kSlide('Verarbeitung dokumentieren: aabb', J.anbn.aabb, 'Eingabe wird akzeptiert: **ja** – die Eingabe ist vollständig gelesen und S2 ist ein Endzustand.', 'Erste Zeile: S0 | # | – | –. Spalte 3 = Zeichen, das VOR dem Schritt oben lag. Letzte Zeile: ε-Übergang.');
-  kSlide('Verarbeitung dokumentieren: aab', J.anbn.aab, 'Eingabe wird akzeptiert: **nein** – A liegt noch oben, (#, ε) : # ist nicht möglich, S1 ist kein Endzustand.', 'Bei einem NKA müsste man alle Möglichkeiten prüfen; dieser Automat ist deterministisch, es gibt genau einen Lauf.');
+  kSlide('Verarbeitung dokumentieren: aabb', J.anbn.aabb, 'Eingabe wird akzeptiert: **ja** – die Eingabe ist vollständig gelesen und S2 ist ein Endzustand.', '[NUR LEHRKRAFT] Erste Zeile: S0 | # | – | –. Spalte 3 = Zeichen, das VOR dem Schritt oben lag. Letzte Zeile: ε-Übergang.');
+  kSlide('Verarbeitung dokumentieren: aab', J.anbn.aab, 'Eingabe wird akzeptiert: **nein** – A liegt noch oben, (#, ε) : # ist nicht möglich, S1 ist kein Endzustand.', '[NUR LEHRKRAFT] Bei einem NKA müsste man alle Möglichkeiten prüfen; dieser Automat ist deterministisch, es gibt genau einen Lauf.');
   if (0) d.table({ title: 'Verarbeitung dokumentieren: aabb', phase: 'Erarbeitung', rows: rows(J.anbn.aabb), colW: [2.2, 3.6, 3.1, 3.23], size: 20, notes: 'Erste Zeile: S0 | # | – | –. Spalte 3 = Zeichen, das VOR dem Schritt oben lag. Letzte Zeile: ε-Übergang. Ergebnis: akzeptiert, S2 ist Endzustand.' });
   if (0) d.table({ title: 'Verarbeitung dokumentieren: aab', phase: 'Erarbeitung', rows: rows(J.anbn.aab), colW: [2.2, 3.6, 3.1, 3.23], size: 20, notes: 'Eingabe vollständig gelesen, aber A oben und S1 ist kein Endzustand. Kein weiterer Übergang ⇒ abgelehnt.' });
   d.section({ phase: 'Übung', title: 'Arbeitsblatt Level 9' });

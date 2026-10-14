@@ -233,7 +233,7 @@ async function folien() {
     'Start: Zustand S0, Kopf auf dem ersten Zeichen der Eingabe',
   ], size: 23, notes: 'Parallel das Merkblatt M11 markieren lassen. Blank gehört zum Bandalphabet Γ, nicht zu Σ.' });
   d.image({ title: 'Beispiel: Binärzahl + 1', phase: 'Erarbeitung', img: IMG + 'tm_binplus.png', sigma: 'Σ = {0, 1} · S0: ans Ende laufen · S1: Übertrag nach links tragen · S2: fertig', caption: 'Eingabe 1011 (= 11) → Ausgabe 1100 (= 12). Was passiert bei 111?', notes: 'Gemeinsam Schritt für Schritt auf 1011 ausführen (nächste Folie). Dann 111: Übertrag läuft bis vor die Zahl – das Blank wird zur 1.' });
-  d.table({ title: 'Konfigurationsfolge für 1011', phase: 'Erarbeitung', rows: traceRows(TR.bin_1011), colW: [1.3, 1.5, 6.3, 3.0], size: 18, notes: 'Kopfposition in eckigen Klammern. Schritt 4: Blank gelesen → Richtungswechsel nach links (S1). Schritte 6–7: Übertrag. Schritt 8: 0 wird zur 1, Halt in S2.' });
+  d.table({ title: 'Konfigurationsfolge für 1011', phase: 'Erarbeitung', rows: traceRows(TR.bin_1011), colW: [1.3, 1.5, 6.3, 3.0], size: 18, notes: '[NUR LEHRKRAFT] Kopfposition in eckigen Klammern. Schritt 4: Blank gelesen → Richtungswechsel nach links (S1). Schritte 6–7: Übertrag. Schritt 8: 0 wird zur 1, Halt in S2.' });
   d.task({ title: 'Unplugged: Du bist der Schreib-Lese-Kopf', phase: 'Übung', steps: [
     '**Kopf:** liest das Feld unter der Münze vor, radiert, schreibt, schiebt die Münze.',
     '**Steuerung:** sucht die Regel auf der Regelkarte, sagt sie an, wechselt die Zustandskarte.',

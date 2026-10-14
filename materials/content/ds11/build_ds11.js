@@ -254,7 +254,7 @@ async function folien() {
     ['Eindeutigkeit', 'eindeutig interpretierbar', 'oft mehrdeutig: „Ich sah den Mann mit dem Fernglas.“'],
     ['Bedeutung', 'exakt definiert', 'abhängig von Kontext, Betonung, Ironie'],
     ['Wortschatz', 'festes, endliches Alphabet', 'offen – neue Wörter entstehen'],
-  ], colW: [2.6, 4.8, 4.7], size: 18, notes: 'Erst nach der Übungsphase aufdecken (AB 1c). Im Abitur: „Vergleichen Sie anhand zweier Aspekte …“ (Abi 2023 Nachschreibtermin D a).' });
+  ], colW: [2.6, 4.8, 4.7], size: 18, notes: '[NUR LEHRKRAFT] Erst nach der Übungsphase aufdecken (AB 1c). Im Abitur: „Vergleichen Sie anhand zweier Aspekte …“ (Abi 2023 Nachschreibtermin D a).' });
   d.section({ phase: 'Übung', title: 'Arbeitsblatt Level 11' });
   d.task({ title: 'Auftrag: AB11', steps: [
     '**Aufgabe 2** (Basis): Mini-Deutsch ableiten und Baum zeichnen.',

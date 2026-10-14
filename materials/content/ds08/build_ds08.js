@@ -200,8 +200,8 @@ async function folien() {
     const f = d.fit(IMG + 'lol_nea.png', 9, 3.4);
     s.addImage({ path: IMG + 'lol_nea.png', x: (13.333 - f.w) / 2, y: 3.2, w: f.w, h: f.h });
   };
-  proto('LLOL', 'Nach dem letzten L liegt eine Münze auf S3 ⇒ akzeptiert. Die Mengen sind die Zustände, in denen der NEA „gleichzeitig“ ist.');
-  proto('LOOL', 'Keine Münze auf S3 ⇒ abgelehnt. Beim zweiten O scheidet die Münze aus S2 aus; S0 bleibt immer belegt.');
+  proto('LLOL', '[NUR LEHRKRAFT] Nach dem letzten L liegt eine Münze auf S3 ⇒ akzeptiert. Die Mengen sind die Zustände, in denen der NEA „gleichzeitig“ ist.');
+  proto('LOOL', '[NUR LEHRKRAFT] Keine Münze auf S3 ⇒ abgelehnt. Beim zweiten O scheidet die Münze aus S2 aus; S0 bleibt immer belegt.');
   d.bullets({ title: 'Nichtdeterministischer endlicher Automat (NEA)', phase: 'Erarbeitung', items: [
     'Wie ein DEA: Σ, Zustände, Startzustand, Endzustände',
     'Aber: Zu einem Zustand und einem Zeichen gibt es **beliebig viele** Folgezustände (auch **keinen**)',
@@ -216,7 +216,7 @@ async function folien() {
     { head: 'Verfahren', text: 'Startmenge → Folgemengen für jedes Zeichen → bis nichts Neues entsteht.', icon: 'LuListOrdered' },
     { head: 'Endzustände', text: 'Alle Mengen, die einen NEA-Endzustand enthalten.', icon: 'LuBadgeCheck' },
   ], notes: 'Teilmengenkonstruktion als eA-Vertiefung. Preis: Ein NEA mit n Zuständen kann einen DEA mit bis zu 2^n Zuständen ergeben (drittletztes Zeichen 1: 4 → 8).' });
-  d.image({ title: 'Beispiel: „endet auf ab“', img: IMG + 'endet_ab_dea.png', caption: 'Aus dem NEA S0 –a→ S1 –b→ S2 (mit Schleife a, b in S0) entsteht dieser DEA mit 3 Zuständen.', notes: 'Tabelle gemeinsam: {S0}: a → {S0,S1}, b → {S0}; {S0,S1}: a → {S0,S1}, b → {S0,S2}; {S0,S2}: a → {S0,S1}, b → {S0}. Endzustand: {S0,S2}.' });
+  d.image({ title: 'Beispiel: „endet auf ab“', img: IMG + 'endet_ab_dea.png', caption: 'Aus dem NEA S0 –a→ S1 –b→ S2 (mit Schleife a, b in S0) entsteht dieser DEA mit 3 Zuständen.', notes: '[NUR LEHRKRAFT] Tabelle gemeinsam: {S0}: a → {S0,S1}, b → {S0}; {S0,S1}: a → {S0,S1}, b → {S0,S2}; {S0,S2}: a → {S0,S1}, b → {S0}. Endzustand: {S0,S2}.' });
   d.section({ phase: 'Übung', title: 'Arbeitsblatt Level 8' });
   d.task({ title: 'Auftrag: AB08', steps: [
     '**Aufgabe 1**: Parallelwelten (Mengen aktiver Zustände).',

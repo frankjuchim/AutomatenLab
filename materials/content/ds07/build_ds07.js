@@ -201,11 +201,11 @@ async function folien() {
   d.table({ title: 'Verarbeitungen', rows: [
     ['Eingabe', 'Zustandsfolge', 'Ergebnis'],
     ...['EEAA', 'EEEAAA', 'EEEEAAAA', 'AEEA'].map((w) => [w, J.tuer[w][1], res(J.tuer[w][0])]),
-  ], colW: [2.0, 8.0, 2.1], size: 20, notes: 'EEEEAAAA: Der vierte Gast ist einer zu viel – Fehlerzustand, obwohl der Club am Ende wieder leer wäre.' });
+  ], colW: [2.0, 8.0, 2.1], size: 20, notes: '[NUR LEHRKRAFT] EEEEAAAA: Der vierte Gast ist einer zu viel – Fehlerzustand, obwohl der Club am Ende wieder leer wäre.' });
   d.question({ text: 'Und wenn der Club keine Kapazitätsgrenze mehr hat?', sub: 'Wie viele Finger – also Zustände – bräuchte der Türsteher dann?', notes: 'Vermutungen sammeln und an der Tafel festhalten („unendlich viele“). Noch nicht auflösen – erst nach dem App-Spiel.' });
   d.section({ phase: 'Erarbeitung', title: 'Überliste den Automaten' });
   d.app({ title: 'Überliste den Automaten', route: '#/ueberliste?stufe=1', phase: 'Erarbeitung', text: 'Ein Automat mit k Zuständen behauptet, **L = {aⁿbⁿ | n ≥ 1}** zu erkennen. Finde ein Wort, bei dem er sich irrt! Stufen 1–3, Ergebnisse in **AB07, Aufgabe 2** eintragen.', notes: 'Partnerarbeit, ca. 15 Minuten. Leitfrage auf die Tafel: Welche Wörter funktionieren IMMER, egal wie viele Zustände der Automat hat?' });
-  d.image({ title: 'Wie hast du gewonnen?', img: IMG + 'zaehler_hl.png', caption: 'Stufe 1: Nach aa und nach aaa ist der Automat im selben Zustand S2 – mit bb dahinter akzeptiert er beide.', notes: `aabb: ${J.zaehler.aabb[1]}. aaabb: ${J.zaehler.aaabb[1]} – akzeptiert, obwohl nicht in L.` });
+  d.image({ title: 'Wie hast du gewonnen?', img: IMG + 'zaehler_hl.png', caption: 'Stufe 1: Nach aa und nach aaa ist der Automat im selben Zustand S2 – mit bb dahinter akzeptiert er beide.', notes: `[NUR LEHRKRAFT] aabb: ${J.zaehler.aabb[1]}. aaabb: ${J.zaehler.aaabb[1]} – akzeptiert, obwohl nicht in L.` });
   d.twoCol({ title: 'Das Schubfachprinzip', left: { head: 'Idee', items: ['k + 1 Gegenstände in k Schubfächer ⇒ mindestens ein Fach enthält **zwei** Gegenstände', 'Gegenstände = Präfixe a, aa, aaa, …', 'Schubfächer = Zustände des DEA'] }, right: { head: 'Beispiel: k = 4', img: IMG + 'schubfach.png' }, phase: 'Erarbeitung', notes: 'aaa und aaaaa landen im selben Zustand. Ab jetzt kann der Automat die beiden Präfixe nie mehr unterscheiden – egal was folgt.' });
   d.bullets({ title: 'Kein DEA für aⁿbⁿ – in 5 Schritten', phase: 'Erarbeitung', size: 26, items: [
     '**1 Annahme:** Ein DEA mit k Zuständen erkennt L.',
@@ -227,7 +227,7 @@ async function folien() {
     { head: 'Modulo', text: '(Anzahl a − Anzahl b) durch 3 teilbar: nur den Rest 0, 1, 2 merken.', icon: 'LuRepeat' },
     { head: 'Obergrenze', text: 'Klammertiefe ≤ 3: wie der Türsteher mit 3 Plätzen.', icon: 'LuGauge' },
     { head: 'Täuschung', text: '„ab“ so oft wie „ba“: gleich genau dann, wenn erstes = letztes Zeichen.', icon: 'LuEyeOff' },
-  ], notes: 'Auflösung der Fallen nach der Zwischensicherung zeigen. L8 ist die Profi-Falle: Ausprobieren mit abab (ab 2×, ba 1×) und aba (je 1×).' });
+  ], notes: '[NUR LEHRKRAFT] Auflösung der Fallen nach der Zwischensicherung zeigen. L8 ist die Profi-Falle: Ausprobieren mit abab (ab 2×, ba 1×) und aba (je 1×).' });
   d.section({ phase: 'Sicherung', title: 'Was wir heute gelernt haben' });
   d.merke({ title: 'Merke: Grenzen endlicher Automaten', items: [
     'Ein DEA hat **endlich viele Zustände** – er kann nur endlich viele verschiedene Situationen unterscheiden.',
