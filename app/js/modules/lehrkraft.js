@@ -6,6 +6,7 @@
 //                                        ⚙️ Einstellungen (reiter: schueler | beitritt | auswertung | rangliste | einstellungen)
 //   #/lehrkraft?teil=aufgaben            Aufgaben der Welten (nach Level, mit Link ins Modul)
 //   #/lehrkraft?teil=urkunden&kurs=<id>  Urkunden des Kurses zum Drucken (wie Algo Quest)
+//   #/lehrkraft?teil=eigene[&kurs=<id>][&neu=quiz|baukasten|&aufgabe=<nr>]  Aufgaben-Editor: eigene Aufgaben je Kurs
 // Was das Portal verwaltet (Kurse anlegen/löschen, Kurscode, Schülerkonten), steht hier nur als Hinweis.
 // Ohne Sitzung leitet die Seite still zum Portal (INTEGRATION.md §3.1).
 
@@ -16,6 +17,8 @@ import { WORLDS, LEVELS, LEVEL_TYPE_LABEL } from '../data/worlds.js';
 import { LEVEL_NIVEAU, NIVEAUS } from '../data/niveaus.js';
 import { MODULES } from './manifest.js';
 import { FALLEN } from '../data/fallen.js';
+import { DfaEditor } from '../components/dfa-editor.js';
+import { GraphView } from '../components/graph-view.js';
 
 const REITER = [
   ['schueler', '👥 Schüler'],
@@ -74,7 +77,7 @@ export default {
     let portal = null;
     const kursId = ctx.params.get('kurs');
     const teil = ctx.params.get('teil');
-    const navAktiv = teil === 'aufgaben' ? 'aufgaben' : 'kurse';
+    const navAktiv = teil === 'aufgaben' ? 'aufgaben' : teil === 'eigene' ? 'eigene' : 'kurse';
 
     /** Rahmen jeder Seite: Überschrift und Navigation des Bereichs (wie die Kopfzeile von Algo Quest). */
     function seite(...inhalt) {
@@ -85,6 +88,7 @@ export default {
         h('nav', { class: 'lk-nav', 'aria-label': 'Lehrkraft-Bereich' }, h('ul', null,
           punkt('kurse', '#/lehrkraft', '📚 Kurse'),
           punkt('aufgaben', '#/lehrkraft?teil=aufgaben', '📖 Aufgaben'),
+          punkt('eigene', '#/lehrkraft?teil=eigene', '✏️ Eigene Aufgaben'),
           punkt('material', ctx.link('material'), '📂 Materialien'),
           punkt('themen', ctx.link('themen'), '🗺️ Themen'),
           portal ? punkt('portal', portal + '/', '⌂ Portal') : null)),
@@ -114,6 +118,7 @@ export default {
       try {
         if (teil === 'aufgaben') await aufgabenSeite();
         else if (teil === 'urkunden' && kursId) await urkundenSeite(kursId);
+        else if (teil === 'eigene') await eigeneSeite(konto);
         else if (kursId) await kursSeite(kursId, ctx.params.get('tab') || 'schueler');
         else await kursListe(konto);
       } catch (e) { if (aktiv) fehlerSeite(e); }
@@ -242,6 +247,7 @@ export default {
             gA ? ' Gestrichelte Level gehören nicht zum Grundkurs-Umfang (freiwillig).' : ' Gestrichelte Level sind Zusatz über das Kerncurriculum hinaus.'),
           matrix,
           h('p', { class: 'lk-legende muted klein', 'aria-hidden': 'true' }, 'Legende: ', [0, 1, 2, 3, 4].map((s, i) => h('span', { class: ['lk-heat', `heat-${s}`] }, ['nichts', '< 25', '< 50', '< 75', '≥ 75'][i])))),
+        bossErgebnisse(a.boss),
         fallenProfil(a.fallen),
         h('div', { class: 'panel lk-karte' },
           h('h3', null, 'Aufgabenstatistik'),
@@ -251,6 +257,17 @@ export default {
             statBody)),
           h('p', { class: 'muted klein' }, '„versucht“ = mindestens einmal geprüft oder einen Tipp geholt; „angesehen“ = „Lösung zeigen“ benutzt (0 Punkte).')),
       ];
+    }
+
+    /** Boss-Ergebnisse (bester Versuch je Welt, wie Algo Quest). */
+    function bossErgebnisse(b) {
+      if (!b?.zeilen?.length) return null;
+      return h('div', { class: 'panel lk-karte' },
+        h('h3', null, '⚔️ Boss-Ergebnisse (bester Versuch)'),
+        tabelle(['Name', ...b.welten.map((w) => `Boss ${w.welt}`)], b.zeilen.map((z) => h('tr', null,
+          h('th', { scope: 'row' }, z.name),
+          z.werte.map((w) => h('td', { class: 'zahl' }, w ? `${w.punkte}/${w.max} (${Math.round((100 * w.punkte) / w.max)} %)${w.besiegt ? ' 🏆' : ''} · ${w.versuche}×` : '–'))))),
+        h('p', { class: 'muted klein' }, '🏆 = besiegt (ab 50 %). n× = Zahl der Kämpfe. Die Boss-Punkte zählen zu den Punkten (nur der beste Versuch je Welt).'));
     }
 
     /** Fallen-Profil des Kurses (wie Algo Quest): Balken je Falle P1–P10 mit Fehlversuchen und betroffenen Schülern. */
@@ -300,6 +317,8 @@ export default {
       const auftragLevel = WORLDS.flatMap((w) => w.levels).map((n) => h('label', { class: 'check lk-check-klein' },
         h('input', { type: 'checkbox', name: 'auftrag-level', value: String(n), checked: (e0.auftrag?.level ?? []).includes(n) }), ` ${n}`));
       // Rangliste für Schüler und Beamer-Board (wie Algo Quest; beide standardmäßig aus)
+      const bossWahl = h('select', { name: 'boss', id: 'lk-boss' }, [['auto', 'automatisch ab 60 % der Level-Punkte der Welt (Standard)'], ['offen', 'sofort offen'], ['gesperrt', 'gesperrt']]
+        .map(([k, text]) => h('option', { value: k, selected: (e0.boss ?? 'auto') === k }, text)));
       const scoreboardBox = h('input', { type: 'checkbox', name: 'scoreboard', checked: !!e0.scoreboard });
       const beamerBox = h('input', { type: 'checkbox', name: 'beamer', checked: !!e0.beamer?.aktiv });
       const boardLink = h('p', { class: 'lk-board-link' });
@@ -322,6 +341,7 @@ export default {
           levelArt: Object.fromEntries([...form.querySelectorAll('select[name^="level-"]')].map((x) => [x.name.slice(6), x.value])),
           auftrag: auftragText.value.trim() ? { text: auftragText.value.trim(), level: [...form.querySelectorAll('input[name=auftrag-level]:checked')].map((x) => Number(x.value)) } : null,
           scoreboard: scoreboardBox.checked,
+          boss: bossWahl.value,
           beamer: { aktiv: beamerBox.checked },
         };
         status.textContent = 'Speichere …';
@@ -341,6 +361,9 @@ export default {
           auftragText,
           h('p', { class: 'muted klein' }, 'Dazu passende Level hervorheben (höchstens vier):'),
           h('div', { class: 'lk-check-reihe' }, auftragLevel)),
+        h('fieldset', null, h('legend', null, 'Boss-Kämpfe'),
+          h('label', { for: 'lk-boss' }, 'Bosse der Welten A–C: '), bossWahl,
+          h('p', { class: 'muted klein' }, 'Ein Boss-Kampf ist eine Prüfung auf Zeit (20–25 Minuten, 8 zufällige Aufgaben im Abitur-Stil, Auswertung erst am Ende, danach 12 Stunden Pause). „Automatisch“ öffnet den Boss einer Welt, sobald jemand 60 % der Punkte in deren Leveln hat. Den Aufgabenpool sehen Sie unter 📖 Aufgaben.')),
         h('fieldset', null, h('legend', null, 'Rangliste und Beamer-Board'),
           h('label', { class: 'check' }, scoreboardBox, ' Rangliste für Schülerinnen und Schüler sichtbar'),
           h('p', { class: 'muted klein' }, 'Zeigt allen im Kurs Platz, Anzeigename und Punkte (gesamt oder je Welt). Die Anzeigenamen wählen die Schülerinnen und Schüler im Portal selbst.'),
@@ -359,6 +382,29 @@ export default {
       ];
     }
 
+    /** Pool des Bosses einer Welt (aufklappbar, lädt beim Öffnen; richtige Antwort markiert). */
+    function bossPool(welt) {
+      if (!['A', 'B', 'C'].includes(welt)) return null;
+      const inhalt = h('div', null, h('p', { class: 'muted' }, 'Lade …'));
+      let geladen = false;
+      return h('details', { class: 'panel lk-karte lk-boss-pool', ontoggle: async (e) => {
+        if (!e.currentTarget.open || geladen) return;
+        geladen = true;
+        try {
+          const p = await api('GET', `/api/lehrer/boss/${welt}`);
+          const antwort = (f) => (f.typ === 'mc' ? f.optionen[0] : f.typ === 'wf' ? `${f.wahr ? 'wahr' : 'falsch'} – ${f.begruendungen[0]}` : f.paare.map((x) => `${x[0]} → ${x[1]}`).join('; '));
+          clear(inhalt,
+            h('p', null, `${p.anzahl} von ${p.aufgaben.length} Aufgaben je Kampf (Basis ${p.mix[1]}, Standard ${p.mix[2]}, Profi ${p.mix[3]}), ${p.dauerMin} Minuten. Im Grundkurs werden nur Aufgaben „gA + eA“ gezogen, wenn genug da sind.`),
+            h('ol', { class: 'lk-boss-liste' }, p.aufgaben.map((a) => h('li', null,
+              h('p', null, h('strong', null, a.frage.frage ?? a.frage.aussage), ' ', h('span', { class: 'muted klein' }, `${STUFE[a.stufe]} · ${a.punkte} P. · ${NIVEAUS[a.niveau]?.kurz ?? a.niveau}`), ' ',
+                a.fallen.map((x) => h('span', { class: 'lk-falle', title: FALLE[x]?.titel ?? x }, x))),
+              a.bild?.art === 'grammatik' ? h('pre', { class: 'boss-grammatik' }, a.bild.text) : a.bild ? h('p', { class: 'muted klein' }, `(mit abgebildetem ${{ dea: 'DEA', nea: 'NEA', mealy: 'Mealy-Automaten', nka: 'Kellerautomaten' }[a.bild.typ]})`) : null,
+              h('p', { class: 'lk-boss-antwort' }, '✓ ', antwort(a.frage)),
+              a.frage.erklaerung ? h('p', { class: 'muted klein' }, a.frage.erklaerung) : null))));
+        } catch (err) { clear(inhalt, h('p', { class: 'notice notice-error' }, err.message)); }
+      } }, h('summary', null, h('strong', null, `⚔️ Boss der Welt ${welt}: Aufgabenpool mit Lösungen`)), inhalt);
+    }
+
     /* ───────────── 📖 Aufgaben der Welten ───────────── */
     async function aufgabenSeite() {
       const { aufgaben } = await api('GET', '/api/katalog');
@@ -373,6 +419,7 @@ export default {
         h('p', { class: 'lk-sprung' }, 'Welten: ', WORLDS.map((w, i) => [i ? ' · ' : '', h('a', { href: `#/lehrkraft?teil=aufgaben`, onclick: (e) => { e.preventDefault(); el.querySelector(`#lk-welt-${w.id}`)?.scrollIntoView({ behavior: 'smooth' }); } }, `Welt ${w.id}`)])),
         WORLDS.map((w) => h('section', { class: 'lk-welt-abschnitt', id: `lk-welt-${w.id}` },
           h('h3', null, `Welt ${w.id} – ${w.title}`),
+          bossPool(w.id),
           w.levels.map((n) => {
             const liste = jeLevel(n);
             return h('div', { class: 'panel lk-karte' },
@@ -386,6 +433,144 @@ export default {
                   h('td', null, h('a', { class: 'btn btn-small', href: aufgabenLink(a) }, 'Vorschau mit Lösung')))))
                 : h('p', { class: 'muted' }, 'Keine Aufgaben mit Punkten (Simulatoren, Training oder Material).'));
           }))));
+    }
+
+    /* ───────────── ✏️ Eigene Aufgaben (Aufgaben-Editor, PR 10) ───────────── */
+    async function eigeneSeite(konto) {
+      const kurse = await api('GET', '/api/lehrer/kurse');
+      if (!aktiv) return;
+      const id = kursId ?? (kurse.length === 1 ? kurse[0].id : null);
+      const link = (p = {}) => `#/lehrkraft?${new URLSearchParams({ teil: 'eigene', ...(id ? { kurs: id } : {}), ...p })}`;
+      const kopf = [h('h2', null, '✏️ Eigene Aufgaben'),
+        h('p', { class: 'lead' }, 'Erstellen Sie eigene Quizfragen und Baukasten-Challenges für einen Kurs. Ihre Schülerinnen und Schüler sehen freigegebene Aufgaben auf der Startseite unter „Aufgaben deiner Lehrkraft“. Geprüft wird auf dem Server – Lösungen erreichen den Browser erst nach der Antwort. Eigene Aufgaben geben keine Punkte; Ergebnisse sehen Sie in der Liste.')];
+      if (!kurse.length) { seite(...kopf, h('p', { class: 'notice' }, 'Noch kein Kurs mit AutomatenLab – legen Sie im Portal einen Kurs an.')); return; }
+      if (!id) {
+        seite(...kopf, h('div', { class: 'panel lk-karte' }, h('h3', null, 'Kurs wählen'),
+          h('ul', null, kurse.map((k) => h('li', null, h('a', { href: `#/lehrkraft?${new URLSearchParams({ teil: 'eigene', kurs: k.id })}` }, k.name))))));
+        return;
+      }
+      const kurs = kurse.find((k) => k.id === id);
+      if (!kurs) throw Object.assign(new Error('Kurs'), { status: 404 });
+      const kursWahl = kurse.length > 1 ? h('p', null, 'Kurs: ', kurse.map((k, i) => [i ? ' · ' : '', k.id === id ? h('strong', null, k.name) : h('a', { href: `#/lehrkraft?${new URLSearchParams({ teil: 'eigene', kurs: k.id })}` }, k.name)])) : h('p', null, 'Kurs: ', h('strong', null, kurs.name));
+      const neuArt = ctx.params.get('neu');
+      const nr = ctx.params.get('aufgabe');
+      if (neuArt === 'quiz' || neuArt === 'baukasten') { editor(kopf, kursWahl, id, link, { art: neuArt, titel: '', aktiv: false, daten: null }); return; }
+      if (nr) { const x = await api('GET', `/api/lehrer/eigene/${encodeURIComponent(nr)}`); if (aktiv) editor(kopf, kursWahl, id, link, x); return; }
+
+      const liste = await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/eigene`);
+      if (!aktiv) return;
+      const status = h('p', { class: 'lk-status', 'aria-live': 'polite' });
+      const zeilen = liste.map((x) => h('tr', null,
+        h('td', null, h('strong', null, x.titel)),
+        h('td', null, x.art === 'quiz' ? `Quiz (${x.fragen} ${x.fragen === 1 ? 'Frage' : 'Fragen'})` : `Baukasten (${STUFE[x.stufe] ?? '–'})`),
+        h('td', null, x.aktiv ? h('span', { class: 'niveau-pille niveau-alle' }, 'freigegeben') : h('span', { class: 'muted' }, 'Entwurf')),
+        h('td', { class: 'zahl' }, String(x.versucht)),
+        h('td', { class: 'zahl' }, String(x.geloest)),
+        h('td', { class: 'lk-aktionen' },
+          h('a', { class: 'btn btn-small', href: link({ aufgabe: String(x.nr) }) }, 'Bearbeiten'),
+          h('a', { class: 'btn btn-small', href: `${x.link}&vorschau=1` }, 'Vorschau'),
+          h('button', { type: 'button', class: 'btn btn-small', onclick: async () => {
+            try { await api('PATCH', `/api/lehrer/eigene/${x.nr}`, { aktiv: !x.aktiv }); eigeneSeite(konto); } catch (e) { status.textContent = e.message; }
+          } }, x.aktiv ? 'Zurückziehen' : 'Freigeben'),
+          h('button', { type: 'button', class: 'btn btn-small', onclick: async () => {
+            if (!window.confirm(`„${x.titel}“ löschen? Die Ergebnisse Ihrer Schülerinnen und Schüler zu dieser Aufgabe werden mitgelöscht.`)) return;
+            try { await api('DELETE', `/api/lehrer/eigene/${x.nr}`); eigeneSeite(konto); } catch (e) { status.textContent = e.message; }
+          } }, 'Löschen'))));
+      seite(...kopf, kursWahl,
+        h('p', { class: 'start-actions' },
+          h('a', { class: 'btn btn-primary', href: link({ neu: 'quiz' }) }, '＋ Quiz'),
+          h('a', { class: 'btn btn-primary', href: link({ neu: 'baukasten' }) }, '＋ Baukasten-Challenge')),
+        h('div', { class: 'panel lk-karte' },
+          h('h3', null, `Aufgaben im Kurs ${kurs.name} (${liste.length})`),
+          liste.length ? tabelle(['Titel', 'Art', 'Status', 'versucht', 'gelöst', ''], zeilen) : h('p', { class: 'muted' }, 'Noch keine eigenen Aufgaben.'),
+          status));
+    }
+
+    /** Editor für eine eigene Aufgabe (neu oder bearbeiten). */
+    function editor(kopf, kursWahl, kurs, link, x) {
+      const status = h('p', { class: 'lk-status', 'aria-live': 'polite' });
+      const titel = h('input', { type: 'text', id: 'ed-titel', maxlength: 80, value: x.titel ?? '', required: true });
+      const freigabe = h('input', { type: 'checkbox', id: 'ed-aktiv', checked: !!x.aktiv });
+      let sammle;
+      let inhalt;
+      if (x.art === 'quiz') {
+        const leer = (typ = 'mc') => ({ typ, frage: '', aussage: '', optionen: ['', '', '', ''], begruendungen: ['', '', ''], richtig: 0, wahr: true, erklaerung: '' });
+        const fragen = (x.daten?.fragen ?? [leer()]).map((f) => ({ ...leer(f.typ), ...f, optionen: [...(f.optionen ?? []), '', '', '', ''].slice(0, 4), begruendungen: [...(f.begruendungen ?? []), '', '', ''].slice(0, 3) }));
+        const box = h('div', { class: 'ed-fragen' });
+        const zeichne = () => clear(box, fragen.map((f, i) => {
+          const name = `ed-f${i}`;
+          const feld = (liste, key, j, rot) => h('div', { class: 'ed-option' },
+            h('input', { type: 'radio', name: `${name}-${key}`, checked: f.richtig === j, 'aria-label': `${rot} ${j + 1} ist richtig`, onchange: () => { f.richtig = j; } }),
+            h('input', { type: 'text', maxlength: 200, value: liste[j], placeholder: j === 0 ? `${rot} ${j + 1}` : `${rot} ${j + 1}${j > 1 ? ' (optional)' : ''}`, 'aria-label': `${rot} ${j + 1}`, oninput: (e) => { liste[j] = e.target.value; } }));
+          return h('fieldset', { class: 'ed-frage' },
+            h('legend', null, `Frage ${i + 1}`),
+            h('p', null, h('label', null, 'Typ ', h('select', { onchange: (e) => { f.typ = e.target.value; f.richtig = 0; zeichne(); } },
+              h('option', { value: 'mc', selected: f.typ === 'mc' }, 'Multiple Choice (eine richtige Antwort)'),
+              h('option', { value: 'wf', selected: f.typ === 'wf' }, 'Wahr oder falsch – mit Begründung')))),
+            f.typ === 'mc'
+              ? [h('label', null, 'Frage', h('textarea', { rows: 2, maxlength: 400, oninput: (e) => { f.frage = e.target.value; } }, f.frage)),
+                h('p', { class: 'muted klein' }, 'Antworten (2 bis 4) – markieren Sie die richtige:'), [0, 1, 2, 3].map((j) => feld(f.optionen, 'opt', j, 'Antwort'))]
+              : [h('label', null, 'Aussage', h('textarea', { rows: 2, maxlength: 400, oninput: (e) => { f.aussage = e.target.value; } }, f.aussage)),
+                h('p', null, 'Die Aussage ist ',
+                  h('label', { class: 'check' }, h('input', { type: 'radio', name: `${name}-wahr`, checked: f.wahr === true, onchange: () => { f.wahr = true; } }), ' wahr'), ' ',
+                  h('label', { class: 'check' }, h('input', { type: 'radio', name: `${name}-wahr`, checked: f.wahr === false, onchange: () => { f.wahr = false; } }), ' falsch')),
+                h('p', { class: 'muted klein' }, 'Begründungen (2 bis 3) – markieren Sie die passende:'), [0, 1, 2].map((j) => feld(f.begruendungen, 'begr', j, 'Begründung'))],
+            h('label', null, 'Erklärung nach der Antwort (optional)', h('textarea', { rows: 2, maxlength: 400, oninput: (e) => { f.erklaerung = e.target.value; } }, f.erklaerung ?? '')),
+            fragen.length > 1 ? h('p', null, h('button', { type: 'button', class: 'btn btn-small', onclick: () => { fragen.splice(i, 1); zeichne(); } }, 'Frage entfernen')) : null);
+        }), fragen.length < 12 ? h('p', null, h('button', { type: 'button', class: 'btn', onclick: () => { fragen.push(leer()); zeichne(); } }, '＋ Frage hinzufügen')) : null);
+        zeichne();
+        inhalt = [box];
+        sammle = () => ({ fragen: fragen.map((f) => {
+          const liste = (f.typ === 'mc' ? f.optionen : f.begruendungen).map((t, j) => ({ t: t.trim(), j })).filter((o) => o.t);
+          const richtig = liste.findIndex((o) => o.j === f.richtig);
+          const basis = { typ: f.typ, richtig, ...(f.erklaerung?.trim() ? { erklaerung: f.erklaerung.trim() } : {}) };
+          return f.typ === 'mc' ? { ...basis, frage: f.frage, optionen: liste.map((o) => o.t) } : { ...basis, aussage: f.aussage, wahr: f.wahr, begruendungen: liste.map((o) => o.t) };
+        }) });
+      } else {
+        const d = x.daten ?? { aufgabe: '', stufe: 1, referenz: null, tipps: [] };
+        const stufe = h('select', { id: 'ed-stufe' }, [1, 2, 3].map((n) => h('option', { value: String(n), selected: d.stufe === n }, STUFE[n])));
+        const aufgabe = h('textarea', { id: 'ed-aufgabe', rows: 3, maxlength: 800, placeholder: 'z. B. „Entwickle einen DEA über Σ = {a, b}, der genau die Wörter akzeptiert, die auf b enden.“' }, d.aufgabe ?? '');
+        const startAlphabet = d.referenz?.alphabet ?? ['a', 'b'];
+        const alphabet = h('input', { type: 'text', id: 'ed-alphabet', value: startAlphabet.join(', '), maxlength: 40 });
+        const edBox = h('div');
+        const graphBox = h('div', { class: 'ed-graph' });
+        const gv = new GraphView(graphBox, { label: 'Musterautomat' });
+        const zeigeGraph = (ed) => { try { gv.render(ed.toDFA()); } catch { /* unvollständig */ } };
+        const ed = new DfaEditor(edBox, { alphabet: startAlphabet, value: d.referenz, onChange: zeigeGraph });
+        zeigeGraph(ed);
+        const tipps = h('textarea', { id: 'ed-tipps', rows: 3, maxlength: 950, placeholder: 'ein Tipp je Zeile, höchstens drei' }, (d.tipps ?? []).join('\n'));
+        inhalt = [
+          h('p', null, h('label', { for: 'ed-stufe' }, 'Stufe '), stufe),
+          h('label', { for: 'ed-aufgabe' }, 'Aufgabentext (Du-Ansprache, so wie Ihre Schülerinnen und Schüler ihn lesen)'), aufgabe,
+          h('p', null, h('label', { for: 'ed-alphabet' }, 'Eingabealphabet Σ (durch Kommas getrennt) '), alphabet, ' ',
+            h('button', { type: 'button', class: 'btn btn-small', onclick: () => ed.setAlphabet(alphabet.value.split(',').map((t) => t.trim()).filter(Boolean)) }, 'Übernehmen')),
+          h('h4', null, 'Musterautomat (DEA)'),
+          h('p', { class: 'muted klein' }, 'Geprüft wird die Sprache: Jeder Automat, der dieselben Wörter akzeptiert, gilt als richtig. Beispielwörter erzeugt der Server aus Ihrem Automaten.'),
+          edBox, graphBox,
+          h('label', { for: 'ed-tipps' }, 'Tipps (optional, kosten beim Abrufen nichts – eigene Aufgaben geben keine Punkte)'), tipps];
+        sammle = () => ({ aufgabe: aufgabe.value, stufe: Number(stufe.value), referenz: ed.toJSON(), tipps: tipps.value.split('\n').map((t) => t.trim()).filter(Boolean).slice(0, 3) });
+      }
+      const form = h('form', { class: 'lk-form ed-form', onsubmit: async (e) => {
+        e.preventDefault();
+        const body = { titel: titel.value, aktiv: freigabe.checked, daten: sammle() };
+        status.textContent = 'Speichere …';
+        try {
+          const r = x.nr ? await api('PATCH', `/api/lehrer/eigene/${x.nr}`, body) : await api('POST', `/api/lehrer/kurse/${encodeURIComponent(kurs)}/eigene`, { ...body, art: x.art });
+          status.textContent = 'Gespeichert.';
+          if (!x.nr) ctx.navigate('lehrkraft', { teil: 'eigene', kurs, aufgabe: String(r.nr) }, { replace: true });
+          else x.versucht = r.versucht;
+        } catch (err) { status.textContent = err.message; }
+      } },
+        h('label', { for: 'ed-titel' }, 'Titel'), titel,
+        ...inhalt,
+        h('label', { class: 'check', for: 'ed-aktiv' }, freigabe, ' Für Schülerinnen und Schüler freigeben'),
+        x.nr && x.versucht ? h('p', { class: 'notice' }, `Schon ${x.versucht}× bearbeitet: Ändern Sie Fragen oder Automat, werden diese Ergebnisse zurückgesetzt (der Titel allein nicht).`) : null,
+        h('p', { class: 'start-actions' },
+          h('button', { type: 'submit', class: 'btn btn-primary' }, 'Speichern'),
+          x.nr ? h('a', { class: 'btn', href: `${x.link}&vorschau=1` }, 'Vorschau') : null,
+          h('a', { class: 'btn', href: link() }, 'Zur Liste')),
+        status);
+      seite(...kopf, kursWahl, h('div', { class: 'panel lk-karte' }, h('h3', null, x.nr ? `Bearbeiten: ${x.titel}` : x.art === 'quiz' ? 'Neues Quiz' : 'Neue Baukasten-Challenge'), form));
     }
 
     /* ───────────── 🏅 Urkunden (wie Algo Quest: im Browser drucken, kein PDF auf dem Server) ───────────── */

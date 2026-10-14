@@ -2,6 +2,35 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Aufgaben-Editor für Lehrkräfte (1.20.0)
+Frank wünscht einen Editor. Lehrkräfte legen je Kurs eigene **Quizze** (1–12 Fragen: Multiple Choice mit 2–4
+Antworten oder Wahr/Falsch mit 2–3 Begründungen, optionale Erklärung) und **Baukasten-Challenges** (Aufgabentext,
+Stufe, Musterautomat als DEA in der Übergangstabelle, bis zu drei Tipps) an. Sie laufen in den vorhandenen Modulen
+(`#/quiz?eigen=<nr>`, `#/baukasten?eigen=<nr>`) über dieselbe Prüf-API (ID `eigen:<nr>`); Lösungen liegen nur in der
+Datenbank (Vertrag §9), Beispielwörter erzeugt der Server aus dem Musterautomaten, geprüft wird die Sprache.
+Entscheidungen: (1) **Keine Punkte, keine Abzeichen** – Punkte gehören zum Konto, eine Kursaufgabe zählte sonst in
+fremden Kursen und im Portal mit; die Lehrkraft sieht je Aufgabe „versucht/gelöst“. (2) Schüler sehen eine Aufgabe
+erst nach **Freigabe** und nur im eigenen Kurs (sonst 404). (3) Ändert die Lehrkraft Fragen oder Automat, werden die
+bisherigen Ergebnisse zurückgesetzt (der Titel allein nicht). (4) Löscht das Portal den Kurs, verschwinden Aufgaben
+und Ergebnisse; löscht es das Konto der Lehrkraft, bleibt die Aufgabe beim Kurs, der Autor wird geleert.
+(5) Höchstens 60 Aufgaben je Kurs, Texte mit Längengrenzen, Ausgabe nur als Textknoten. Nebenbei behoben: Der
+Baukasten (und andere Tabellen) war auf dem Smartphone breiter als der Bildschirm.
+
+## 2026-10-14 · Boss-Kämpfe der Welten A–C wie Algo Quest (1.19.0)
+Übernommen aus Algo Quest: Kampf auf Zeit (A 20, B/C 25 Minuten), 8 Aufgaben nach Mix (3 Basis, 3 Standard, 2 Profi,
+leichte zuerst), keine Rückmeldung während des Kampfes, Antworten werden gespeichert und erst am Ende gewertet
+(30 s Kulanz), 12 Stunden Pause, bester Versuch zählt (zu den Punkten, in Ranglisten und Portal-Kennzahlen),
+besiegt ab 50 %, Abzeichen je Boss und „Makellos“. Kurs-Einstellung `boss`: automatisch ab 60 % der Level-Punkte
+der Welt im Kursumfang (Standard), offen oder gesperrt; bei mehreren Kursen gilt die günstigste. Abweichungen:
+(1) Bosse nur für die Welten A–C – passend zu den Boss-Leveln der Materialien (DS06, DS10, DS14); Welt D hat zwei
+Bonus-Level. (2) Aufgaben im **Format des Level-Quiz** (Multiple Choice, Wahr/Falsch mit Begründung, Zuordnung) mit
+abgebildetem Automaten bzw. Grammatik – geprüft wird wie beim Quiz, Wahr/Falsch und Zuordnung auch zur Hälfte.
+(3) Jede Aufgabe mit Automat oder Grammatik hat eine **Kontrolle gegen die Engine** (`test/boss-inhalte.test.js`):
+richtige Option richtig, jede falsche falsch (der Test fand dabei einen Fehler im Entwurf: „gerade Anzahl a und
+endet auf b“ braucht 3, nicht 4 Zustände). (4) Im Grundkurs werden nur Aufgaben „gA + eA“ gezogen, wenn genug da sind
+(Welt A); die Bosse B und C sind eA und erscheinen im Grundkurs als „freiwillig“. (5) Lehrkräfte dürfen jederzeit
+kämpfen und sehen den Pool mit Lösungen unter 📖 Aufgaben.
+
 ## 2026-10-14 · Rangliste, Beamer-Board und Urkunden wie Algo Quest (1.18.0)
 Frank wünscht die Funktionen von Algo Quest. Übernommen: Rangliste für Schüler (gesamt oder je Welt, gleiche Punkte =
 gleicher Platz, eigener Eintrag markiert, keine Konto-IDs), Beamer-Board (Top 15, Kursdurchschnitt je Welt, letzte 8

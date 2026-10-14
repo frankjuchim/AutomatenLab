@@ -129,6 +129,41 @@ const MIGRATIONEN = [
   );
   CREATE INDEX idx_falsche_aufgabe ON falsche_antworten(aufgabe_id);
   CREATE INDEX idx_falsche_sub ON falsche_antworten(sub);
+  `,
+  `
+  -- Boss-Kämpfe (PR 9, wie Algo Quest): ein Versuch je Kampf; Aufgaben-IDs und Antworten als JSON, gewertet erst
+  -- am Ende (ende_at gesetzt). ergebnis = [{id, wert, punkte}]. Es zählt der beste Versuch je Welt.
+  CREATE TABLE boss_versuche (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    sub         TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    welt        TEXT NOT NULL,
+    aufgaben    TEXT NOT NULL,
+    antworten   TEXT NOT NULL DEFAULT '{}',
+    start_at    TEXT NOT NULL,
+    deadline_at TEXT NOT NULL,
+    ende_at     TEXT,
+    punkte      INTEGER NOT NULL DEFAULT 0,
+    max_punkte  INTEGER NOT NULL,
+    ergebnis    TEXT NOT NULL DEFAULT '[]'
+  );
+  CREATE INDEX idx_boss_sub ON boss_versuche(sub, welt);
+  `,
+  `
+  -- Eigene Aufgaben der Lehrkräfte (PR 10, Aufgaben-Editor): je Kurs Quizfragen bzw. Baukasten-Challenges mit
+  -- Lösung (nur auf dem Server). Lernstand wie alle Aufgaben in fortschritt (aufgabe_id „eigen:<id>“), ohne Punkte.
+  -- autor_sub wird beim Löschen des Kontos geleert; mit dem Kurs verschwinden die Aufgaben (ON DELETE CASCADE).
+  CREATE TABLE eigene_aufgaben (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    kurs_id    TEXT NOT NULL REFERENCES kurse(id) ON DELETE CASCADE,
+    autor_sub  TEXT,
+    art        TEXT NOT NULL CHECK (art IN ('quiz', 'baukasten')),
+    titel      TEXT NOT NULL,
+    daten      TEXT NOT NULL,
+    aktiv      INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX idx_eigene_kurs ON eigene_aufgaben(kurs_id);
   `
 ];
 

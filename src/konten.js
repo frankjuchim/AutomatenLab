@@ -113,6 +113,8 @@ function createKonten(ctx) {
       n += db.prepare('DELETE FROM abzeichen WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM training WHERE sub = ?').run(sub).changes;
       n += db.prepare('DELETE FROM falsche_antworten WHERE sub = ?').run(sub).changes;
+      n += db.prepare('DELETE FROM boss_versuche WHERE sub = ?').run(sub).changes;
+      db.prepare('UPDATE eigene_aufgaben SET autor_sub = NULL WHERE autor_sub = ?').run(sub); // Aufgaben bleiben beim Kurs
       n += db.prepare('DELETE FROM konten WHERE sub = ?').run(sub).changes;
       return n;
     })();
@@ -121,6 +123,8 @@ function createKonten(ctx) {
   /** Alle Daten eines Kurses löschen (Einstellungen, Mitgliedschaften); Lernstände hängen an sub, nicht am Kurs. */
   const loescheKurs = db.transaction((kursId) => {
     let n = db.prepare('DELETE FROM kurs_mitglieder WHERE kurs_id = ?').run(kursId).changes;
+    // Ergebnisse der eigenen Aufgaben des Kurses (die Aufgaben selbst löscht ON DELETE CASCADE)
+    for (const t of ['fortschritt', 'falsche_antworten']) n += db.prepare(`DELETE FROM ${t} WHERE aufgabe_id IN (SELECT 'eigen:' || id FROM eigene_aufgaben WHERE kurs_id = ?)`).run(kursId).changes;
     n += db.prepare('DELETE FROM kurse WHERE id = ?').run(kursId).changes;
     return n;
   });

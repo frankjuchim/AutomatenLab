@@ -193,3 +193,10 @@ Schreibende Anfragen nur mit gleicher Herkunft und als JSON; höchstens 120 Prü
 3. Modul in `app/js/modules/<modul>.js` auf `ctx.quelle` umstellen (keine `progress.solve/award` mehr).
 4. Eigene Demo-Aufgabe in `app/js/data/demo.js` (mit Test gegen die Engine) und Eintrag in `app/js/data/gast.js`.
 5. Lösungstexte in `test/loesungen.test.js` aufnehmen, `test/lernen.test.js` um den Ablauf ergänzen.
+
+## Eigene Aufgaben der Lehrkräfte (Aufgaben-Editor)
+* ID `eigen:<nr>` (Tabelle `eigene_aufgaben`, `src/eigene.js`), Deep-Links `#/quiz?eigen=<nr>`, `#/baukasten?eigen=<nr>`.
+* Quiz: Fragen im Format des Level-Quiz (erste Option bzw. Begründung richtig, gespeichert in der Datenbank);
+  Baukasten: Musterautomat als DEA, Beispiele aus dem Automaten (bis zu vier kürzeste Wörter je Seite).
+* Prüfung wie Level-Quiz bzw. Baukasten, aber **0 Punkte und keine Abzeichen**; Zugriff nur für Mitglieder des Kurses
+  (freigegeben) und dessen Lehrkräfte, sonst 404.

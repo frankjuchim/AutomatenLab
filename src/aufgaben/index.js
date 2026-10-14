@@ -471,9 +471,48 @@ async function ladeAufgaben(secret) {
   }
   const map = new Map(liste.map((a) => [a.id, a]));
 
+  // Boss-Kämpfe (inhalte/boss.js, src/boss.js): eigene Aufgaben je Welt, nicht im Katalog der Level.
+  // Öffentlicher Teil und Wertung wie eine Frage des Level-Quiz; Punkte = Stufenpunkte × Wert (1, ½ oder 0).
+  const bossD = await lade(path.join(INHALTE, 'boss.js'));
+  const bossAufgaben = new Map();
+  for (const [welt, b] of Object.entries(bossD.BOSSE)) for (const a of b.pool) bossAufgaben.set(a.id, { ...a, welt, punkte: PUNKTE_STUFE[a.stufe] });
+  const bossFrage = (a) => {
+    const f = a.frage;
+    if (f.typ === 'mc') return { typ: 'mc', frage: f.frage, optionen: h.mische(f.optionen.map((text, j) => ({ id: h.oid(a.id, 0, j), text }))) };
+    if (f.typ === 'wf') return { typ: 'wf', aussage: f.aussage, begruendungen: h.mische(f.begruendungen.map((text, j) => ({ id: h.oid(a.id, 0, j), text }))) };
+    return { typ: 'zuordnung', frage: f.frage, links: f.paare.map((x) => x[0]), rechts: h.mische(f.paare.map((x) => x[1])) };
+  };
+  const boss = {
+    welten: Object.fromEntries(Object.entries(bossD.BOSSE).map(([welt, b]) => [welt, { welt, titel: b.titel, niveau: b.niveau, dauerMin: b.dauerMin, anzahl: Math.min(b.anzahl, b.pool.length), mix: b.mix, pool: b.pool.map((a) => a.id) }])),
+    aufgabe: (id) => bossAufgaben.get(id),
+    /** ohne Lösung: Frage (Optionen gemischt, HMAC-Kennungen), Bild (Gegenstand der Aufgabe), Stufe, Punkte */
+    oeffentlich: (a) => ({ id: a.id, stufe: a.stufe, punkte: a.punkte, ...(a.bild ? { bild: a.bild } : {}), frage: bossFrage(a) }),
+    /** Wert 0/½/1 der Antwort (ungültige Antwort = 0) und Lösungsteil für die Auswertung */
+    werte(a, antwort) {
+      let wert = 0;
+      try { wert = antwort == null ? 0 : pruefeQuizFrage(a.frage, antwort, (j) => h.oid(a.id, 0, j)).wert; } catch { wert = 0; }
+      return wert;
+    },
+    loesung(a) {
+      const f = a.frage;
+      const teil = f.typ === 'mc' ? { richtig: h.oid(a.id, 0, 0), richtigText: f.optionen[0] }
+        : f.typ === 'wf' ? { wahr: f.wahr, richtig: h.oid(a.id, 0, 0), richtigText: f.begruendungen[0] }
+          : { loesung: f.paare.map((x) => x[1]) };
+      return { ...teil, ...(f.erklaerung ? { erklaerung: f.erklaerung } : {}) };
+    },
+    /** für die Vorschau der Lehrkraft: Aufgabe mit richtiger Antwort im Klartext */
+    lehrkraft: (a) => ({ id: a.id, stufe: a.stufe, punkte: a.punkte, niveau: a.niveau, fallen: a.fallen, ...(a.bild ? { bild: a.bild } : {}), frage: a.frage })
+  };
+
   // Training (src/training.js): Arena-Automaten (öffentlich), Minimierer-Automaten für „Unterscheide!“, Sortierer-Karten
   const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })), sortierer: sortiererD.SORTIERER_KARTEN };
-  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training, fallen: fallenM.FALLEN };
+  // Eigene Aufgaben der Lehrkräfte (src/eigene.js): dieselben Aufgabentypen wie Level-Quiz und Baukasten, ohne Abzeichen
+  const typen = {
+    quiz: { ...QUIZ, modul: 'eigen', abzeichen: () => [] },
+    baukasten: { ...BAUKASTEN, modul: 'eigen', abzeichen: () => [] },
+    normalizeDFA
+  };
+  return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training, fallen: fallenM.FALLEN, boss, typen };
 }
 
 module.exports = { ladeAufgaben, PUNKTE_STUFE };

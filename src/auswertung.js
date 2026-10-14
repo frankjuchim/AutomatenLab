@@ -15,10 +15,11 @@ const crypto = require('node:crypto');
 
 const KURSARTEN = ['eA', 'gA'];
 const LEVEL_ARTEN = ['pflicht', 'vertiefung', 'bonus', 'spaeter'];
+const BOSS_MODI = ['auto', 'offen', 'gesperrt']; // wie src/boss.js
 const AUFTRAG_MAX = 400;
 const hauptLevel = (a) => { const l = a.levels || []; return l.length ? (a.modul === 'quiz' && l.length > 1 ? l[l.length - 1] : l[0]) : null; };
 
-function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
+function createAuswertung(ctx, { konten, katalog, aufgaben, training = null, bossPunkte = () => new Map() }) {
   const { db } = ctx;
   const iso = () => new Date(ctx.now()).toISOString();
   const levelInfo = new Map(katalog.welten.flatMap((w) => w.levels.map((l) => [l.nr, { ...l, welt: w.kennung }])));
@@ -39,7 +40,7 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     // Rangliste für Schüler und Beamer-Board (PR 8, wie Algo Quest): beide standardmäßig aus. Das Board ist ohne
     // Anmeldung unter /board/<token> erreichbar – ein zufälliger Link statt des Kurscodes, den die Plattform nicht kennt.
     const beamer = { aktiv: !!(e.beamer && e.beamer.aktiv && e.beamer.token), token: typeof e.beamer?.token === 'string' ? e.beamer.token : null };
-    return { kursart: KURSARTEN.includes(e.kursart) ? e.kursart : 'eA', levelArt, auftrag, scoreboard: e.scoreboard === true, beamer };
+    return { kursart: KURSARTEN.includes(e.kursart) ? e.kursart : 'eA', levelArt, auftrag, scoreboard: e.scoreboard === true, beamer, boss: BOSS_MODI.includes(e.boss) ? e.boss : 'auto' };
   }
 
   /** Einstellungen eines Kurses ändern (nur bekannte Felder, geprüft). */
@@ -66,6 +67,10 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         if (level.length > 4 || level.some((n) => !levelInfo.has(n))) throw ungueltig('Wählen Sie höchstens vier Level.');
         e.auftrag = { text, level: level.sort((a, b) => a - b), at: iso() };
       }
+    }
+    if (body && body.boss !== undefined) {
+      if (!BOSS_MODI.includes(body.boss)) throw ungueltig('Diese Einstellung für die Boss-Kämpfe gibt es nicht.');
+      e.boss = body.boss;
     }
     if (body && body.scoreboard !== undefined) {
       if (typeof body.scoreboard !== 'boolean') throw ungueltig('Die Einstellung zur Rangliste passt nicht.');
@@ -111,16 +116,19 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     const fp = fortschrittVon(subs);
     const trainingP = zahlenVon(subs, 'SELECT sub, COALESCE(SUM(punkte), 0) AS n FROM training WHERE sub IN (?) GROUP BY sub');
     const abz = zahlenVon(subs, 'SELECT sub, COUNT(*) AS n FROM abzeichen WHERE sub IN (?) GROUP BY sub');
+    const bossP = bossPunkte(subs);
     const zeilen = mitglieder.map((m) => {
       const rows = [...fp.get(m.sub).values()].filter((r) => aufgaben?.map.has(r.aufgabe_id) ?? true);
       const aufgabenPunkte = rows.reduce((s, r) => s + r.punkte, 0);
       const t = trainingP.get(m.sub) || 0;
+      const bp = bossP.get(m.sub) || 0;
       return {
         sub: m.sub,
         name: m.name,
-        punkte: aufgabenPunkte + t,
+        punkte: aufgabenPunkte + t + bp,
         aufgabenPunkte,
         trainingPunkte: t,
+        bossPunkte: bp,
         geloest: rows.filter(geloest).length,
         angesehen: rows.filter((r) => r.status === 'angesehen').length,
         abzeichen: abz.get(m.sub) || 0,
@@ -251,8 +259,8 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         ...a.aufgaben.map((x) => [x.titel, x.id, x.modul, x.welt, x.level ?? '', x.stufe, x.punkte, x.versucht, x.geloest, prozent(x.quote), x.fehlversucheSchnitt ?? '', x.tippsSchnitt ?? '', x.angesehen, x.fallen.join(' '), x.falscheAntworten.map((f) => `${f.antwort} (${f.anzahl}×)`).join(' | ')])]);
     }
     if (art === 'uebersicht') {
-      return csv([['Name', 'Punkte', 'davon Training', 'gelöst', 'Lösung angesehen', 'Abzeichen', 'Rang', 'zuletzt aktiv'],
-        ...schueler(kurs).map((s) => [s.name, s.punkte, s.trainingPunkte, s.geloest, s.angesehen, s.abzeichen, s.rang, s.zuletztAktiv ?? ''])]);
+      return csv([['Name', 'Punkte', 'davon Training', 'davon Boss (beste Versuche)', 'gelöst', 'Lösung angesehen', 'Abzeichen', 'Rang', 'zuletzt aktiv'],
+        ...schueler(kurs).map((s) => [s.name, s.punkte, s.trainingPunkte, s.bossPunkte, s.geloest, s.angesehen, s.abzeichen, s.rang, s.zuletztAktiv ?? ''])]);
     }
     throw Object.assign(new Error('Diesen Export gibt es nicht.'), { status: 404 });
   }
@@ -303,9 +311,10 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     if (!welt) return s.map((z) => ({ sub: z.sub, name: z.name, punkte: z.punkte, abzeichen: z.abzeichen, geloest: z.geloest }));
     const fp = fortschrittVon(s.map((z) => z.sub));
     const inWelt = new Set(liste.filter((a) => weltVon(a) === welt).map((a) => a.id));
+    const bossW = bossPunkte(s.map((z) => z.sub), welt);
     return s.map((z) => {
       const rows = [...fp.get(z.sub).values()].filter((r) => inWelt.has(r.aufgabe_id));
-      return { sub: z.sub, name: z.name, punkte: rows.reduce((n, r) => n + r.punkte, 0), abzeichen: z.abzeichen, geloest: rows.filter(geloest).length };
+      return { sub: z.sub, name: z.name, punkte: rows.reduce((n, r) => n + r.punkte, 0) + (bossW.get(z.sub) || 0), abzeichen: z.abzeichen, geloest: rows.filter(geloest).length };
     });
   }
 

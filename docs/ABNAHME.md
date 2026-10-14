@@ -18,17 +18,20 @@ Dauer: etwa 30 Minuten mit einem Lehrkraft-Konto und einem Test-Schülerkonto im
 - [ ] Falsch antworten, Tipp holen, „Lösung zeigen“: Punkte sinken wie angekündigt, nach „Lösung zeigen“ 0 Punkte.
 - [ ] Training: Arena-Runde (Stufe 1) und Sortierer-Runde – Trainingspunkte, höchstens 30 am Tag.
 - [ ] Startseite: Auftrag der Lehrkraft oben, Level-Karte mit den Einstellungen des Kurses (siehe unten).
+- [ ] Boss-Kampf (Einstellung „sofort offen“): Kampf starten, ein paar Aufgaben beantworten, Seite neu laden (Antworten bleiben), abgeben → Auswertung mit Lösungen, Punkte oben rechts steigen.
 - [ ] Anderes Gerät: Lernstand ist derselbe.
 
 ## Als Lehrkraft (`/lehrer`)
 - [ ] Anmeldung über den Knopf auf der Startseite führt in den Lehrkraft-Bereich; die Startseite zeigt „Zum Lehrkraft-Bereich“.
 - [ ] Navigation 📚 Kurse · 📖 Aufgaben · 📂 Materialien · 🗺️ Themen · ⌂ Portal wie in Algo Quest.
 - [ ] Kurs öffnen: 👥 Schüler zeigt das Test-Konto mit Punkten; 🏆 Rangliste; 🔗 Beitritt verweist aufs Portal.
+- [ ] 📊 Auswertung: Boss-Ergebnisse (bester Versuch je Welt).
 - [ ] 📊 Auswertung: Lernstand-Matrix, Aufgabenstatistik mit häufigen falschen Antworten, drei CSV-Exporte öffnen sich in Excel/LibreOffice.
 - [ ] ⚙️ Einstellungen: Grundkurs wählen, einen Auftrag mit Level schreiben, ein Level auf „später“ setzen, speichern → beim Schüler sichtbar; QR-Link auf das „später“-Level funktioniert trotzdem.
 - [ ] ⚙️ Einstellungen: Rangliste und Beamer-Board einschalten → Schüler sehen „🏆 Rangliste deines Kurses“; der Board-Link öffnet sich ohne Anmeldung auf dem Beamer; „Neuen Link erzeugen“ sperrt den alten.
 - [ ] 🏅 Urkunden: Vorschau prüfen, als PDF drucken (A4, eine Seite je Schüler).
 - [ ] 📖 Aufgaben: „Vorschau mit Lösung“ bei drei Modulen öffnen (z. B. Turing, Keller, Quiz) – Lösung eingesetzt, „Ohne Lösung ausprobieren“ geht, der eigene Lernstand bleibt leer.
+- [ ] ✏️ Eigene Aufgaben: ein Quiz mit zwei Fragen und eine Baukasten-Challenge anlegen, freigeben → beim Schüler unter „Aufgaben deiner Lehrkraft“, lösen, in der Liste „gelöst“.
 - [ ] 📂 Materialien: Lehrkraft-PDF einer Doppelstunde öffnet sich.
 
 ## Löschung (Verbund)
