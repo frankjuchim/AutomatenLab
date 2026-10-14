@@ -209,7 +209,7 @@ async function lk() {
     ]),
     ...K.solved(J.kart['1112KE'], { size: 18 }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P7', 'P8', 'P2', 'P10', 'P6'] }, [
       ...D.bullets([
         '**Rückwärts-Aufgaben:** Unveränderte Belegung heißt nicht „nichts passiert“ – es kann ein Zeichen wie 1 oder _ gelesen worden sein **oder** ein ε-Übergang (Zustandswechsel beachten!).',
         '**NKA-Akzeptanz:** „Der Automat kann auch falsch raten, also wird abgelehnt“ – falsch. Es genügt **ein** akzeptierender Lauf; bei Ablehnung müssen **alle** Läufe scheitern.',

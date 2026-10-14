@@ -57,8 +57,8 @@
      "lehrkraft": "lehrkraft/DS01_Lehrkraft_Ein-Automat-hoert-zu.pdf",
      "original": "original/DS01_Lehrkraft_Ein-Automat-hoert-zu.docx",
      "bytes": {
-      "lehrkraft": 385059,
-      "original": 466228
+      "lehrkraft": 385561,
+      "original": 466345
      },
      "demo": [
       "lehrkraft"
@@ -118,8 +118,8 @@
      "lehrkraft": "lehrkraft/DS02_Lehrkraft_Was-macht-dieser-Automat.pdf",
      "original": "original/DS02_Lehrkraft_Was-macht-dieser-Automat.docx",
      "bytes": {
-      "lehrkraft": 455715,
-      "original": 446978
+      "lehrkraft": 456194,
+      "original": 447113
      }
     }
    ]
@@ -160,8 +160,8 @@
      "schueler": "schueler/M02_Merkblatt_DEA-entwickeln.pdf",
      "original": "original/M02_Merkblatt_DEA-entwickeln.docx",
      "bytes": {
-      "schueler": 348365,
-      "original": 516205
+      "schueler": 348753,
+      "original": 516310
      }
     },
     {
@@ -170,8 +170,8 @@
      "lehrkraft": "lehrkraft/DS03_Lehrkraft_Bauplan-gesucht.pdf",
      "original": "original/DS03_Lehrkraft_Bauplan-gesucht.docx",
      "bytes": {
-      "lehrkraft": 674312,
-      "original": 966656
+      "lehrkraft": 674789,
+      "original": 966767
      }
     },
     {
@@ -265,8 +265,8 @@
      "schueler": "schueler/M03_Merkblatt_Minimierung.pdf",
      "original": "original/M03_Merkblatt_Minimierung.docx",
      "bytes": {
-      "schueler": 210039,
-      "original": 209910
+      "schueler": 210461,
+      "original": 209981
      }
     },
     {
@@ -275,8 +275,8 @@
      "lehrkraft": "lehrkraft/DS05_Lehrkraft_Weniger-ist-mehr.pdf",
      "original": "original/DS05_Lehrkraft_Weniger-ist-mehr.docx",
      "bytes": {
-      "lehrkraft": 473336,
-      "original": 515960
+      "lehrkraft": 473752,
+      "original": 516062
      }
     },
     {
@@ -329,8 +329,8 @@
      "schueler": "schueler/M04_Merkblatt_Mealy-Automaten.pdf",
      "original": "original/M04_Merkblatt_Mealy-Automaten.docx",
      "bytes": {
-      "schueler": 216881,
-      "original": 338987
+      "schueler": 217480,
+      "original": 339088
      }
     },
     {
@@ -339,8 +339,8 @@
      "lehrkraft": "lehrkraft/DS06_Lehrkraft_Automaten-die-antworten.pdf",
      "original": "original/DS06_Lehrkraft_Automaten-die-antworten.docx",
      "bytes": {
-      "lehrkraft": 445320,
-      "original": 722228
+      "lehrkraft": 445718,
+      "original": 722328
      }
     },
     {
@@ -421,8 +421,8 @@
      "schueler": "schueler/M05_Merkblatt_Grenzen-endlicher-Automaten.pdf",
      "original": "original/M05_Merkblatt_Grenzen-endlicher-Automaten.docx",
      "bytes": {
-      "schueler": 162137,
-      "original": 159475
+      "schueler": 162688,
+      "original": 159558
      }
     },
     {
@@ -431,8 +431,8 @@
      "lehrkraft": "lehrkraft/DS07_Lehrkraft_Der-Automat-stoesst-an-Grenzen.pdf",
      "original": "original/DS07_Lehrkraft_Der-Automat-stoesst-an-Grenzen.docx",
      "bytes": {
-      "lehrkraft": 473309,
-      "original": 691552
+      "lehrkraft": 473748,
+      "original": 691627
      }
     },
     {
@@ -485,8 +485,8 @@
      "schueler": "schueler/M06_Merkblatt_NEA.pdf",
      "original": "original/M06_Merkblatt_NEA.docx",
      "bytes": {
-      "schueler": 176089,
-      "original": 170344
+      "schueler": 176424,
+      "original": 170409
      }
     },
     {
@@ -495,8 +495,8 @@
      "lehrkraft": "lehrkraft/DS08_Lehrkraft_Raten-erlaubt.pdf",
      "original": "original/DS08_Lehrkraft_Raten-erlaubt.docx",
      "bytes": {
-      "lehrkraft": 355738,
-      "original": 264853
+      "lehrkraft": 356048,
+      "original": 264913
      }
     }
    ]
@@ -537,8 +537,8 @@
      "schueler": "schueler/M07_Merkblatt_Kellerautomaten.pdf",
      "original": "original/M07_Merkblatt_Kellerautomaten.docx",
      "bytes": {
-      "schueler": 155303,
-      "original": 88514
+      "schueler": 156154,
+      "original": 88620
      }
     },
     {
@@ -547,8 +547,8 @@
      "lehrkraft": "lehrkraft/DS09_Lehrkraft_Der-Automat-bekommt-ein-Gedaechtnis.pdf",
      "original": "original/DS09_Lehrkraft_Der-Automat-bekommt-ein-Gedaechtnis.docx",
      "bytes": {
-      "lehrkraft": 468088,
-      "original": 337272
+      "lehrkraft": 470086,
+      "original": 337468
      }
     },
     {
@@ -601,8 +601,8 @@
      "lehrkraft": "lehrkraft/DS10_Lehrkraft_Keller-Profis.pdf",
      "original": "original/DS10_Lehrkraft_Keller-Profis.docx",
      "bytes": {
-      "lehrkraft": 248545,
-      "original": 23110
+      "lehrkraft": 249765,
+      "original": 23303
      }
     },
     {
@@ -683,8 +683,8 @@
      "schueler": "schueler/M08_Merkblatt_Grammatiken.pdf",
      "original": "original/M08_Merkblatt_Grammatiken.docx",
      "bytes": {
-      "schueler": 113789,
-      "original": 48097
+      "schueler": 114276,
+      "original": 48172
      }
     },
     {
@@ -693,8 +693,8 @@
      "lehrkraft": "lehrkraft/DS11_Lehrkraft_Sprache-natuerlich-oder-formal.pdf",
      "original": "original/DS11_Lehrkraft_Sprache-natuerlich-oder-formal.docx",
      "bytes": {
-      "lehrkraft": 284908,
-      "original": 189254
+      "lehrkraft": 285317,
+      "original": 189322
      }
     },
     {
@@ -747,8 +747,8 @@
      "schueler": "schueler/M09_Merkblatt_Regulaere-Grammatik.pdf",
      "original": "original/M09_Merkblatt_Regulaere-Grammatik.docx",
      "bytes": {
-      "schueler": 197135,
-      "original": 165651
+      "schueler": 198230,
+      "original": 165760
      }
     },
     {
@@ -757,8 +757,8 @@
      "lehrkraft": "lehrkraft/DS12_Lehrkraft_Grammatik-trifft-Automat.pdf",
      "original": "original/DS12_Lehrkraft_Grammatik-trifft-Automat.docx",
      "bytes": {
-      "lehrkraft": 448383,
-      "original": 487693
+      "lehrkraft": 449245,
+      "original": 487807
      }
     },
     {
@@ -820,8 +820,8 @@
      "lehrkraft": "lehrkraft/DS13_Lehrkraft_Klammern-Spiegel-Programme.pdf",
      "original": "original/DS13_Lehrkraft_Klammern-Spiegel-Programme.docx",
      "bytes": {
-      "lehrkraft": 484190,
-      "original": 518013
+      "lehrkraft": 485143,
+      "original": 518158
      }
     },
     {
@@ -874,8 +874,8 @@
      "lehrkraft": "lehrkraft/DS14_Lehrkraft_Landkarte-der-Sprachen.pdf",
      "original": "original/DS14_Lehrkraft_Landkarte-der-Sprachen.docx",
      "bytes": {
-      "lehrkraft": 375402,
-      "original": 653282
+      "lehrkraft": 375906,
+      "original": 653357
      }
     },
     {
@@ -955,8 +955,8 @@
      "lehrkraft": "lehrkraft/DS15_Lehrkraft_Sprachdesign-Studio.pdf",
      "original": "original/DS15_Lehrkraft_Sprachdesign-Studio.docx",
      "bytes": {
-      "lehrkraft": 407226,
-      "original": 318645
+      "lehrkraft": 407725,
+      "original": 318733
      }
     }
    ]
@@ -1091,8 +1091,8 @@
      "schueler": "schueler/M12_Merkblatt_Abi-Spickzettel.pdf",
      "original": "original/M12_Merkblatt_Abi-Spickzettel.docx",
      "bytes": {
-      "schueler": 91072,
-      "original": 16179
+      "schueler": 109544,
+      "original": 17581
      }
     },
     {

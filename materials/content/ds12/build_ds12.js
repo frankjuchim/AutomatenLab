@@ -172,7 +172,7 @@ async function lk() {
       'd) „Die Grammatik ist nicht regulär“ ist eine Aussage über **eine** konkrete Grammatik (ihre Regelform). „Die Sprache ist nicht regulär“ heißt: **Keine** Grammatik dieser Sprache ist regulär bzw. kein DEA erkennt sie. L(G~T~) ist regulär, obwohl G~T~ es nicht ist. Für {aⁿbⁿ | n ≥ 1} (S → aSb | ab) gibt es dagegen gar keine reguläre Grammatik (Level 7: kein DEA).',
     ]),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P9', 'P6'] }, [
       ...D.bullets([
         '**ε-Regeln vergessen:** Endzustände werden zu Regeln Si → ε. Ohne sie gibt es kein fertiges Wort.',
         '**Regel A → a ohne neuen Endzustand:** Beim Rückweg Grammatik → Automat braucht A → a einen zusätzlichen Endzustand (Z).',

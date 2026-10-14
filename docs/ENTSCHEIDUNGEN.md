@@ -2,6 +2,16 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Fallen-Nummern in den Materialien (1.16.0)
+Jeder Warnkasten („Darauf achten“, „Typische Fehler“) der Lehrkraft-Handreichungen DS01–DS15 und der Merkblätter
+M02–M09 nennt am Ende die Fallen, die er behandelt („Abitur-Fallen: P2 Akzeptanz falsch entschieden · …“). Die
+Zuordnung steht beim Aufruf im Build-Skript (`D.warn({ titel, fallen }, …)`), Titel und Texte kommen aus
+`app/js/data/fallen.js` – dieselbe Quelle wie App und Fallen-Profil. Damit die Nummern für Schüler etwas bedeuten,
+hat der Abi-Spickzettel M12 einen neuen Abschnitt „C Die zehn Abitur-Fallen“ (Nr., Falle, So vermeidest du sie).
+Ohne Nummer bleiben der Warnkasten zur Turingmaschine (DS16, laut Liste keine Abitur-Falle) und die Dreh-Hinweise der
+Videoplanung. Neu erzeugt wurden nur die betroffenen Dateien (Handreichungen, Merkblätter, M12); die übrigen PDFs sind
+unverändert. Verworfen: Nummern an jedem einzelnen Spiegelstrich (unruhig, und ein Strich gehört oft zu zwei Fallen).
+
 ## 2026-10-14 · Fallen je Quizfrage (1.15.0)
 Alle 87 Fragen des Level-Quiz (Welt A–D, Exit-Tickets DS01–DS16) haben eine Fallen-Liste (`QUIZ_FALLEN` in
 `inhalte/quiz.js`, gleiche Reihenfolge wie die Fragen, Test prüft Länge und Nummern). Fragen ohne Bezug zu einer der zehn

@@ -212,7 +212,7 @@ async function lk() {
     ], { widthsCm: [2.4, 4.6, 4.6, 5.8], size: 18, allCenter: true }),
     D.small('Verarbeitung von sh(v(d))l – Eingabe wird akzeptiert: ja (S3 ist Endzustand).'),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P5', 'P10'] }, [
       ...D.bullets([
         '**Unendliches Alphabet:** „Alle Zahlen“ oder „alle Wörter“ als Zeichen – Σ muss endlich sein; Zeichenklassen (z = Ziffer) vorschlagen.',
         '**Grammatik passt nicht zum Automaten:** Teams bauen Automat und Grammatik unabhängig – Übersetzungsrezept M09 (Zustand ↔ Nichtterminal) nutzen.',

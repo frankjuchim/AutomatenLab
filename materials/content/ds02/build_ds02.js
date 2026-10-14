@@ -221,7 +221,7 @@ async function lk() {
       ['H2 d', 'In S3 sind die letzten beiden Zeichen „ab“ – das vorletzte Zeichen ist also a. Endet die Eingabe hier, erfüllt sie die Bedingung und muss akzeptiert werden (z. B. `bab`).', '2'],
     ], { widthsCm: [1.5, 14.6, 1.3], size: 18, center: [2] }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [...D.bullets([
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P10', 'P3', 'P1'] }, [...D.bullets([
       '**Bedeutung = Wiederholung des Graphen:** „In S1 wurde 1 gelesen.“ reicht nicht. Gefordert ist, was der Automat über **das gesamte bisher gelesene Wort** weiß – im Sachzusammenhang („erste Bit des Startzeichens korrekt“).',
       '**ε vergessen:** Bei der Sprachbeschreibung prüfen, ob S0 Endzustand ist (Fall 1: ε ∈ L, Fall 3: ε ∉ L).',
       '**Zu enge Vermutungen:** Sprache nur aus akzeptierten Beispielen ableiten. Immer auch Gegenbeispiele testen (Fall 3: Die Vermutung „Palindrome“ scheitert an `abaa`.).',

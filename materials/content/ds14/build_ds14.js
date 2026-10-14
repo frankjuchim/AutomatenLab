@@ -178,7 +178,7 @@ async function lk() {
       '**Nachbesprechung (10 min in Level 15):** häufigste Fehler sammeln, insbesondere Teil f (Begründung) und g (zwei *verschiedene* Bäume).',
     ]),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P6'] }, [
       ...D.bullets([
         '**„Grammatik“ und „Sprache“ verwechselt:** Eine kontextfreie Grammatik kann eine reguläre Sprache erzeugen – die Einordnung erfolgt nach der **Sprache** (möglichst speziell).',
         '**Endliche Sprachen** werden zu hoch eingeordnet („sieht aus wie aⁿbⁿ“).',

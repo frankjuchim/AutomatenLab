@@ -47,7 +47,7 @@ const OUT = (__MAT + '/out/');
       ['Begründen Sie die Verwendung eines Kellerautomaten.', 'Grenze des DEA nennen (unbeschränktes Zählen) **und** sagen, was der Keller speichert (z. B. „ein A je Einheit der Quersumme“).'],
       ['Analysieren Sie, wie die Anzahl der Zustände von p abhängt.', 'Bedeutung der Zustände angeben (z. B. „bisher bezahlter Betrag 0 … p − 1“) ⇒ Formel (p Zustände) ⇒ für unbeschränktes p kein endlicher Automat.'],
     ], { widthsCm: [6.6, 10.8], size: 19, firstColBold: true }),
-    ...D.warn('Typischer Fehler', [
+    ...D.warn({ titel: 'Typischer Fehler', fallen: ['P6'] }, [
       D.p('„Mein DEA erkennt aaabbb nicht, also geht es nicht.“ – Ein **Beispiel** zeigt nur, dass **ein** Automat falsch ist. Die Begründung muss für **jeden** DEA gelten (beliebiges k). Und: Die Fortsetzung muss an **beide** Präfixe dieselbe sein.', { size: 20 }),
     ]),
   ];

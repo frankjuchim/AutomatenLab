@@ -55,7 +55,7 @@ const J = W.load(11);
       ['Verändern Sie die Grammatik so, dass …', 'Nur die nötigen Regeln ändern, Vorgaben beachten (z. B. Terminalalphabet unverändert); mit Beispiel und Gegenbeispiel prüfen.'],
       ['Vergleichen Sie formale und natürliche Sprachen.', 'Je Aspekt beide Seiten gegenüberstellen – mit Beispiel.'],
     ], { widthsCm: [6.2, 11.2], size: 19, firstColBold: true }),
-    ...D.warn('Typische Fehler', [
+    ...D.warn({ titel: 'Typische Fehler', fallen: ['P9'] }, [
       ...D.bullets([
         '→ und ⇒ verwechselt; mehrere Ersetzungen in einem Schritt; Ableitung endet mit Nichtterminalen („… Wasser Punkt“).',
         '„Nicht ableitbar“ ohne Begründung – im Abitur muss die Stelle benannt werden, an der keine Regel passt.',

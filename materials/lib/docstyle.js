@@ -171,8 +171,26 @@ function info(title, body, o = {}) { return [box([boxTitle(title, C.teal), ...bo
 function merke(title, body, o = {}) { return [box([boxTitle(title, C.ocker), ...body], { fill: C.ockerTint, border: C.ocker, borderSize: 8, ...o }), spacer(140)]; }
 /** Tipp/Hilfe-Kasten (dezent). */
 function tip(title, body, o = {}) { return [box([boxTitle(title, C.muted), ...body], { fill: 'F4F6F7', border: C.line, ...o }), spacer(140)]; }
-/** Achtung-Kasten (rot) – typische Fehler. */
-function warn(title, body, o = {}) { return [box([boxTitle(title, C.red), ...body], { fill: C.redTint, border: C.redTint, ...o }), spacer(140)]; }
+/** Achtung-Kasten (rot) – typische Fehler. title = Text oder { titel, fallen: ['P1', …] }: Mit Fallen steht am Ende
+ *  „Abitur-Fallen: P1 Kurztitel · …“ (Liste und Nummern aus app/js/data/fallen.js, Übersicht auf Merkblatt M12). */
+function warn(title, body, o = {}) {
+  const t = typeof title === 'string' ? { titel: title } : title;
+  const extra = t.fallen?.length ? [fallenZeile(t.fallen)] : [];
+  return [box([boxTitle(t.titel, C.red), ...body, ...extra], { fill: C.redTint, border: C.redTint, ...o }), spacer(140)];
+}
+const FALLEN = require('../../app/js/data/fallen.js').FALLEN; // ES-Modul, require() geht ab Node 22.12
+/** Zeile „Abitur-Fallen: P1 … · P3 …“ (nach Nummer sortiert). */
+function fallenZeile(liste) {
+  const nr = (p) => Number(p.slice(1));
+  const fs_ = [...liste].sort((a, b) => nr(a) - nr(b)).map((p) => {
+    const f = FALLEN.find((x) => x.p === p);
+    if (!f) throw new Error(`Unbekannte Falle ${p}`);
+    return f;
+  });
+  const runs = [new TextRun({ text: 'Abitur-Fallen: ', font: FONT_BODY, bold: true, size: 17, color: C.red })];
+  fs_.forEach((f, i) => runs.push(new TextRun({ text: `${i ? '  ·  ' : ''}${f.p} `, font: FONT_BODY, bold: true, size: 17, color: C.red }), new TextRun({ text: f.titel, font: FONT_BODY, size: 17, color: C.muted })));
+  return new Paragraph({ children: runs, spacing: { before: 100, after: 0 } });
+}
 /** Kernfrage-Banner. */
 function kernfrage(text) {
   return [box([new Paragraph({ children: [new TextRun({ text: 'Kernfrage  ', font: FONT_BODY, bold: true, size: 20, color: C.ocker }), new TextRun({ text, font: FONT_HEAD, italics: true, size: 24, color: C.tealDark })], spacing: { after: 0 } })], { fill: C.ockerTint2, border: C.ockerTint }), spacer(160)];
@@ -347,6 +365,6 @@ function preview(file, outDir) {
 
 module.exports = {
   C, cm, CONTENT_W, FONT_BODY, FONT_HEAD, runs, p, small, h1, h2, h3, spacer, pageBreak, bullets, numbered, checklist,
-  table, fillTable, cell, box, info, merke, tip, warn, kernfrage, task, sub, lines, drawBox, img, qr, doc, save, preview,
+  table, fillTable, cell, box, info, merke, tip, warn, fallenZeile, FALLEN, kernfrage, task, sub, lines, drawBox, img, qr, doc, save, preview,
   TextRun, Paragraph, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, BorderStyle,
 };

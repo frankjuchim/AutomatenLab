@@ -153,7 +153,7 @@ async function lk() {
       'Zum Vergleich Original (5 → 9 Bit): 1 + 2 + 4 + 8 + 16 = 31 Zustände.',
     ]),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P5', 'P1'] }, [
       ...D.bullets([
         '**Endzustände eingezeichnet:** Mealy-Automaten haben keine Endzustände (Ergänzende Hinweise 2025). Doppelkreise sind falsch.',
         '**Fehlende Übergänge:** Der Übergangsgraph muss vollständig sein – jeder Zustand braucht für jedes Eingabezeichen eine Kante (ggf. mit Ausgabe ε).',

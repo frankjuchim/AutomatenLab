@@ -35,6 +35,9 @@ const tbl = (rows) => D.table([['Aufgabenstellung', 'So antwortest du', 'Musterb
       ['**Begründen Sie**, dass die Grammatik (nicht) regulär ist. / dass die Sprache nicht regulär ist.', '**Grammatik:** Regelform prüfen – nur A → aB | a | ε ⇒ regulär; zwei Nichtterminale oder Terminal rechts vom Nichtterminal ⇒ nicht regulär. Achtung: „Grammatik nicht regulär“ heißt **nicht** „Sprache nicht regulär“! **Sprache:** Schubfachargument (A).', '„S → aSb ist nicht rechtsregulär (Terminal nach dem Nichtterminal).“ – „A → 0A | 1A | ε ist regulär.“'],
       ['**Verändern / Erweitern Sie** die Grammatik so, dass …', 'Regel ergänzen oder ersetzen; prüfen, dass gewünschte Wörter weiterhin ableitbar sind und unerwünschte nicht; ein neues Wort ableiten.', '„Auch das leere Wort soll erzeugt werden“: S → aSb | ab wird zu S → aSb | ε; Test: S ⇒ ε.'],
     ]),
+    D.h2('C  Die zehn Abitur-Fallen'),
+    D.p('Diese Fehler kosten im Abitur am häufigsten Punkte. Die Nummern stehen auch in den Warnkästen der Materialien und im Fallen-Profil deiner Lehrkraft.', { size: 17 }),
+    D.table([['Nr.', 'Falle', 'So vermeidest du sie'], ...D.FALLEN.map((f) => [`**${f.p}**`, f.titel, f.text])], { widthsCm: [1.3, 5.6, 10.5], size: SZ, firstColBold: true }),
     D.p('**Faustregeln:** nennen/angeben = ohne Begründung · begründen = Argument mit „da/weil“ · erläutern = erklären **plus** Sachzusammenhang · beurteilen = Urteil + Begründung + Gegenargument · Zeit: etwa **3 Minuten pro BE** · Notation wie in den Merkblättern.', { size: 16, before: 40 }),
   ];
   const f = await D.save(D.doc({ kind: 'MB', title: 'Abi-Spickzettel: Operatoren & Antwortmuster', subtitle: 'Merkblatt M12 · Automaten und formale Sprachen · Was in einer vollständigen Antwort steht', metaText: 'M12  ·  Zusatz', code: 'M12 · Abi-Spickzettel', titleSize: 34, body }), OUT + 'M12_Merkblatt_Abi-Spickzettel.docx');

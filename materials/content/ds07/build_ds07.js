@@ -170,7 +170,7 @@ async function lk() {
     ]),
     D.img(IMG + 'kartoffel5.png', { widthCm: 12, caption: 'Kartoffelautomat für 5 € (5 Zustände)' }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P6'] }, [
       ...D.bullets([
         '**„Der DEA bräuchte unendlich viele Zustände“** ist als Abi-Kurzbegründung oft ausreichend, aber nur mit Bezug zum Sachverhalt: **Was** müsste gezählt werden, und warum ist es **unbeschränkt**?',
         '**Fallen:** Endliche Sprachen (L~1~) sind immer regulär; Zählen **modulo** k (L~4~) und Zählen mit **Obergrenze** (L~6~, Aufgabe 4d) gehen mit einem DEA.',

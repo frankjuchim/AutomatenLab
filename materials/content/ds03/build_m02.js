@@ -44,7 +44,7 @@ const baustein = (name, merkt, file, bsp, w = 6.6) => [
       ['Begründen Sie, dass mindestens n Zustände nötig sind.', 'n Wörter angeben, die paarweise durch eine Fortsetzung unterschieden werden (Vertiefung: Level 5).'],
     ], { widthsCm: [6.0, 11.4], size: 19, firstColBold: true }),
     ...D.tip('Antwortmuster „verschiedene Zustände“', [D.p('Sprache: alle Wörter über {a, b}, die auf „aba“ enden; x = ab, y = b. Mit der Fortsetzung z = a ist xz = aba ∈ L, aber yz = ba ∉ L. Befände sich der Automat nach „ab“ und nach „b“ im selben Zustand, müsste er nach dem Lesen von a in beiden Fällen gleich entscheiden – Widerspruch. Also muss er nach „ab“ und „b“ in verschiedenen Zuständen sein.', { size: 20 })]),
-    ...D.warn('Typische Fehler', [...D.bullets([
+    ...D.warn({ titel: 'Typische Fehler', fallen: ['P3', 'P1'] }, [...D.bullets([
       '**Neuanfang vergessen:** Bei „enthält“/„endet auf“ führt ein unpassendes Zeichen nicht automatisch nach S0 – es kann schon der Anfang eines neuen Treffers sein (Test: `ababa` für „endet auf aba“).',
       '**Unvollständig:** Ein Zustand hat für ein Zeichen keinen Übergang – und es fehlt der Hinweis zum Fehlerzustand.',
       '**Nicht deterministisch:** Zwei Pfeile mit demselben Zeichen aus einem Zustand.',

@@ -52,7 +52,7 @@ const OUT = (__MAT + '/out/');
       ['Begründen Sie die Verwendung eines Kellerautomaten.', 'Grenze des DEA (unbeschränktes Zählen/Vergleichen, Schubfach) + was der Keller speichert.'],
       ['Entwickeln Sie einen Kellerautomaten …', 'Idee „Was lege ich ab, was entferne ich?“ – Γ angeben – Graph – mit kurzen Wörtern, ε und Grenzfällen testen.'],
     ], { widthsCm: [6.2, 11.2], size: 19, firstColBold: true }),
-    ...D.warn('Typische Fehler', [...D.bullets([
+    ...D.warn({ titel: 'Typische Fehler', fallen: ['P7', 'P2'] }, [...D.bullets([
       'Ablage falsch herum: Bei (A, a) : BA liegt **B** oben.',
       '„Akzeptiert, weil der Keller leer ist“ – falsch: Es zählt nur der **Endzustand** nach vollständiger Eingabe.',
       'Das gelesene Kellerzeichen vergessen zu entfernen: (A, a) : A lässt den Keller **unverändert**.',

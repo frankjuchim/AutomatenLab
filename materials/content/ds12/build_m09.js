@@ -56,7 +56,7 @@ const FEHLER = 'Alle nicht eingezeichneten Übergänge führen in einen Fehlerzu
       ['Erläutern Sie, wie sichergestellt wird, dass …', 'Bedeutung der Nichtterminale im Sachzusammenhang („In C sind noch 3 Schläge frei“) und welche Regeln fehlen bzw. vorhanden sind.'],
       ['Geben Sie eine Regel an, sodass keine reguläre Grammatik möglich ist.', 'Regel, die unbeschränktes Zählen oder Vergleichen verlangt („gleich viele … wie …“), kurz begründen.'],
     ], { widthsCm: [6.2, 11.2], size: 19, firstColBold: true }),
-    ...D.warn('Typische Fehler', [
+    ...D.warn({ titel: 'Typische Fehler', fallen: ['P9', 'P6'] }, [
       ...D.bullets([
         'ε-Regeln für Endzustände vergessen; bei A → a den neuen Endzustand vergessen.',
         'S → Sa für regulär halten; Nichtdeterminismus nach der Übersetzung übersehen.',

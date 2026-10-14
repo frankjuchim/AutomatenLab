@@ -16,7 +16,7 @@ const OUT = (__MAT + '/out/');
       ['Akzeptanz', 'Zustand nach dem letzten Zeichen ist Endzustand', 'es gibt **mindestens einen** Weg, der nach dem letzten Zeichen in einem Endzustand endet'],
       ['formal', 'δ: Q × Σ → Q', 'δ: Q × (Σ ∪ {ε}) → Teilmengen von Q'],
     ], { widthsCm: [3.2, 6.6, 7.6], size: 19, firstColBold: true }),
-    ...D.warn('ε ist kein Eingabezeichen', [D.p('ε bezeichnet das **leere Wort**. Es gehört **nicht** zum Eingabealphabet Σ. Ein ε-Übergang wird ausgeführt, ohne dass ein Zeichen gelesen wird.', { size: 20 })]),
+    ...D.warn({ titel: 'ε ist kein Eingabezeichen', fallen: ['P2'] }, [D.p('ε bezeichnet das **leere Wort**. Es gehört **nicht** zum Eingabealphabet Σ. Ein ε-Übergang wird ausgeführt, ohne dass ein Zeichen gelesen wird.', { size: 20 })]),
     D.h2('2  Verarbeitung darstellen (Menge aktiver Zustände)'),
     D.img(IMG + 'lol_nea.png', { widthCm: 9.5, caption: 'NEA „enthält LOL“, Σ = {L, O, X}: In S0 „rät“ der Automat bei L, ob hier LOL beginnt.' }),
     D.p(`**LLOL:**  \`${J.lol.LLOL[1]}\`  – S3 ist aktiv, also akzeptiert.`, { size: 20 }),
