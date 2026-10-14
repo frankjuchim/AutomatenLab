@@ -18,6 +18,7 @@ npm test                       # App-Tests + Server-Tests (node --test)
 npm run dev                    # Server mit App unter http://localhost:8080 (Daten in ./data)
 npm run vertrag -- http://localhost:8080   # Vertragsprüfung (Manifest, Pflicht-URLs, /healthz)
 node qa/qa-routes.mjs http://localhost:8080/   # alle Deep-Links im Browser prüfen (Playwright)
+bash qa/pruefung_lokal.sh                      # komplette GitHub-Prüfung lokal (Docker): Freigabe zum Merge, wenn Actions nicht läuft
 QA_PORTAL_KEY=<privater Testschlüssel> node qa/qa-routes.mjs <url>   # angemeldet (Server mit PORTAL_URL=http://portal.test + passendem PORTAL_PUBLIC_KEY)
 QA_GAST=1 node qa/qa-routes.mjs <url>          # als Gast: nur Demo-Routen offen, alles andere → Anmeldung
 npm run materials:build        # alle Materialien → materials/dist/Automaten_LK

@@ -1,0 +1,61 @@
+# Materialpaket bei jedem Tag v* (Roadmap Phase 6): baut alle Unterrichtsmaterialien aus den geprüften Daten neu
+# (materials/build_all.sh – prüft dabei jeden Automaten und jede Grammatik) und hängt zwei ZIP-Dateien an das
+# GitHub-Release des Tags:
+#   Automaten_LK_<tag>.zip   Lehrkräfte-Paket (Word/PowerPoint, Ordner Pflicht/Vertiefung/Bonus, Merkblätter, Videoreihe)
+#   Automaten_PDF_<tag>.zip  die PDFs der Plattform (materials/pdf: Schüler, Lehrkraft, Originale – wie committet)
+# Das Repository ist privat – die Releases (mit Lösungen) sieht nur, wer Zugriff auf das Repository hat.
+# Manuell startbar (Actions → Materialpaket → Run workflow): dann nur als Artefakt des Laufs, ohne Release.
+name: Materialpaket
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  paket:
+    name: Materialien bauen und anhängen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: materials/requirements.txt
+      - name: Graphviz installieren
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends graphviz
+      - run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - run: python -m pip install -r materials/requirements.txt
+      - name: Alle Materialien bauen (prüft jeden Automaten und jede Grammatik)
+        run: npm run materials:build
+      - name: ZIP-Dateien packen
+        run: |
+          NAME="${GITHUB_REF_NAME:-manuell}"
+          mkdir -p paket
+          (cd materials/dist && zip -qr "../../paket/Automaten_LK_${NAME}.zip" Automaten_LK)
+          (cd materials && zip -qr "../paket/Automaten_PDF_${NAME}.zip" pdf)
+          ls -lh paket
+      - name: An das Release des Tags hängen
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "AutomatenLab $GITHUB_REF_NAME" --notes "Materialpaket automatisch gebaut (Workflow Materialpaket)."
+          gh release upload "$GITHUB_REF_NAME" paket/*.zip --clobber
+      - name: Als Artefakt ablegen (manueller Lauf)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: materialpaket
+          path: paket/
+          retention-days: 7

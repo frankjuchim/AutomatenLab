@@ -8,7 +8,7 @@ Jeder Punkt eignet sich als GitHub-Issue. Reihenfolge = Vorschlag. ✅ = erledig
 - ✅ Repository anlegen, ersten Stand pushen
 - [ ] Release **v1.0** mit `Automaten_LK.zip` (Materialpaket) erstellen
 - ✅ Deployment per CapRover-Webhook aus dem Wurzelordner (`captain-definition`, `Dockerfile`), GitHub-Prüfung mit allen Deep-Links
-- [ ] `.github`-Dateien aus dem ersten Paket fehlen: Release-Workflow für das Materialpaket, Issue-Vorlagen (PR-Vorlage und Prüfung neu angelegt)
+- ✅ `.github`-Dateien: Release-Workflow für das Materialpaket, Issue-Vorlagen (Fehler, fachlicher Fehler), PR-Vorlage und Prüfung
 - [ ] Lizenz festlegen
 
 ## Phase 1 – Analyse und Angleichung
@@ -55,8 +55,9 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ PR 7 (1.12.0): Kurs-Einstellungen – Level-Art je Kurs (Pflicht/Vertiefung/Bonus/Später, nur Anzeige: Deep-Links bleiben offen), Auftrag der Lehrkraft auf der Startseite, Grundkurs: eA-Level „freiwillig“; Datenschutzhinweise (`docs/DATENSCHUTZ.md`, `#/datenschutz`) auf dem Stand des Verbunds; Löschung über die Verbund-API vollständig getestet (jede Tabelle mit Konto-Bezug); Abnahme-Checkliste `docs/ABNAHME.md`
 
 ## Phase 6 – Materialien ↔ Plattform
-- [ ] Erklärvideos verlinken: „Erklärvideo“-Knopf in den Modulen, Video-QR-Codes auf Merkblättern (Links nach Upload)
-- [ ] Release-Workflow baut das Materialpaket bei jedem Tag `v*` automatisch
+- ✅ Erklärvideos in der App (1.13.0): Knopf „▶ Erklärvideo“ auf der Modulseite und Link je Level auf der Themenseite – erscheinen, sobald in `app/js/data/videos.js` eine Adresse steht (nur verlinkt, nie eingebettet)
+- [ ] Video-Adressen eintragen und Video-QR-Codes auf den Merkblättern – wartet auf den Upload der Videos
+- ✅ Release-Workflow (`.github/workflows/materialpaket.yml`): baut bei jedem Tag `v*` alle Materialien neu und hängt Lehrkräfte-Paket und PDFs als ZIP an das Release (Repo privat); manuell startbar als Artefakt
 - ✅ Materialien als Download (`#/material`): Schüler-PDF ohne Lösungen, Lehrkraft-PDF mit Lösungen/Notizen/Klausuren, Originale (docx/pptx, ZIP je Akte) nur für den Admin
 
 ## Ideen (später)

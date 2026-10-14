@@ -821,3 +821,4 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .type-tag.type-spaeter { color: var(--ink-2); }
 .type-tag.type-freiwillig { color: var(--ink-2); font-weight: 600; }
 .type-tag.type-auftrag { color: #8A520B; }
+.module-videos { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0; }

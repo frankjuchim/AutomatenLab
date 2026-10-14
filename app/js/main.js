@@ -11,6 +11,7 @@ import { sitzung, anmeldeLink, istLehrkraft } from './core/sitzung.js';
 import { serverQuelle, demoQuelle, vorschauQuelle } from './core/aufgaben.js';
 import { api } from './core/api.js';
 import { gastErlaubt } from './data/gast.js';
+import { videosZuModul } from './data/videos.js';
 
 const SPECIAL = {
   '': () => import('./modules/home.js'),
@@ -176,7 +177,10 @@ function modulePage(meta, { vorschauArt = null, params = null } = {}) {
       h('div', { class: 'module-title-row' },
         h('h1', { class: 'module-title' }, meta.title),
         meta.levels.length ? levelChips(meta.levels) : null),
-      h('p', { class: 'module-subtitle' })),
+      h('p', { class: 'module-subtitle' }),
+      // Erklärvideos (Phase 6): nur verlinkt, öffnet in neuem Tab – erscheint erst, wenn eine Adresse eingetragen ist
+      videosZuModul(meta.route).length ? h('p', { class: 'module-videos' }, videosZuModul(meta.route).map((v) =>
+        h('a', { class: 'btn btn-small btn-ghost', href: v.url, target: '_blank', rel: 'noopener' }, `▶ Erklärvideo ${v.id}: ${v.titel}`))) : null),
     vorschauArt ? h('p', { class: 'notice vorschau-hinweis' }, h('strong', null, 'Vorschau für Lehrkräfte: '),
       vorschauArt === '1' ? 'Lösung eingesetzt – Ausprobieren geht trotzdem. ' : 'Ohne Lösung – so beginnen Ihre Schülerinnen und Schüler. ',
       'Nichts wird gespeichert. ', h('a', { href: umschalten() }, vorschauArt === '1' ? 'Ohne Lösung ausprobieren' : 'Mit Lösung ansehen'),

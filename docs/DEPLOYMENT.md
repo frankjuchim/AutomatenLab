@@ -31,9 +31,13 @@ ab 1.1 übernimmt der Node-Server.
 
 ## GitHub-Prüfung
 
-`.github/workflows/pruefung.yml` läuft bei jedem Push und Pull Request: App- und Server-Tests sowie Bau des Images,
-Vertragsprüfung und Aufruf aller Deep-Links aus `app/README.md` (`qa/qa-routes.mjs`) gegen den Container. Die Prüfung blockiert den Webhook-Build nicht – sie ist die
-Freigabe-Voraussetzung für den Merge nach `main`.
+`.github/workflows/pruefung.yml` läuft bei jedem Pull Request und jedem Push auf `main`: App- und Server-Tests sowie Bau
+des Images, Vertragsprüfung und Aufruf aller Deep-Links aus `app/README.md` (`qa/qa-routes.mjs`) gegen den Container. Die
+Prüfung blockiert den Webhook-Build nicht – sie ist die Freigabe-Voraussetzung für den Merge nach `main`.
+
+**Ohne GitHub Actions** (z. B. Minuten des privaten Repositorys aufgebraucht): `bash qa/pruefung_lokal.sh` führt dieselben
+Schritte lokal aus (braucht Docker und Chromium) und endet mit „PRÜFUNG GRÜN <commit> <version>“. Dieser Lauf ersetzt dann
+die GitHub-Prüfung als Freigabe für den Merge.
 
 ## Konfiguration und Portal-Anmeldung
 
@@ -48,6 +52,6 @@ Freigabe-Voraussetzung für den Merge nach `main`.
 
 ## Materialpaket als Release
 
-Das Materialpaket (`Automaten_LK.zip`) wird lokal mit `npm run materials:build` und `npm run materials:package` erzeugt
-und an ein GitHub-Release gehängt. Ein Release-Workflow (`.github/workflows/release-materials.yml`) war geplant, ist
-aber beim ersten Upload nicht im Repository angekommen (siehe `docs/ROADMAP.md`, Phase 6).
+Ein Tag `v*` startet `.github/workflows/materialpaket.yml`: Alle Materialien werden neu gebaut, `Automaten_LK_<tag>.zip`
+(Lehrkräfte-Paket) und `Automaten_PDF_<tag>.zip` (PDFs der Plattform) hängen am Release. Ohne GitHub Actions: lokal mit
+`npm run materials:build` bauen und `materials/dist/Automaten_LK` packen; das Release legt Frank dann von Hand an.

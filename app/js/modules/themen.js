@@ -9,6 +9,7 @@ import { niveauPille } from '../components/niveau.js';
 import { MODULES } from './manifest.js';
 import { api } from '../core/api.js';
 import { materialLinks } from '../components/material-links.js';
+import { videosZuLevel } from '../data/videos.js';
 
 const ds = (n) => `DS${String(n).padStart(2, '0')}`;
 const levelListe = (ns) => ns.map((n) => `${n}`).join(', ');
@@ -35,6 +36,8 @@ export default {
             ? h('p', { class: 'themen-module' }, 'Üben mit: ',
               module.flatMap((m, i) => [i ? ', ' : null, h('a', { href: ctx.link(m.route) }, m.title)]))
             : null,
+          videosZuLevel(n).length ? h('p', { class: 'themen-module' }, 'Erklärvideo: ',
+            videosZuLevel(n).flatMap((v, i) => [i ? ', ' : null, h('a', { href: v.url, target: '_blank', rel: 'noopener' }, `▶ ${v.id} ${v.titel}`)])) : null,
           slot(`level-${n}`),
           BOSS_LEVELS.includes(n) ? slot(`boss-${w.id.toLowerCase()}`) : null);
       })));
