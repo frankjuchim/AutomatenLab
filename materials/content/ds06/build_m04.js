@@ -59,7 +59,7 @@ const K = DATA.kart;
       ['Beschreiben Sie Gemeinsamkeiten und Unterschiede zum DEA.', 'Tabelle aus Abschnitt 3: Alphabete, Kanten, Endzustände, Ergebnis; Gemeinsamkeiten nicht vergessen.'],
       ['Untersuchen Sie, wie viele Zustände mindestens nötig sind.', 'Zeigen, was sich der Automat merken muss (z. B. alle k bisher gelesenen Bits ⇒ 2^k^ Möglichkeiten) und die Anzahlen addieren.'],
     ], { widthsCm: [6.2, 11.2], size: 19, firstColBold: true }),
-    ...D.warn('Typische Fehler', [D.p('Endzustände (Doppelkreise) einzeichnen · fehlende Übergänge (nicht vollständig) · „N“ oder „–“ statt **ε** für keine Ausgabe · Ausgabe an den Zustand statt an die Kante schreiben.', { size: 20 })]),
+    ...D.warn({ titel: 'Typische Fehler', fallen: ['P5', 'P1'] }, [D.p('Endzustände (Doppelkreise) einzeichnen · fehlende Übergänge (nicht vollständig) · „N“ oder „–“ statt **ε** für keine Ausgabe · Ausgabe an den Zustand statt an die Kante schreiben.', { size: 20 })]),
   ];
   const f = await D.save(D.doc({ kind: 'MB', niveau: 'alle', title: 'Mealy-Automaten', subtitle: 'Merkblatt M04 · Level 6 · Notation, Vergleich mit DEA, Entwickeln', metaText: 'M04  ·  Welt A', code: 'M04 · Merkblatt Mealy-Automaten', body }), OUT + 'M04_Merkblatt_Mealy-Automaten.docx');
   console.log(f);

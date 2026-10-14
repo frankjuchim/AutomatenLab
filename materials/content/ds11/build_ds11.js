@@ -193,7 +193,7 @@ async function lk() {
     ]),
     D.img(IMG + 'baum_g5.png', { widthCm: 4.2, caption: 'Ableitungsbaum zu aabaa (G5): Die Rekursion ist als „Schachtelung“ sichtbar.' }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P9'] }, [
       ...D.bullets([
         '**→ und ⇒ verwechselt:** → steht in Regeln, ⇒ verbindet Satzformen in einer Ableitung.',
         '**Mehrere Ersetzungen in einem Schritt:** Im Abitur wird pro Schritt ein Nichtterminal ersetzt. Ableitungen „abkürzen“ führt zu Punktverlust.',

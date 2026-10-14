@@ -142,7 +142,7 @@ async function lk() {
       'c) Für **jeden festen** Preis gibt es einen endlichen Automaten. Ein einziger Automat, der für **beliebig hohe** Preise funktioniert, müsste beliebig viele Beträge unterscheiden – das geht mit endlich vielen Zuständen nicht. (Vorgriff auf Level 7: Grenzen endlicher Automaten.)',
     ]),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P1', 'P2', 'P3'] }, [
       ...D.bullets([
         '**Zustand vs. Übergang:** SuS beschriften Zustände mit Zeichen. Klarstellen: Zeichen stehen an Pfeilen, Zustände sind „Gedächtnis“.',
         '**Akzeptanz zu früh:** „Der Automat war doch in S3!“ – entscheidend ist der Zustand **nach dem letzten Zeichen**.',

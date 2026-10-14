@@ -105,7 +105,7 @@ async function lk() {
       ['Material', 'Folien DS09, AB09, Merkblatt M07, Klammerkarten (Kopiervorlage unten, je Gruppe 2× „(“, 2× „)“, 2× „[“, 2× „]“), AutomatenLab „Keller-Labor“ (#/keller?automat=anbn&modus=tabelle&wort=aabb; modus=sim)'],
       ['Vorbereitung', 'Klammerkarten kopieren/schneiden; Wortstreifen „( [ ( ) ] )“ und „( [ ) ]“ an die Tafel; App-Tabellentrainer testen.'],
     ], { widthsCm: [3.2, 14.2], firstColBold: true, firstColFill: true }),
-    ...D.warn('Achtung: ältere Materialien', [D.p('Ältere Materialien und Schulbücher definieren teils „akzeptiert, wenn der Keller leer ist bzw. nur noch # enthält“. **Verbindlich (Ergänzende Hinweise 2025):** akzeptiert, wenn es eine Möglichkeit gibt, dass sich der Automat nach vollständiger Verarbeitung der Eingabe in einem **Endzustand** befindet – der Kellerinhalt spielt keine Rolle. Außerdem: in der Klammer **zuerst das Kellerzeichen, dann das Eingabezeichen**.', { size: 20 })]),
+    ...D.warn({ titel: 'Achtung: ältere Materialien', fallen: ['P2'] }, [D.p('Ältere Materialien und Schulbücher definieren teils „akzeptiert, wenn der Keller leer ist bzw. nur noch # enthält“. **Verbindlich (Ergänzende Hinweise 2025):** akzeptiert, wenn es eine Möglichkeit gibt, dass sich der Automat nach vollständiger Verarbeitung der Eingabe in einem **Endzustand** befindet – der Kellerinhalt spielt keine Rolle. Außerdem: in der Klammer **zuerst das Kellerzeichen, dann das Eingabezeichen**.', { size: 20 })]),
     D.h2('Verlaufsplan (90 Minuten)'),
     D.table([
       ['Zeit', 'Phase', 'Unterrichtsgeschehen', 'Sozialform / Medien'],
@@ -152,7 +152,7 @@ async function lk() {
     ...K.solved(J.gab.abba),
     ...D.bullets(['b) Nach `bba` liegt `B#` im Keller: Es wurde **ein b mehr** als a gelesen. Allgemein enthält der Keller nur A (Überschuss an a) oder nur B (Überschuss an b); die Anzahl ist die Differenz.']),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P7', 'P8', 'P2'] }, [
       ...D.bullets([
         '**Ablagereihenfolge:** Bei (A, a) : BA liegt danach **B** oben. SuS legen oft „von links nach rechts“ ab.',
         '**Gelesenes Kellerzeichen wird entfernt:** (A, a) : A bedeutet „A bleibt liegen“, nicht „A dazulegen“.',

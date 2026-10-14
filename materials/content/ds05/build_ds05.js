@@ -161,7 +161,7 @@ async function lk() {
     ]),
     D.img(IMG + 'tuer.png', { widthCm: 11 }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P4', 'P1'] }, [
       ...D.bullets([
         '**Gleiche Folgezustände verlangt:** SuS halten Zustände nur dann für äquivalent, wenn sie zu denselben Zuständen führen. Entscheidend ist gleiches **Akzeptanzverhalten** (Aufgabe 1b).',
         '**Fehlerzustand vergessen:** Das Verfahren braucht einen vollständigen Automaten. Bei weggelassenem Fehlerzustand muss er in die Tabelle (Smiley-Beispiel: F_err).',

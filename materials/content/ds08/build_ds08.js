@@ -156,7 +156,7 @@ async function lk() {
       `b) Es entstehen **${J.d3_states} Zustände** (alle Teilmengen {S0} ∪ X mit X ⊆ {S1, S2, S3}); das Markierungsverfahren zeigt: keiner ist überflüssig. Ein DEA-Zustand merkt sich die **letzten drei Zeichen** (bzw. welche der letzten drei Positionen eine 1 waren) – 2^3^ = 8 Möglichkeiten. Allgemein: „n-letztes Zeichen ist 1“ braucht als DEA 2^n^ Zustände, als NEA nur n + 1.`,
     ]),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P2'] }, [
       ...D.bullets([
         '**Akzeptanz falsch verstanden:** „Eine Figur ist ausgeschieden, also abgelehnt.“ – Entscheidend ist, ob **mindestens eine** Figur am Ende im Endzustand steht.',
         '**ε als Zeichen:** ε gehört nicht zu Σ; ε-Übergänge werden **vor** dem ersten Zeichen und nach jedem Zeichen mitberücksichtigt (ε-Hülle).',

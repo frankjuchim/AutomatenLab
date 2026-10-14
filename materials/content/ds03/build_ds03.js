@@ -171,7 +171,7 @@ async function lk() {
     D.p(`d) Die Abitur-Regel („beide Farben“) benötigt **${SOL.ka_states} Zustände** ohne Fehlerzustand (Variante: ${SOL.kv_states}). Musterlösung zum Vergleich (entspricht der Referenz der Baukasten-Challenge „konsole“):`, { size: 20 }),
     ...D.img(IMG + 'konsole_abi.png', { widthCm: 11, caption: FEHLER }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [...D.bullets([
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P3', 'P1'] }, [...D.bullets([
       '**Neuanfang vergessen:** Bei „endet auf“ und „enthält“ springen viele bei einem „falschen“ Zeichen immer nach S0. Testwort mit Überlappung (`ababa`, `aaba`) bereithalten.',
       '**Unvollständige Automaten:** Bei „endet auf“ darf es keinen Fehlerzustand geben – jedes Zeichen kann noch zu einem akzeptierten Wort führen.',
       '**Komplement:** Tauschen nur bei vollständigem Automaten (Aufgabe 3b).',

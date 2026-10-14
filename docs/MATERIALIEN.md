@@ -76,3 +76,6 @@ Ein Tag `v*` baut alle Materialien in GitHub Actions neu und hängt `Automaten_L
 
 ## Erklärvideos unter Materialien
 `npm run materials:pdf` legt die Folien jedes Erklärvideos (V1–V9, Extra 1/2 aus `out/video`) beim passenden Level ab (Zuordnung `app/js/data/videos.js`, erstes Level): Schülerfassung, Lehrkraftfassung mit Sprechertext (Notizseiten) und Original. Neue Akten-Art `video`.
+
+## Abitur-Fallen in Warnkästen
+`D.warn({ titel: 'Darauf achten', fallen: ['P2', 'P7'] }, body)` setzt unter den Kasten die Zeile „Abitur-Fallen: P2 … · P7 …“ (Liste aus `app/js/data/fallen.js`, Übersicht auf Merkblatt M12). Neue Warnkästen bekommen ihre Fallen gleich mit; ohne Abitur-Bezug genügt der Titel als Text.

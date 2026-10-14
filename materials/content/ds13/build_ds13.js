@@ -170,7 +170,7 @@ async function lk() {
     W.side([...D.img(IMG + 'kommentar_nka.png', { widthCm: 7.6 })], D.table([['Zustand', 'Belegung Kellerspeicher', 'oberstes Kellersymbol', 'verarb. Eingabezeichen'], ...kt], { size: 17, widthsCm: [1.7, 2.6, 2.5, 2.6], center: [0, 1, 2, 3] }), 7.8),
     D.p('Eingabe wird akzeptiert: ja.', { size: 20 }),
     D.h2('Typische Schwierigkeiten'),
-    ...D.warn('Darauf achten', [
+    ...D.warn({ titel: 'Darauf achten', fallen: ['P3', 'P9', 'P6'] }, [
       ...D.bullets([
         '**Klammern einzeln erzeugen** (S → (S | S) | ε): erzeugt auch „)(“. Öffnende und schließende Klammer müssen in **derselben** Regel entstehen.',
         '**ε vergessen oder zu viel:** Bei Palindromen fehlen sonst die Wörter gerader bzw. ungerader Länge; bei aⁿbⁿ (n ≥ 1) darf ε nicht erzeugt werden.',
