@@ -33,8 +33,8 @@ const STATUS = {
   minimierer: async () => { const A = await katalog('minimierer'); return geloest(solvedOf('minimierer', A.map((x) => x.schluessel)), A.length); },
   mealy: async () => { const A = (await katalog('mealy')).filter((a) => a.art === 'bugjagd'); return geloest(solvedOf('mealy', A.map((x) => x.schluessel)), A.length, 'repariert'); },
   ueberliste: async () => {
-    const { UEBERLISTE_STUFEN: S } = await import('../data/ueberliste.js');
-    return geloest(solvedOf('ueberliste', S.map((x) => x.id)), S.length, 'überlistet') + (progress.isSolved('ueberliste', 'bonus') ? ' · Bonus' : '');
+    const S = (await katalog('ueberliste')).filter((a) => a.art !== 'bonus');
+    return geloest(solvedOf('ueberliste', S.map((x) => x.schluessel)), S.length, 'überlistet') + (progress.isSolved('ueberliste', 'bonus') ? ' · Bonus' : '');
   },
   parallelwelten: async () => {
     const { PARALLELWELTEN: P } = await import('../data/parallelwelten.js');

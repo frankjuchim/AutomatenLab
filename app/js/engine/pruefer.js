@@ -219,3 +219,29 @@ export function mealyLoesung(referenz, fehler) {
   const R = mealy(referenz);
   return { fehler: fehler.map((f) => ({ von: f.von, zeichen: f.zeichen, falsch: f.ausgabe, richtig: R.delta[f.von][f.zeichen].out === '' ? 'ε' : R.delta[f.von][f.zeichen].out })) };
 }
+
+/* ───────────── Überliste den Automaten ───────────── */
+
+/** Testwort dem (sichtbaren) Automaten vorlegen und mit der Wahrheit (Prädikat) vergleichen. ok = überlistet. */
+export function pruefeUeberliste(automat, pruefe, antwort) {
+  const A = dfa(automat);
+  const tk = tokenizeWort(antwort?.wort ?? '', A.alphabet);
+  if (!tk.ok) throw ungueltig400(tk.message);
+  if (tk.tokens.length > 200) throw ungueltig400('Das Wort ist zu lang (höchstens 200 Zeichen).');
+  const akzeptiert = runDFA(A, tk.tokens).accepted;
+  const gehoertDazu = !!pruefe(tk.tokens);
+  const ueberlistet = akzeptiert !== gehoertDazu;
+  return { ok: ueberlistet, zaehltFehler: false, rueckmeldung: { wort: tk.tokens, akzeptiert, gehoertDazu, ueberlistet } };
+}
+
+/** Lösungsteil: ein Wort, bei dem sich der Automat irrt (Form präfixⁿ fortsetzungᵐ, kürzestes zuerst). */
+export function ueberlisteBeispiel(automat, pruefe, praefix, fortsetzung) {
+  const A = dfa(automat);
+  for (let laenge = 1; laenge <= 2 * A.states.length + 6; laenge++) {
+    for (let n = laenge; n >= 0; n--) {
+      const w = [...Array(n).fill(praefix), ...Array(laenge - n).fill(fortsetzung)];
+      if (runDFA(A, w).accepted !== !!pruefe(w)) return w;
+    }
+  }
+  return null;
+}

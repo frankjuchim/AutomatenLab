@@ -37,6 +37,7 @@ findet er einen, schlägt die Prüfung fehl.
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
 | Mealy-Maschine | 7 × „Was kommt raus?“ + 7 Bug-Jagden | Vorhersage 10 (Anteil im ersten Versuch); Bug-Jagd Basis/Standard/Profi → 10/20/30 | 10 je Wort, 10 gefunden, 30 repariert |
+| Überliste den Automaten | 5 Stufen + Bonus | Stufe 1: 10, Stufen 2–4: 20, Stufe 5: 30; Bonus 20 × Anteil | 30–50 je Stufe (−5 je Tipp), Bonus 20 |
 | Minimierer | 7 Aufgaben (Markierungsverfahren) | Basis 1 (Smiley, gerade Anzahl a) / Standard 2 / Profi 3 (Prüfnummern) → 10/20/30 | 30 je Aufgabe, „Unterscheide!“ 5 je Paar |
 
 ## 3. Interaktionen
@@ -87,6 +88,15 @@ findet er einen, schlägt die Prüfung fehl.
   (kürzestes Gegenbeispiel), falsch = Fehlversuch. Lösungsteil: die falschen Kanten mit richtiger Ausgabe.
 * Grenze: Die Referenz steht in „Was kommt raus?“ und in der freien Simulation – wer vergleicht, findet die Bugs
   schneller. Das ist didaktisch in Ordnung (Vergleichen ist eine Strategie) und lässt sich nicht verbergen.
+
+### Überliste den Automaten (`ueberliste`)
+* Öffentlich: Behauptung (Sprache), Kontext, der Automat (er „zeigt“ sich erst beim Aufdecken, ist aber Gegenstand der
+  Aufgabe), Präfix/Fortsetzung für das Schubfach-Schema, Zahl der Tipps. ID `ueberliste:<schlüssel>`, Deep-Links
+  unverändert `#/ueberliste?stufe=n`.
+* Antwort `{ wort }` → `akzeptiert`, `gehoertDazu` (die „Wahrheit“ kennt nur der Server), `ueberlistet`. Testen ist
+  erlaubt und kostet nichts; gelöst, sobald der Automat irrt. Tipps einzeln abrufbar (kosten Punkte nach §2).
+  Lösungsteil: ein Beispielwort der Form Präfixⁿ Fortsetzungᵐ.
+* Bonus `ueberliste:bonus`: vier Fragen wie beim Quiz (erster Durchgang zählt, kein „Lösung zeigen“).
 
 ### Training (`arena`, `unterscheide`)
 Wie der Trainingsplatz von Algo Quest (Umsetzung von `docs/VERBUND.md` §6): Spielrunden statt Aufgaben mit IDs.

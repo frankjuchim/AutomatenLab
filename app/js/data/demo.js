@@ -84,3 +84,22 @@ DEMO.push(
   { modul: 'mealy', art: 'vorhersage', id: 'demo:mealy:vorhersage', titel: 'Demo: Paritäts-Melder – Was kommt raus?', daten: PARITAET },
   { modul: 'mealy', art: 'bugjagd', id: 'demo:mealy', titel: 'Demo: Paritäts-Melder – Bug-Jagd', daten: PARITAET },
 );
+
+// Überliste-Demo: ein eigener „Kontostand“-Automat (Bilanz bis ±2, danach sättigt er)
+DEMO.push({
+  modul: 'ueberliste', id: 'demo:ueberliste', titel: 'Demo: Der Kontostand',
+  daten: {
+    id: 'demo-kontostand', stufe: 1, titel: 'Der Kontostand',
+    kontext: 'Auf ein Konto wird eingezahlt (+) und abgehoben (-), immer derselbe Betrag. Der Automat behauptet zu erkennen, ob der Kontostand am Ende wieder 0 ist.',
+    sprache: 'L = Wörter über {+, -} mit gleich vielen + wie -',
+    automat: { alphabet: ['+', '-'], start: 'S0', accepting: ['S0'],
+      delta: { M2: { '+': 'M1', '-': 'M2' }, M1: { '+': 'S0', '-': 'M2' }, S0: { '+': 'P1', '-': 'M1' }, P1: { '+': 'P2', '-': 'S0' }, P2: { '+': 'P2', '-': 'P1' } } },
+    praefix: '+', fortsetzung: '-',
+    pruefe: (w) => count(w, '+') === count(w, '-'),
+    tipps: [
+      'Der Automat hat nur fünf Zustände – der Kontostand kann aber beliebig groß werden.',
+      'Lies +, ++, +++ … und lass dir den Zustand nach jedem Präfix zeigen. Wann bleibt er gleich?',
+      'Konkret: Probiere +++--- (dreimal einzahlen, dreimal abheben).',
+    ],
+  },
+});

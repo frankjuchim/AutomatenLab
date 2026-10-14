@@ -7,7 +7,7 @@ import { dfa, runDFA } from '../js/engine/dfa.js';
 import { enumerateWords } from '../js/engine/tokenize.js';
 import { parseGrammar, derive, derivationToTree, languageUpTo, isRightRegular, tokenizeWord } from '../js/engine/grammar.js';
 import { tm, runTM, countOnes, tmToGraph } from '../js/engine/turing.js';
-import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../js/data/ueberliste.js';
+import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../../inhalte/ueberliste.js';
 import { RALLYE_AUFGABEN } from '../js/data/rallye.js';
 import { GRAMMATIK_CHALLENGES } from '../js/data/grammatik.js';
 import { SORTIERER_KARTEN, FAECHER } from '../js/data/sortierer.js';
@@ -28,7 +28,7 @@ test('Überliste: jeder Automat zählt bis zur Kapazität richtig und irrt sich 
     // es gibt ein Wort, bei dem er sich irrt (Präfix^(c+1) Fortsetzung^(c+1))
     const bad = [...Array(c + 1).fill(s.praefix), ...Array(c + 1).fill(s.fortsetzung)];
     assert.notEqual(runDFA(A, bad).accepted, !!s.pruefe(bad), `${s.id}: müsste sich bei ${bad.join('')} irren`);
-    assert.ok(s.tipps.length >= 3 && s.punkte > 0);
+    assert.ok(s.tipps.length >= 3 && [1, 2, 3].includes(s.stufe));
   }
   // Zustandsanzahl wächst mit der Stufe innerhalb derselben Sprache
   const anbn = UEBERLISTE_STUFEN.filter((s) => s.sprache.includes('aⁿbⁿ')).map((s) => dfa(bauAutomat(s)).states.length);

@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel } from '../js/engine/pruefer.js';
 import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
-  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'quiz']);
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'quiz', 'ueberliste']);
   assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
   assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
@@ -74,6 +74,16 @@ test('Demo-Mealy: Beispiele und Prädikat passen, Vorhersage und Bug-Jagd wie au
   const fix = {}; for (const f of mealyLoesung(x.automat, x.fehler).fehler) (fix[f.von] ??= {})[f.zeichen] = f.richtig;
   assert.equal(pruefeMealyReparatur(x.automat, F, fix).ok, true);
   assert.equal(pruefeMealyTest(x.automat, F, { test: '10', urteil: 'bug', ausgaben: fix }).bug, false);
+});
+
+test('Demo-Überliste: Automat zählt bis ±2 richtig, irrt danach; Beispiel aus der Lösung überlistet ihn', () => {
+  const x = DEMO.find((d) => d.modul === 'ueberliste').daten;
+  const A = dfa(x.automat);
+  for (const w of enumerateWords(A.alphabet, 4)) assert.equal(runDFA(A, w).accepted, x.pruefe(w), w.join(''));
+  const w = ueberlisteBeispiel(x.automat, x.pruefe, x.praefix, x.fortsetzung);
+  assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: w.join('') }).ok, true);
+  assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: '+-' }).ok, false);
+  assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: '+++---' }).ok, true, 'Tipp 3 stimmt');
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

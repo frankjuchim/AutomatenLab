@@ -12,7 +12,10 @@
 //   tipps                  gestufte Hinweise (allgemein → konkret)
 //   praefix                Symbol, mit dem die Präfixe a, aa, aaa … gebildet werden (Schubfachargument)
 //   fortsetzung            Symbol für die Fortsetzung bⁱ
-//   punkte                 Punkte bei Sieg ohne Tipps (jeder Tipp kostet etwas)
+//   stufe                  1 Basis, 2 Standard, 3 Profi (Punkte 10/20/30, Vertrag §9; jeder Tipp kostet nach §9)
+//
+// Liegt in inhalte/ (nur Server, Vertrag InfoLabs §9): Das Prädikat (die „Wahrheit“), die Tipps und die richtigen
+// Bonus-Antworten kennt nur der Server. Der Automat selbst ist Gegenstand der Aufgabe.
 
 const count = (w, s) => w.filter((x) => x === s).length;
 
@@ -60,19 +63,19 @@ const TIPPS_ANBN = (c) => [
 
 export const UEBERLISTE_STUFEN = [
   {
-    id: 'anbn-klein', titel: 'Der Zähler', kontext: 'Ein Automat behauptet, genau die Wörter aⁿbⁿ (n ≥ 1) zu erkennen – erst n-mal a, dann n-mal b.',
+    id: 'anbn-klein', stufe: 1, titel: 'Der Zähler', kontext: 'Ein Automat behauptet, genau die Wörter aⁿbⁿ (n ≥ 1) zu erkennen – erst n-mal a, dann n-mal b.',
     sprache: 'L = {aⁿbⁿ | n ≥ 1}', alphabet: ['a', 'b'], kapazitaet: 2, bau: bauAnBn, pruefe: pruefeAnBn,
-    praefix: 'a', fortsetzung: 'b', tipps: TIPPS_ANBN(2), punkte: 30,
+    praefix: 'a', fortsetzung: 'b', tipps: TIPPS_ANBN(2),
   },
   {
-    id: 'anbn-mittel', titel: 'Der bessere Zähler', kontext: 'Dieser Automat hat mehr Zustände und zählt weiter – aber immer noch nicht unbegrenzt.',
+    id: 'anbn-mittel', stufe: 2, titel: 'Der bessere Zähler', kontext: 'Dieser Automat hat mehr Zustände und zählt weiter – aber immer noch nicht unbegrenzt.',
     sprache: 'L = {aⁿbⁿ | n ≥ 1}', alphabet: ['a', 'b'], kapazitaet: 4, bau: bauAnBn, pruefe: pruefeAnBn,
-    praefix: 'a', fortsetzung: 'b', tipps: TIPPS_ANBN(4), punkte: 40,
+    praefix: 'a', fortsetzung: 'b', tipps: TIPPS_ANBN(4),
   },
   {
-    id: 'klammern', titel: 'Der Klammer-Prüfer', kontext: 'Ein Automat behauptet, korrekt geklammerte Ausdrücke über { (, ) } zu erkennen (auch das leere Wort). Er merkt sich die Klammertiefe – aber nur bis zu einer Grenze.',
+    id: 'klammern', stufe: 2, titel: 'Der Klammer-Prüfer', kontext: 'Ein Automat behauptet, korrekt geklammerte Ausdrücke über { (, ) } zu erkennen (auch das leere Wort). Er merkt sich die Klammertiefe – aber nur bis zu einer Grenze.',
     sprache: 'L = korrekt geklammerte Ausdrücke, z. B. (()()), ε', alphabet: ['(', ')'], kapazitaet: 3, bau: bauKlammern, pruefe: pruefeKlammern,
-    praefix: '(', fortsetzung: ')', punkte: 40,
+    praefix: '(', fortsetzung: ')',
     tipps: [
       'Die Klammertiefe kann beliebig groß werden. Wie viele verschiedene Tiefen kann sich ein Automat mit k Zuständen merken?',
       'Lies (, ((, (((, … und beobachte den Zustand. Ab einer Tiefe bleibt der Automat im selben Zustand hängen.',
@@ -81,9 +84,9 @@ export const UEBERLISTE_STUFEN = [
     ],
   },
   {
-    id: 'tuersteher', titel: 'Der Türsteher', kontext: 'Am Club-Eingang: E = jemand kommt rein, A = jemand geht raus. Der Automat behauptet zu erkennen, ob am Ende genauso viele rein wie raus sind (Reihenfolge egal).',
+    id: 'tuersteher', stufe: 2, titel: 'Der Türsteher', kontext: 'Am Club-Eingang: E = jemand kommt rein, A = jemand geht raus. Der Automat behauptet zu erkennen, ob am Ende genauso viele rein wie raus sind (Reihenfolge egal).',
     sprache: 'L = Wörter über {E, A} mit gleich vielen E wie A', alphabet: ['E', 'A'], kapazitaet: 3, bau: bauBilanz, pruefe: pruefeBilanz,
-    praefix: 'E', fortsetzung: 'A', punkte: 40,
+    praefix: 'E', fortsetzung: 'A',
     tipps: [
       'Der Automat merkt sich die Bilanz (rein minus raus) – aber eine Bilanz kann beliebig groß werden, Zustände gibt es nur k.',
       'Lass E, EE, EEE, … kommen. Wann bleibt der Zustand gleich? Dann hat der Türsteher aufgehört zu zählen.',
@@ -92,9 +95,9 @@ export const UEBERLISTE_STUFEN = [
     ],
   },
   {
-    id: 'anbn-gross', titel: 'Der Riesen-Zähler', kontext: 'Dieser Automat hat viele Zustände. Blindes Raten dauert jetzt lange – mit der richtigen Idee brauchst du nur ein Wort.',
+    id: 'anbn-gross', stufe: 3, titel: 'Der Riesen-Zähler', kontext: 'Dieser Automat hat viele Zustände. Blindes Raten dauert jetzt lange – mit der richtigen Idee brauchst du nur ein Wort.',
     sprache: 'L = {aⁿbⁿ | n ≥ 1}', alphabet: ['a', 'b'], kapazitaet: 10, bau: bauAnBn, pruefe: pruefeAnBn,
-    praefix: 'a', fortsetzung: 'b', tipps: TIPPS_ANBN(10), punkte: 50,
+    praefix: 'a', fortsetzung: 'b', tipps: TIPPS_ANBN(10),
   },
 ];
 

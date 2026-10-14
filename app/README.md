@@ -62,7 +62,7 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/quiz?welt=A` … `?welt=D` | Quiz je Welt (8–10 Fragen) |
 | `#/quiz?ds=1` … `?ds=16` | Mini-Exit-Ticket je Doppelstunde (3 Fragen) |
 | `#/gast` | Ausprobieren ohne Anmeldung: je Modul eine Aufgabe (Gastmodus) – auch `BASE_URL/gast` |
-| `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` · `#/minimierer?demo=1` · `#/minimierer?demo=1&modus=unterscheide` · `#/mealy?demo=1` · `#/mealy?demo=1&modus=bugjagd` · `#/mealy?demo=1&modus=frei` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
+| `#/quiz?demo=1` · `#/detektiv?demo=1` · `#/baukasten?demo=1` · `#/minimierer?demo=1` · `#/minimierer?demo=1&modus=unterscheide` · `#/mealy?demo=1` · `#/mealy?demo=1&modus=bugjagd` · `#/mealy?demo=1&modus=frei` · `#/ueberliste?demo=1` | Demo-Aufgaben des Gastmodus (eigene Aufgaben, im Browser geprüft, ohne Punkte) |
 | `#/themen` | Themen der Einheit: Welten, Level, Module und je Level Arbeitsblatt, Folien, Merkblatt als PDF (öffentlich, ohne Lösungen; PDFs je Rolle, sonst 🔒) – auch `BASE_URL/themen` |
 | `#/material` | Zusätzliches Material als PDF (Arbeitsblätter, Folien, Merkblätter; Lehrkräfte zusätzlich Lösungen und Klausuren, Admin die Originale) – ohne Anmeldung nur die Demo (Level 1: Schüler- und Lehrkraftfassung), zählt nicht für Punkte – auch `BASE_URL/material` |
 | `#/themen?teil=niveaus` | Niveau-Übersicht: was ist für Grundkurs (gA), Leistungskurs (eA) und Zusatz (öffentlich) – auch `BASE_URL/niveaus` |
@@ -101,14 +101,14 @@ Tipp für den Beamer: Knopf „A A“ oben rechts schaltet die Großansicht ein.
 ## Challenges und Inhalte ergänzen
 
 Alle Inhalte stehen als kommentierte Daten in `js/data/`. **Ausnahme:** Module mit Prüfung auf dem Server (Level-Quiz,
-Sprach-Detektiv, Automaten-Baukasten, Minimierer, Mealy-Maschine) haben ihre Daten samt Lösungen in `../inhalte/` (nie ausgeliefert,
+Sprach-Detektiv, Automaten-Baukasten, Minimierer, Mealy-Maschine, Überliste) haben ihre Daten samt Lösungen in `../inhalte/` (nie ausgeliefert,
 Format: `docs/AUFGABENFORMAT.md`); `minimierer.js` dort enthält die DEAs fürs Markierungsverfahren (`klassen` =
 erwartete Zusammenfassung, `stufe`, `merke`, getestet in `tests/teil2.test.js`).
 
 * `arena.js` – Automaten der Akzeptor-Arena (`id`, `titel`, `kontext`, `level` = Stufen, `automat`, `bedeutung`, `beispiele`).
 * `detektiv.js` (in `inhalte/`) – Fälle (4 Optionen, **die erste ist richtig**, jede mit Prüffunktion `pruefe(w)`).
 * `baukasten.js` (in `inhalte/`) – Challenges (`id`, `stufe`, `titel`, `aufgabe`, `referenz` = Musterlösung, `beispiele`, `tipp`, optional `pruefe`). Neue Challenges hinten anhängen, damit vorhandene `?level=n`-Links gleich bleiben – oder in QR-Codes `?aufgabe=<id>` verwenden.
-* `ueberliste.js` – Stufen von „Überliste den Automaten“ (Sprache, Kapazität c, Bauplan `bau(c)`, Prädikat, Tipps).
+* `ueberliste.js` (in `inhalte/`) – Stufen von „Überliste den Automaten“ (Sprache, Kapazität c, Bauplan `bau(c)`, Prädikat, Tipps).
 * `rallye.js` – Rallye-Aufgaben (Grammatiktext in Abi-Notation, Zielwort, `modus: 'baum'` für Mehrdeutigkeit).
 * `grammatik.js` – Grammatik-Challenges (Σ, Prädikat `pruefe`, `regulaer`, Musterlösung – im Test gegen das Prädikat geprüft). Geprüft wird die Sprache bis `maxLen`; auch Grammatiken mit vielen ε-Regeln werden vollständig ausgewertet (`tests/grammar-nullable.test.js`).
 * `sortierer.js` – Sprachkarten (`typ` 3/2/0 + Begründung); `turing.js` – TM-Programme (Übergang `[Folgezustand, geschrieben, L|R|N]`) und Tabellen-Challenges; `quiz.js` – Quizfragen (mc/wf/zuordnung, erste Option richtig).

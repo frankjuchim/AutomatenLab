@@ -200,6 +200,39 @@ test('Mealy: Vorhersage wie ein Quiz (erster Versuch zählt), Bug-Jagd mit Test 
   assert.ok(ls.solved[id] && ls.solved[v.id]);
 });
 
+test('Überliste: Testen kostet nichts, Tipps kosten Punkte, gelöst sobald der Automat irrt; Bonus wie ein Quiz', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=ueberliste')).body.aufgaben;
+  assert.deepEqual(k.map((a) => a.schluessel), ['anbn-klein', 'anbn-mittel', 'klammern', 'tuersteher', 'anbn-gross', 'bonus']);
+  assert.equal(k.at(-1).art, 'bonus');
+  const id = 'ueberliste:anbn-klein';
+  const a = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.equal(a.aufgabe.tippsAnzahl, 4);
+  assert.doesNotMatch(JSON.stringify(a), /pruefe|Schubfach/);
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr({ wort: 'aabb' })).body;
+  assert.deepEqual([r.rueckmeldung.akzeptiert, r.rueckmeldung.gehoertDazu, r.rueckmeldung.ueberlistet], [true, true, false]);
+  assert.equal(r.zustand.fehlversuche, 0);
+  const t = (await post(s, `/api/aufgaben/${id}/tipp`)).body;
+  assert.equal(t.zustand.tipps.length, 1);
+  r = (await pr({ wort: 'aaabb' })).body;
+  assert.equal(r.rueckmeldung.ueberlistet, true);
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 0, 1));
+  assert.ok(r.loesung.beispiel.length > 0);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'ueberliste-erster'));
+  assert.equal((await pr({ wort: 'abc' })).status, 400);
+  // Bonus: erster Durchgang zählt
+  const b = (await s.get('/api/aufgaben/ueberliste:bonus')).body.aufgabe;
+  assert.equal(b.fragen.length, 4);
+  let letzte;
+  for (let i = 0; i < b.fragen.length; i++) letzte = (await post(s, '/api/aufgaben/ueberliste:bonus/pruefen', { antwort: { frage: i, wahl: b.fragen[i].optionen[0].id } })).body;
+  assert.equal(letzte.geloest, true);
+  assert.ok(letzte.punkteErhalten >= 0 && letzte.punkteErhalten <= 20);
+  assert.equal((await post(s, '/api/aufgaben/ueberliste:bonus/aufdecken')).status, 400);
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -51,10 +51,11 @@ async function ladeAufgaben(secret) {
     lade(path.join(ENGINE, 'pruefer.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'arena.js')),
-    lade(path.join(ENGINE, 'training.js'))
+    lade(path.join(ENGINE, 'training.js')),
+    lade(path.join(INHALTE, 'ueberliste.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -241,7 +242,40 @@ async function ladeAufgaben(secret) {
     liste.push({ id: `mealy:${x.id}`, typ: MEALY_BUG, modul: 'mealy', nr: i + 1, titel: `${x.titel}: Bug-Jagd`, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [6], daten: x, fehlerhaft, okBeispiele, tipps: [] });
   });
 
+  /* ---------- Überliste den Automaten: Wort finden, bei dem der (sichtbare) Automat irrt; Bonus wie ein Quiz ---------- */
+  const UEBERLISTE = {
+    modul: 'ueberliste',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, kontext: x.kontext, sprache: x.sprache, automat: a.automat, praefix: x.praefix, fortsetzung: x.fortsetzung, tippsAnzahl: a.tipps.length };
+    },
+    /** antwort: { wort } – Testen ist erlaubt und kostet nichts; gelöst, sobald der Automat irrt. */
+    pruefe(a, antwort) {
+      return pruefeUeberliste(a.automat, a.daten.pruefe, antwort);
+    },
+    loesungsteil(a) {
+      return { beispiel: ueberlisteBeispiel(a.automat, a.daten.pruefe, a.daten.praefix, a.daten.fortsetzung) };
+    },
+    abzeichen({ a, zeilen, katalog }) {
+      const neu = ['ueberliste-erster'];
+      const z = zeilen.find((r) => r.aufgabe_id === a.id);
+      if (z && z.tipps === 0 && a.nr >= 3 && z.status === 'geloest') neu.push('ueberliste-ohne-tipp');
+      const geloest = new Set(zeilen.filter((r) => r.status === 'geloest' || r.nachgeloest).map((r) => r.aufgabe_id));
+      if (katalog.filter((x) => x.typ === UEBERLISTE).every((x) => geloest.has(x.id))) neu.push('ueberliste-alle');
+      return neu;
+    }
+  };
+  ueberlisteD.UEBERLISTE_STUFEN.forEach((x, i) => {
+    const automat = ueberlisteD.bauAutomat(x);
+    dfa(automat);
+    liste.push({ id: `ueberliste:${x.id}`, typ: UEBERLISTE, modul: 'ueberliste', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [7], daten: x, automat, tipps: x.tipps });
+  });
+  const BONUS = { ...QUIZ, modul: 'ueberliste', abzeichen: () => [] };
+  liste.push({ id: 'ueberliste:bonus', typ: BONUS, modul: 'ueberliste', nr: ueberlisteD.UEBERLISTE_STUFEN.length + 1, titel: 'Bonus: Warum hilft ein Zustand mehr nicht?', art: 'bonus', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [7],
+    daten: { titel: 'Bonus: Warum hilft ein Zustand mehr nicht?', fragen: ueberlisteD.UEBERLISTE_BONUS.map((q) => ({ typ: 'mc', frage: q.frage, optionen: q.optionen })) }, tipps: [] });
+
   const map = new Map(liste.map((a) => [a.id, a]));
+
   // Training (src/training.js): Arena-Automaten (öffentlich) und Minimierer-Automaten für „Unterscheide!“
   const training = { T: trainingM, arena: arenaD.ARENA_AUTOMATEN, minimierer: minimierer.MINIMIERER_AUFGABEN.map((x) => ({ id: x.id, automat: x.automat })) };
   return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training };
