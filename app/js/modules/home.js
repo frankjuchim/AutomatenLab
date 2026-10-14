@@ -37,10 +37,10 @@ const STATUS = {
     return geloest(solvedOf('ueberliste', S.map((x) => x.schluessel)), S.length, 'überlistet') + (progress.isSolved('ueberliste', 'bonus') ? ' · Bonus' : '');
   },
   parallelwelten: async () => {
-    const { PARALLELWELTEN: P } = await import('../data/parallelwelten.js');
-    const r = P.flatMap((x) => x.raetsel.map((w) => `${x.id}:${w}`));
-    const t = P.filter((x) => x.teilmengen).map((x) => x.id);
-    return `Rätsel ${solvedOf('parallelwelten-r', r)}/${r.length} · Teilmengen ${solvedOf('parallelwelten', t)}/${t.length}`;
+    const K = await katalog('parallelwelten');
+    const r = K.filter((a) => a.art === 'raetsel').map((a) => a.schluessel);
+    const t = K.filter((a) => a.art === 'teilmengen').map((a) => a.schluessel);
+    return `Rätsel ${solvedOf('parallelwelten', r)}/${r.length} · Teilmengen ${solvedOf('parallelwelten', t)}/${t.length}`;
   },
   keller: async () => {
     const { KELLER_AUTOMATEN: K } = await import('../data/keller.js');

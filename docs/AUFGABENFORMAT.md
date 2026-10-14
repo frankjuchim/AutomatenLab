@@ -37,6 +37,7 @@ findet er einen, schlägt die Prüfung fehl.
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
 | Mealy-Maschine | 7 × „Was kommt raus?“ + 7 Bug-Jagden | Vorhersage 10 (Anteil im ersten Versuch); Bug-Jagd Basis/Standard/Profi → 10/20/30 | 10 je Wort, 10 gefunden, 30 repariert |
+| Parallelwelten | 6 × Rätsel + 5 Teilmengenkonstruktionen | Rätsel 10 × Anteil im ersten Versuch; Teilmengen 20 | 10 je Rätselwort, Teilmengen 30 |
 | Überliste den Automaten | 5 Stufen + Bonus | Stufe 1: 10, Stufen 2–4: 20, Stufe 5: 30; Bonus 20 × Anteil | 30–50 je Stufe (−5 je Tipp), Bonus 20 |
 | Minimierer | 7 Aufgaben (Markierungsverfahren) | Basis 1 (Smiley, gerade Anzahl a) / Standard 2 / Profi 3 (Prüfnummern) → 10/20/30 | 30 je Aufgabe, „Unterscheide!“ 5 je Paar |
 
@@ -97,6 +98,15 @@ findet er einen, schlägt die Prüfung fehl.
   erlaubt und kostet nichts; gelöst, sobald der Automat irrt. Tipps einzeln abrufbar (kosten Punkte nach §2).
   Lösungsteil: ein Beispielwort der Form Präfixⁿ Fortsetzungᵐ.
 * Bonus `ueberliste:bonus`: vier Fragen wie beim Quiz (erster Durchgang zählt, kein „Lösung zeigen“).
+
+### Parallelwelten (`parallelwelten`)
+* Je NEA `parallelwelten:<schlüssel>:raetsel` („Wo stehen die Figuren?“) und – bei kleinen Alphabeten –
+  `parallelwelten:<schlüssel>` (Teilmengenkonstruktion). Öffentlich: NEA, Beispiele, Rätselwörter (Gegenstand der
+  Aufgabe; die Simulation rechnet die Engine im Browser). Deep-Links unverändert (`?aufgabe=n`, `?automat=<id>`).
+* Rätsel: `{ wort: Index, zustaende: [...] }`; erster Versuch je Wort zählt (keine Fehlversuche); zu viele Zustände
+  werden genannt, fehlende ab dem zweiten Versuch, die Lösung nach dem dritten.
+* Teilmengen: `{ menge, ziele: { a: [...] } }` je Zeile; falsche Zeile = Fehlversuch (Rückmeldung: falsche Spalten und
+  wohin die Figuren ohne ε-Abschluss ziehen). „Zeile aufdecken“ ist „Lösung zeigen“ (alle Zeilen und der DEA).
 
 ### Training (`arena`, `unterscheide`)
 Wie der Trainingsplatz von Algo Quest (Umsetzung von `docs/VERBUND.md` §6): Spielrunden statt Aufgaben mit IDs.

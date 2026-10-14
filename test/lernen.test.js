@@ -233,6 +233,43 @@ test('Überliste: Testen kostet nichts, Tipps kosten Punkte, gelöst sobald der 
   assert.equal((await post(s, '/api/aufgaben/ueberliste:bonus/aufdecken')).status, 400);
 });
 
+test('Parallelwelten: Rätsel wie ein Quiz, Teilmengenkonstruktion Zeile für Zeile, falsche Zeile = Fehlversuch', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=parallelwelten')).body.aufgaben;
+  assert.equal(k.filter((a) => a.art === 'raetsel').length, 6);
+  assert.equal(k.filter((a) => a.art === 'teilmengen').length, 5);
+  const { nfa, runNFA } = await import('../app/js/engine/nfa.js');
+  const { subsetConstruction } = await import('../app/js/engine/nfa.js');
+  // Rätsel „endet-ab“: a, ab, aa, abb, bab
+  const rid = 'parallelwelten:endet-ab:raetsel';
+  const ra = (await s.get(`/api/aufgaben/${rid}`)).body.aufgabe;
+  const N = nfa(ra.automat);
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr(rid, { wort: 0, zustaende: ['S2'] })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.deepEqual(r.rueckmeldung.zuViel, ['S2']);
+  assert.equal(r.rueckmeldung.loesung, undefined);
+  for (let i = 0; i < ra.worte.length; i++) r = (await pr(rid, { wort: i, zustaende: runNFA(N, ra.worte[i]).sets.at(-1) })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, 8, '4 von 5 im ersten Versuch → 10 × 0,8');
+  assert.equal((await pr(rid, { wort: 0, zustaende: ['X9'] })).status, 400);
+  // Teilmengenkonstruktion „lol“
+  const tid = 'parallelwelten:lol';
+  const ta = (await s.get(`/api/aufgaben/${tid}`)).body.aufgabe;
+  const { table } = subsetConstruction(nfa(ta.automat));
+  const falsch = (await pr(tid, { menge: table[0].set, ziele: {} })).body;
+  assert.equal(falsch.rueckmeldung.richtig, false);
+  assert.ok(falsch.rueckmeldung.falsch.length > 0);
+  assert.equal(falsch.zustand.fehlversuche, 1);
+  for (const z of table) r = (await pr(tid, { menge: z.set, ziele: z.targets })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(20, 1, 0));
+  assert.equal(r.loesung.zeilen.length, table.length);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'parallelwelten-teilmengen'));
+  assert.equal((await pr(tid, { menge: ['S1', 'S3'], ziele: {} })).status, 400, 'Menge kommt nicht vor');
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -52,10 +52,11 @@ async function ladeAufgaben(secret) {
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'arena.js')),
     lade(path.join(ENGINE, 'training.js')),
-    lade(path.join(INHALTE, 'ueberliste.js'))
+    lade(path.join(INHALTE, 'ueberliste.js')),
+    lade(path.join(INHALTE, 'parallelwelten.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -273,6 +274,49 @@ async function ladeAufgaben(secret) {
   const BONUS = { ...QUIZ, modul: 'ueberliste', abzeichen: () => [] };
   liste.push({ id: 'ueberliste:bonus', typ: BONUS, modul: 'ueberliste', nr: ueberlisteD.UEBERLISTE_STUFEN.length + 1, titel: 'Bonus: Warum hilft ein Zustand mehr nicht?', art: 'bonus', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [7],
     daten: { titel: 'Bonus: Warum hilft ein Zustand mehr nicht?', fragen: ueberlisteD.UEBERLISTE_BONUS.map((q) => ({ typ: 'mc', frage: q.frage, optionen: q.optionen })) }, tipps: [] });
+
+  /* ---------- Parallelwelten: „Wo stehen die Figuren?“ (wie ein Quiz) und Teilmengenkonstruktion (Zeile für Zeile) ---------- */
+  const pwOeffentlich = (a) => {
+    const x = a.daten;
+    return { id: x.id, nr: a.nr, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, worte: x.raetsel, teilmengen: !!x.teilmengen };
+  };
+  const PW_RAETSEL = {
+    modul: 'parallelwelten',
+    oeffentlich: pwOeffentlich,
+    /** antwort: { wort: Index, zustaende: [...] } – gewertet wird der erste Versuch je Wort. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeNeaRaetsel(a.daten.automat, a.daten.raetsel, z.daten.stand, antwort);
+      return { ok: erg.richtig, fertig: z.offen && erg.fertig, zaehltFehler: false, anteil: z.offen && erg.fertig ? erg.anteil : undefined, daten: z.offen ? { stand: erg.stand } : undefined, rueckmeldung: erg.rueckmeldung };
+    },
+    loesungsteil(a, z) {
+      const st = z.daten.stand ?? {};
+      return { ergebnis: { ersterVersuch: Object.values(st.antworten ?? {}).reduce((s, x) => s + x, 0), von: a.daten.raetsel.length } };
+    },
+    abzeichen({ zeilen }) {
+      let richtig = 0;
+      for (const r of zeilen) if (r.aufgabe_id.endsWith(':raetsel')) { try { richtig += Object.values(JSON.parse(r.daten).stand?.antworten ?? {}).reduce((s, x) => s + x, 0); } catch { /* leer */ } }
+      return richtig >= 5 ? ['parallelwelten-figuren'] : [];
+    }
+  };
+  const PW_TEILMENGEN = {
+    modul: 'parallelwelten',
+    oeffentlich: pwOeffentlich,
+    /** antwort: { menge: [...], ziele: { a: [...] } } – eine Zeile; falsche Zeile = Fehlversuch. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeTeilmengenZeile(a.daten.automat, z.daten.stand, antwort);
+      return { ...erg, daten: { stand: erg.stand } };
+    },
+    loesungsteil(a) {
+      return teilmengenLoesung(a.daten.automat);
+    },
+    abzeichen({ erg }) {
+      return erg && erg.ok ? ['parallelwelten-teilmengen'] : [];
+    }
+  };
+  pwD.PARALLELWELTEN.forEach((x, i) => {
+    liste.push({ id: `parallelwelten:${x.id}:raetsel`, typ: PW_RAETSEL, modul: 'parallelwelten', nr: i + 1, titel: `${x.titel}: Wo stehen die Figuren?`, art: 'raetsel', stufe: 1, punkte: PUNKTE_STUFE[1], levels: [8], daten: x, tipps: [] });
+    if (x.teilmengen) liste.push({ id: `parallelwelten:${x.id}`, typ: PW_TEILMENGEN, modul: 'parallelwelten', nr: i + 1, titel: `${x.titel}: Teilmengenkonstruktion`, art: 'teilmengen', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [8], daten: x, tipps: [] });
+  });
 
   const map = new Map(liste.map((a) => [a.id, a]));
 

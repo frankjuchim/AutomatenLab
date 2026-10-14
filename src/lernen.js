@@ -129,7 +129,7 @@ function createLernen(ctx, { aufgaben, training = null }) {
 
   function aufdecken(sub, id) {
     const a = aufgabe(id);
-    if (a.modul === 'quiz' || a.id.endsWith(':vorhersage') || a.id === 'ueberliste:bonus') throw fehler(400, 'Hier gibt es kein „Lösung zeigen“ – die Lösung erscheint nach jeder Antwort.');
+    if (a.modul === 'quiz' || a.id.endsWith(':vorhersage') || a.id.endsWith(':raetsel') || a.id === 'ueberliste:bonus') throw fehler(400, 'Hier gibt es kein „Lösung zeigen“ – die Lösung erscheint nach jeder Antwort.');
     const r = sichereZeile(sub, a.id);
     if (r.status === 'offen') db.prepare("UPDATE fortschritt SET status = 'angesehen', punkte = 0, updated_at = ? WHERE sub = ? AND aufgabe_id = ?").run(iso(), sub, a.id);
     const r2 = zeile(sub, a.id);
@@ -166,7 +166,7 @@ function createLernen(ctx, { aufgaben, training = null }) {
   function katalog(modul) {
     return aufgaben.liste
       .filter((a) => !modul || a.modul === modul)
-      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.art ? { art: a.art } : {}), ...(['baukasten', 'minimierer', 'ueberliste'].includes(a.modul) ? { schluessel: a.id.slice(a.modul.length + 1) } : {}), ...(a.modul === 'mealy' ? { schluessel: a.id.slice('mealy:'.length), art: a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd' } : {}) }));
+      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.art ? { art: a.art } : {}), ...(['baukasten', 'minimierer', 'ueberliste', 'parallelwelten'].includes(a.modul) ? { schluessel: a.id.slice(a.modul.length + 1) } : {}), ...(a.modul === 'mealy' ? { schluessel: a.id.slice('mealy:'.length), art: a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd' } : {}) }));
   }
 
   return { abrufen, pruefen, tipp, aufdecken, lernstand, katalog, punkteFuer };

@@ -12,7 +12,7 @@ import { pda, runPDA, searchFrom, initialConfig, matchesConfigSequence, isDeterm
 import * as MK from '../js/engine/markierung.js';
 import { MINIMIERER_AUFGABEN, MINIMIERER_BEDEUTUNG } from '../../inhalte/minimierer.js';
 import { MEALY_AUFGABEN } from '../../inhalte/mealy.js';
-import { PARALLELWELTEN } from '../js/data/parallelwelten.js';
+import { PARALLELWELTEN } from '../../inhalte/parallelwelten.js';
 import { KELLER_AUTOMATEN } from '../js/data/keller.js';
 import { BADGES } from '../js/data/badges.js';
 

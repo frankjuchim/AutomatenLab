@@ -103,3 +103,19 @@ DEMO.push({
     ],
   },
 });
+
+// Parallelwelten-Demo: ein eigener NEA mit ε-Übergängen (ODER-Baustein), für Rätsel und Teilmengenkonstruktion
+const ODER = {
+  id: 'demo-oder', titel: 'Beginnt mit 1 oder endet auf 0',
+  kontext: 'Zwei ε-Übergänge teilen die Figur gleich am Anfang: Eine prüft „beginnt mit 1“ (S1, S2), die andere „endet auf 0“ (S3, S4).',
+  automat: { alphabet: ['0', '1'], start: 'S0', accepting: ['S2', 'S4'],
+    delta: { S0: { ε: ['S1', 'S3'] }, S1: { 1: 'S2' }, S2: { '0, 1': 'S2' }, S3: { '0, 1': 'S3', 0: 'S4' }, S4: {} } },
+  beispiele: { ja: ['1', '10', '0', '110', '0010'], nein: ['ε', '01', '011', '0111'] },
+  pruefe: (w) => w[0] === '1' || w.at(-1) === '0',
+  raetsel: ['ε', '1', '0', '10', '01'],
+  teilmengen: true,
+};
+DEMO.push(
+  { modul: 'parallelwelten', art: 'raetsel', id: 'demo:parallelwelten:raetsel', titel: 'Demo: Beginnt mit 1 oder endet auf 0 – Wo stehen die Figuren?', daten: ODER },
+  { modul: 'parallelwelten', art: 'teilmengen', id: 'demo:parallelwelten', titel: 'Demo: Beginnt mit 1 oder endet auf 0 – Teilmengenkonstruktion', daten: ODER },
+);

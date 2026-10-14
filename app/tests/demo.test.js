@@ -4,12 +4,13 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile } from '../js/engine/pruefer.js';
+import { nfa, runNFA, subsetConstruction } from '../js/engine/nfa.js';
 import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
-  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'quiz', 'ueberliste']);
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'ueberliste']);
   assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
   assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
@@ -84,6 +85,20 @@ test('Demo-Überliste: Automat zählt bis ±2 richtig, irrt danach; Beispiel aus
   assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: w.join('') }).ok, true);
   assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: '+-' }).ok, false);
   assert.equal(pruefeUeberliste(x.automat, x.pruefe, { wort: '+++---' }).ok, true, 'Tipp 3 stimmt');
+});
+
+test('Demo-Parallelwelten: NEA = Prädikat, Rätsel und Teilmengen wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.id === 'demo:parallelwelten').daten;
+  const N = nfa(x.automat);
+  for (const w of enumerateWords(N.alphabet, 8)) assert.equal(runNFA(N, w).accepted, x.pruefe(w), w.join(''));
+  for (const w of x.beispiele.ja) assert.equal(runNFA(N, w === 'ε' ? '' : w).accepted, true, w);
+  for (const w of x.beispiele.nein) assert.equal(runNFA(N, w === 'ε' ? '' : w).accepted, false, w);
+  let stand = null; let r;
+  x.raetsel.forEach((w, i) => { r = pruefeNeaRaetsel(x.automat, x.raetsel, stand, { wort: i, zustaende: runNFA(N, w === 'ε' ? '' : w).sets.at(-1) }); stand = r.stand; });
+  assert.equal(r.fertig, true); assert.equal(r.anteil, 1);
+  let st = null;
+  for (const z of subsetConstruction(N).table) { r = pruefeTeilmengenZeile(x.automat, st, { menge: z.set, ziele: z.targets }); st = r.stand; }
+  assert.equal(r.ok, true);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

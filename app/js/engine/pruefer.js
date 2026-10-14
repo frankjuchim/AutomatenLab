@@ -5,6 +5,7 @@ import { dfa, runDFA, normalizeDFA, equivalent, minimizeDFA } from './dfa.js';
 import * as MK from './markierung.js';
 import { mealy, runMealy, mealyEquivalent } from './mealy.js';
 import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
+import { nfa, runNFA, epsilonClosure, subsetConstruction } from './nfa.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -244,4 +245,66 @@ export function ueberlisteBeispiel(automat, pruefe, praefix, fortsetzung) {
     }
   }
   return null;
+}
+
+/* ───────────── Parallelwelten (NEA) ───────────── */
+
+/** Zustandsmenge aus der Antwort lesen: nur Zustände des NEA, in Zustandsreihenfolge. */
+function leseMenge(N, liste) {
+  if (!Array.isArray(liste) || liste.some((x) => typeof x !== 'string' || !N.states.includes(x))) throw ungueltig400('Unbekannter Zustand.');
+  return N.states.filter((x) => liste.includes(x));
+}
+const gleicheMenge = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/**
+ * „Wo stehen die Figuren?“: Menge aktiver Zustände nach Wort Nr. i. Gewertet wird der erste Versuch je Wort; nach dem
+ * zweiten Versuch werden fehlende Zustände genannt, nach dem dritten die Lösung. stand = { antworten, versuche }.
+ */
+export function pruefeNeaRaetsel(automat, worte, stand0, antwort) {
+  const i = Number.isInteger(antwort?.wort) ? antwort.wort : -1;
+  if (typeof worte[i] !== 'string') throw ungueltig400('Dieses Rätsel gibt es nicht.');
+  const N = nfa(automat);
+  const mine = leseMenge(N, antwort.zustaende);
+  const soll = runNFA(N, worte[i] === 'ε' ? '' : worte[i]).sets.at(-1);
+  const richtig = gleicheMenge(mine, soll);
+  const stand = { antworten: { ...(stand0?.antworten ?? {}) }, versuche: { ...(stand0?.versuche ?? {}) }, erledigt: { ...(stand0?.erledigt ?? {}) } };
+  const k = String(i);
+  if (!(k in stand.antworten)) stand.antworten[k] = richtig ? 1 : 0;
+  stand.versuche[k] = (stand.versuche[k] ?? 0) + 1;
+  const v = stand.versuche[k];
+  if (richtig || v >= 3) stand.erledigt[k] = true;
+  const fertig = worte.every((_, j) => stand.erledigt[j]);
+  const summe = Object.values(stand.antworten).reduce((a, b) => a + b, 0);
+  const fehlend = soll.filter((x) => !mine.includes(x));
+  return { richtig, fertig, anteil: summe / worte.length, stand,
+    rueckmeldung: { wort: i, richtig, versuche: v, zuViel: mine.filter((x) => !soll.includes(x)), fehlendAnzahl: fehlend.length,
+      ...(v >= 2 && !richtig ? { fehlend } : {}), ...(richtig || v >= 3 ? { loesung: soll, akzeptiert: soll.some((x) => N.accepting.includes(x)) } : {}),
+      fertig, ersterVersuch: summe, von: worte.length } };
+}
+
+/**
+ * Teilmengenkonstruktion Zeile für Zeile: antwort = { menge: [...], ziele: { a: [...] } } – eine Zeile der Tabelle.
+ * stand = { fertig: ["S0,S1", …] } (richtig ausgefüllte Zeilen). Falsche Zeile = Fehlversuch.
+ */
+export function pruefeTeilmengenZeile(automat, stand0, antwort) {
+  const N = nfa(automat);
+  const { table } = subsetConstruction(N);
+  const menge = leseMenge(N, antwort?.menge);
+  const zeile = table.find((r) => gleicheMenge(r.set, menge));
+  if (!zeile) throw ungueltig400('Diese Zustandsmenge kommt in der Teilmengenkonstruktion nicht vor.');
+  const falsch = [];
+  for (const a of N.alphabet) if (!gleicheMenge(leseMenge(N, antwort.ziele?.[a] ?? []), zeile.targets[a])) falsch.push(a);
+  const stand = { fertig: [...new Set(stand0?.fertig ?? [])] };
+  const key = menge.join(',');
+  if (!falsch.length && !stand.fertig.includes(key)) stand.fertig.push(key);
+  const alle = table.every((r) => stand.fertig.includes(r.set.join(',')));
+  return { ok: !falsch.length && alle, fertig: !falsch.length && alle, zaehltFehler: falsch.length > 0, stand,
+    rueckmeldung: { richtig: !falsch.length, falsch, ...(falsch.length ? { gelesen: Object.fromEntries(falsch.map((a) => [a, [...new Set(menge.flatMap((x) => N.delta[x]?.[a] ?? []))]])) } : {}), erledigt: stand.fertig.length, von: table.length, fertig: alle } };
+}
+
+/** Teilmengenkonstruktion: Lösungsteil – alle Zeilen und der DEA. */
+export function teilmengenLoesung(automat) {
+  const N = nfa(automat);
+  const { table, dfa: D } = subsetConstruction(N);
+  return { zeilen: table.map((r) => ({ menge: r.set, ziele: r.targets, endzustand: r.accepting })), dea: D, start: epsilonClosure(N, N.starts) };
 }

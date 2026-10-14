@@ -11,7 +11,7 @@ import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
 import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel } from '../engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung } from '../engine/pruefer.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -81,6 +81,9 @@ function vorbereiten(d) {
       const beispiele = x.beispiele.filter(([ein]) => !pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug).slice(0, 3);
       oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele, worte: x.vorhersage };
     }
+  } else if (d.modul === 'parallelwelten') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, worte: x.raetsel, teilmengen: !!x.teilmengen };
   } else if (d.modul === 'ueberliste') {
     const x = d.daten;
     oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, sprache: x.sprache, automat: x.automat, praefix: x.praefix, fortsetzung: x.fortsetzung, tippsAnzahl: x.tipps.length };
@@ -129,7 +132,10 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'ueberliste' ? { beispiel: ueberlisteBeispiel(s.d.daten.automat, s.d.daten.pruefe, s.d.daten.praefix, s.d.daten.fortsetzung) }
+  const loesung = (s) => (s.d.modul === 'parallelwelten' ? (s.d.art === 'raetsel'
+    ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.raetsel.length } }
+    : teilmengenLoesung(s.d.daten.automat))
+    : s.d.modul === 'ueberliste' ? { beispiel: ueberlisteBeispiel(s.d.daten.automat, s.d.daten.pruefe, s.d.daten.praefix, s.d.daten.fortsetzung) }
     : s.d.modul === 'mealy' ? (s.d.art === 'vorhersage'
     ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.vorhersage.length } }
     : mealyLoesung(s.d.daten.automat, s.d.daten.fehler))
@@ -157,6 +163,13 @@ export function demoQuelle() {
         const j = s.d.daten.optionen.findIndex((_, k) => s.idVon(0, k) === antwort?.wahl);
         if (j < 0) throw Object.assign(new Error('Bitte wähle eine Beschreibung.'), { status: 400 });
         erg = pruefeDetektiv(s.d.daten, j);
+      } else if (s.d.modul === 'parallelwelten' && s.d.art === 'raetsel') {
+        const r = pruefeNeaRaetsel(s.d.daten.automat, s.d.daten.raetsel, s.stand, antwort);
+        s.stand = r.stand;
+        erg = { ok: r.richtig, fertig: !s.geloest && r.fertig, zaehltFehler: false, rueckmeldung: r.rueckmeldung };
+      } else if (s.d.modul === 'parallelwelten') {
+        erg = pruefeTeilmengenZeile(s.d.daten.automat, s.stand, antwort);
+        s.stand = erg.stand;
       } else if (s.d.modul === 'ueberliste') {
         erg = pruefeUeberliste(s.d.daten.automat, s.d.daten.pruefe, antwort);
       } else if (s.d.modul === 'minimierer') {
