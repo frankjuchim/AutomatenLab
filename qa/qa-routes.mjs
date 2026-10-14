@@ -42,6 +42,8 @@ const nea = idsIn('| `#/parallelwelten?aufgabe=1`').filter((x) => !/^\d/.test(x)
 range(6).forEach((n) => { add(`#/parallelwelten?aufgabe=${n}`); add(`#/parallelwelten?aufgabe=${n}&modus=sim`); add(`#/parallelwelten?aufgabe=${n}&modus=spiel`); if (n !== 4) add(`#/parallelwelten?aufgabe=${n}&modus=teilmengen`); });
 nea.forEach((id) => add(`#/parallelwelten?automat=${id}`));
 add('#/parallelwelten?aufgabe=1&modus=sim&wort=XLOLX');
+// Kursseite des Lehrkraft-Bereichs: nur angemeldet sinnvoll (die QA-Lehrkraft hat den Kurs k:900)
+if (QA_KEY) ['', '&tab=beitritt', '&tab=auswertung', '&tab=rangliste', '&tab=einstellungen'].forEach((t) => add(`#/lehrkraft?kurs=k%3A900${t}`));
 idsIn('| `#/keller?automat=<id>`').forEach((id) => ['', '&modus=sim', '&modus=tabelle', '&modus=rueckwaerts'].forEach((m) => add(`#/keller?automat=${id}${m}`)));
 add('#/keller?automat=anbn&modus=sim&wort=aabb');
 range(5).forEach((n) => add(`#/ueberliste?stufe=${n}`));
@@ -59,7 +61,7 @@ const GLEICH_UEBERSICHT = new Set(['#/turing?programm=binaer-plus-1', '#/arena?s
 // hier der erwartete Ausgang. /sso/start wird abgefangen, damit kein Aufruf ans Portal hinausgeht.
 const GESCHUETZT = new Set(['#/lehrkraft']);
 const routeTeile = (r) => { const m = /^#\/([a-z]*)\??(.*)$/.exec(r); return { route: m[1], params: new URLSearchParams(m[2]) }; };
-const istGeschuetzt = (r) => GESCHUETZT.has(r) || (QA_GAST && !gastErlaubt(routeTeile(r).route, routeTeile(r).params));
+const istGeschuetzt = (r) => GESCHUETZT.has(r) || routeTeile(r).route === 'lehrkraft' || (QA_GAST && !gastErlaubt(routeTeile(r).route, routeTeile(r).params));
 
 async function anmelden(ctx) {
   if (!QA_KEY) return;

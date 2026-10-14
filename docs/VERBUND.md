@@ -19,7 +19,9 @@ still gemacht, sondern als Textvorschlag für `VERTRAG.md` formuliert (§6 unten
 * **Manifest** `GET /api/plattform` (§7) und **`/healthz`** (§6), geprüft mit `scripts/vertrag_pruefen.js`
   (unverändert aus `frankjuchim/labs`) in den Tests.
 * **Verbund-API** (§6): `POST /api/verbund/loeschen`, `GET /api/verbund/kurse/:kursId/uebersicht`,
-  `POST /api/verbund/kurse/:kursId`.
+  `POST /api/verbund/kurse/:kursId`. Die Kursübersicht liefert seit 1.10.0 echte Kennzahlen: Punkte (Aufgaben +
+  Training), gelöste Aufgaben, Anteil = gelöste Aufgaben des Kursumfangs (Leistungskurs: Level „gA + eA“ und „nur eA“,
+  Grundkurs: nur „gA + eA“; Zusatz-Level nie), je Welt der Durchschnitt dieses Anteils.
 * **Bei AutomatenLab bleibt** (§3): Inhalte, Prüfung und Lernstand (auf dem Server, §6 unten), Kurs-Einstellungen
   (Freischaltung Pflicht/Vertiefung/Bonus, Aufträge), Lehrkraft-Auswertung (Lernstand-Matrix, CSV), Gastmodus,
   Themenseite, ergänzende Datenschutzhinweise.
