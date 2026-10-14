@@ -166,7 +166,7 @@ function createLernen(ctx, { aufgaben, training = null }) {
   function katalog(modul) {
     return aufgaben.liste
       .filter((a) => !modul || a.modul === modul)
-      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.art ? { art: a.art } : {}), ...(['baukasten', 'minimierer', 'ueberliste', 'parallelwelten', 'keller'].includes(a.modul) ? { schluessel: a.id.slice(a.modul.length + 1) } : {}), ...(a.modul === 'mealy' ? { schluessel: a.id.slice('mealy:'.length), art: a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd' } : {}) }));
+      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.art ? { art: a.art } : {}), ...(['baukasten', 'minimierer', 'ueberliste', 'parallelwelten', 'keller', 'rallye'].includes(a.modul) ? { schluessel: a.id.slice(a.modul.length + 1) } : {}), ...(a.modul === 'mealy' ? { schluessel: a.id.slice('mealy:'.length), art: a.id.endsWith(':vorhersage') ? 'vorhersage' : 'bugjagd' } : {}) }));
   }
 
   return { abrufen, pruefen, tipp, aufdecken, lernstand, katalog, punkteFuer };

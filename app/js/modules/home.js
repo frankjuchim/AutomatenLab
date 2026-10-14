@@ -48,7 +48,7 @@ const STATUS = {
     const r = K.filter((a) => a.art === 'rueckwaerts').map((a) => a.schluessel);
     return `Tabellen ${solvedOf('keller', t)}/${t.length} · Rückwärts ${solvedOf('keller', r)}/${r.length}`;
   },
-  rallye: async () => { const { RALLYE_AUFGABEN: A } = await import('../data/rallye.js'); return geloest(solvedOf('rallye', A.map((x) => x.id)), A.length); },
+  rallye: async () => { const A = await katalog('rallye'); return geloest(solvedOf('rallye', A.map((x) => x.schluessel)), A.length); },
   grammatik: async () => { const { GRAMMATIK_CHALLENGES: C } = await import('../data/grammatik.js'); return geloest(solvedOf('grammatik', C.map((x) => x.id)), C.length); },
   sortierer: async () => { const b = progress.best('sortierer:runde'); return b != null ? `Rekord ${b} richtig einsortiert` : ''; },
   turing: async () => { const { TURING_CHALLENGES: C } = await import('../data/turing.js'); return geloest(solvedOf('turing', C.map((x) => x.id)), C.length); },

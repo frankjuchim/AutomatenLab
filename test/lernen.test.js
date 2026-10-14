@@ -311,6 +311,44 @@ test('Keller-Labor: Tabelle vollständig geprüft (Lauf + Entscheidung), Rückw�
   assert.equal(r.loesung.wort, 'aaabbb');
 });
 
+test('Rallye: Linksableitung auf dem Server nachgespielt, Baum-Modus braucht zwei verschiedene Ableitungen', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // aⁿbⁿ: S → aSb | ab, Ziel aaabbb
+  let r = (await pr('rallye:anbn', { regeln: [['S', 0], ['S', 1]] })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr('rallye:anbn', { regeln: [['S', 0], ['S', 0], ['S', 1]] })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 1, 0));
+  assert.equal(r.loesung.schritte, 3);
+  assert.equal((await pr('rallye:anbn', { regeln: 'x' })).status, 400);
+  // Baum-Modus: zweimal dieselbe Ableitung genügt nicht
+  const k = (await s.get('/api/katalog?modul=rallye')).body.aufgaben;
+  const baum = k.find((a) => a.schluessel === 'term-mehrdeutig');
+  const ba = (await s.get(`/api/aufgaben/${baum.id}`)).body.aufgabe;
+  assert.equal(ba.modus, 'baum');
+  const { parseGrammar, tokenizeWord } = await import('../app/js/engine/grammar.js');
+  const g = parseGrammar(ba.grammatik);
+  const w = tokenizeWord(g, ba.ziel).tokens;
+  // alle Linksableitungen per Tiefensuche (klein)
+  const alle = [];
+  const dfs = (form, regeln) => {
+    if (alle.length >= 2 || regeln.length > 20) return;
+    const pos = form.findIndex((x) => x.t === 'N');
+    if (pos < 0) { if (form.length === w.length && form.every((x, i) => x.v === w[i])) alle.push(regeln); return; }
+    if (form.filter((x) => x.t === 'T').length > w.length) return;
+    (g.byLhs.get(form[pos].v) ?? []).forEach((rg, idx) => dfs([...form.slice(0, pos), ...rg.rhs, ...form.slice(pos + 1)], [...regeln, [form[pos].v, idx]]));
+  };
+  dfs([{ t: 'N', v: g.start }], []);
+  assert.equal(alle.length, 2);
+  assert.equal((await pr(baum.id, { baeume: [alle[0], alle[0]] })).body.rueckmeldung.richtig, false);
+  r = (await pr(baum.id, { baeume: alle })).body;
+  assert.equal(r.geloest, true);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'rallye-mehrdeutig'));
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

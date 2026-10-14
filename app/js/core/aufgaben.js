@@ -11,7 +11,7 @@ import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
 import { erzeugeArenaRunde, werteArenaRunde, erzeugeUnterscheideRunde, werteUnterscheideRunde } from '../engine/training.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung } from '../engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung } from '../engine/pruefer.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -81,6 +81,9 @@ function vorbereiten(d) {
       const beispiele = x.beispiele.filter(([ein]) => !pruefeMealyTest(x.automat, fehlerhaft, { test: ein, urteil: 'stimmt' }).bug).slice(0, 3);
       oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, fehlerText: x.fehlerText, automat: fehlerhaft, bedeutung: x.bedeutung ?? null, beispiele, worte: x.vorhersage };
     }
+  } else if (d.modul === 'rallye') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, grammatik: x.grammatik, ziel: x.ziel, sep: x.sep ?? null, modus: x.modus ?? 'ableiten' };
   } else if (d.modul === 'keller') {
     const x = d.daten;
     oeffentlich = d.art === 'rueckwaerts'
@@ -137,7 +140,8 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'keller' ? (s.d.art === 'tabelle' ? kellerTabellenLoesung(s.d.daten.automat, s.d.daten.tabelle) : kellerRueckwaertsLoesung(s.d.daten.automat, s.d.daten.rueckwaerts[0]))
+  const loesung = (s) => (s.d.modul === 'rallye' ? rallyeLoesung(s.d.daten.grammatik, s.d.daten.ziel, s.d.daten.sep ?? '')
+    : s.d.modul === 'keller' ? (s.d.art === 'tabelle' ? kellerTabellenLoesung(s.d.daten.automat, s.d.daten.tabelle) : kellerRueckwaertsLoesung(s.d.daten.automat, s.d.daten.rueckwaerts[0]))
     : s.d.modul === 'parallelwelten' ? (s.d.art === 'raetsel'
     ? { ergebnis: { ersterVersuch: Object.values(s.stand?.antworten ?? {}).reduce((a, b) => a + b, 0), von: s.d.daten.raetsel.length } }
     : teilmengenLoesung(s.d.daten.automat))
@@ -169,6 +173,8 @@ export function demoQuelle() {
         const j = s.d.daten.optionen.findIndex((_, k) => s.idVon(0, k) === antwort?.wahl);
         if (j < 0) throw Object.assign(new Error('Bitte wähle eine Beschreibung.'), { status: 400 });
         erg = pruefeDetektiv(s.d.daten, j);
+      } else if (s.d.modul === 'rallye') {
+        erg = pruefeRallye(s.d.daten.grammatik, s.d.daten.ziel, s.d.daten.modus ?? 'ableiten', antwort);
       } else if (s.d.modul === 'keller' && s.d.art === 'tabelle') {
         erg = pruefeKellerTabelle(s.d.daten.automat, s.d.daten.tabelle, s.stand, antwort);
         s.stand = erg.stand;

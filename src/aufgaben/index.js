@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -54,10 +54,11 @@ async function ladeAufgaben(secret) {
     lade(path.join(ENGINE, 'training.js')),
     lade(path.join(INHALTE, 'ueberliste.js')),
     lade(path.join(INHALTE, 'parallelwelten.js')),
-    lade(path.join(INHALTE, 'keller.js'))
+    lade(path.join(INHALTE, 'keller.js')),
+    lade(path.join(INHALTE, 'rallye.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -359,6 +360,28 @@ async function ladeAufgaben(secret) {
   kellerD.KELLER_AUTOMATEN.forEach((x, i) => {
     liste.push({ id: `keller:${x.id}:tabelle`, typ: KELLER_TABELLE, modul: 'keller', nr: i + 1, titel: `${x.titel}: Tabellen-Trainer`, art: 'tabelle', stufe: 1, punkte: PUNKTE_STUFE[1], levels: [9, 10], daten: x, tipps: [] });
     liste.push({ id: `keller:${x.id}:rueckwaerts`, typ: KELLER_RUECKWAERTS, modul: 'keller', nr: i + 1, titel: `${x.titel}: Rückwärts`, art: 'rueckwaerts', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [9, 10], daten: x, folge: kellerFolge(x.automat, x.rueckwaerts[0]), tipps: [] });
+  });
+
+  /* ---------- Ableitungs-Rallye: Linksableitung bis zum Zielwort (Baum-Modus: zwei verschiedene Ableitungen) ---------- */
+  const RALLYE = {
+    modul: 'rallye',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, kontext: x.kontext, grammatik: x.grammatik, ziel: x.ziel, sep: x.sep ?? null, modus: x.modus ?? 'ableiten' };
+    },
+    /** antwort: { regeln: [[lhs, index], …] } bzw. { baeume: [regeln1, regeln2] } */
+    pruefe(a, antwort) {
+      return pruefeRallye(a.daten.grammatik, a.daten.ziel, a.daten.modus ?? 'ableiten', antwort);
+    },
+    loesungsteil(a) {
+      return rallyeLoesung(a.daten.grammatik, a.daten.ziel, a.daten.sep ?? '');
+    },
+    abzeichen({ a, alleGeloest }) {
+      return ['rallye-erste', ...((a.daten.modus === 'baum') ? ['rallye-mehrdeutig'] : []), ...(alleGeloest ? ['rallye-alle'] : [])];
+    }
+  };
+  rallyeD.RALLYE_AUFGABEN.forEach((x, i) => {
+    liste.push({ id: `rallye:${x.id}`, typ: RALLYE, modul: 'rallye', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [11, 13], daten: x, tipps: [] });
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));

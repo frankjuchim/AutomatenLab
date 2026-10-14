@@ -7,6 +7,7 @@ import { mealy, runMealy, mealyEquivalent } from './mealy.js';
 import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
 import { nfa, runNFA, epsilonClosure, subsetConstruction } from './nfa.js';
 import { pda, runPDA, successors, initialConfig, runToTable, matchesConfigSequence } from './pda.js';
+import { parseGrammar, derive, symbolsToString, tokenizeWord } from './grammar.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -382,4 +383,45 @@ export function pruefeKellerRueckwaerts(automat, folge, antwort) {
 export function kellerRueckwaertsLoesung(automat, wort) {
   const r = runPDA(pda(automat), wort);
   return { wort, zeilen: r.table };
+}
+
+/* ───────────── Ableitungs-Rallye ───────────── */
+
+/** Linksableitung nachspielen: regeln = [[linke Seite, Index der Alternative], …] → Satzform am Ende (oder Fehler). */
+function linksableitung(g, regeln) {
+  if (!Array.isArray(regeln) || regeln.length > 400) throw ungueltig400('Die Ableitung fehlt.');
+  let form = [{ t: 'N', v: g.start }];
+  for (let k = 0; k < regeln.length; k++) {
+    const [lhs, idx] = Array.isArray(regeln[k]) ? regeln[k] : [];
+    const pos = form.findIndex((x) => x.t === 'N');
+    const r = g.byLhs.get(lhs)?.[idx];
+    if (pos < 0 || !r || form[pos].v !== lhs) return { fehler: k };
+    form = [...form.slice(0, pos), ...r.rhs, ...form.slice(pos + 1)];
+  }
+  return { form };
+}
+
+/**
+ * Rallye prüfen. Modus „ableiten“: antwort = { regeln } – Linksableitung bis zum Zielwort.
+ * Modus „baum“: antwort = { baeume: [regeln1, regeln2] } – zwei verschiedene Linksableitungen (= Bäume) des Zielworts.
+ */
+export function pruefeRallye(grammatik, ziel, modus, antwort) {
+  const g = parseGrammar(grammatik);
+  const w = tokenizeWord(g, ziel).tokens;
+  const trifft = (regeln) => { const r = linksableitung(g, regeln); return !r.fehler && r.form.length === w.length && r.form.every((x, k) => x.t === 'T' && x.v === w[k]); };
+  if (modus === 'baum') {
+    const b = antwort?.baeume;
+    if (!Array.isArray(b) || b.length !== 2) throw ungueltig400('Es fehlen die zwei Ableitungen.');
+    const ok = trifft(b[0]) && trifft(b[1]) && JSON.stringify(b[0]) !== JSON.stringify(b[1]);
+    return { ok, rueckmeldung: { richtig: ok } };
+  }
+  const ok = trifft(antwort?.regeln);
+  return { ok, rueckmeldung: { richtig: ok, schritte: Array.isArray(antwort?.regeln) ? antwort.regeln.length : 0 } };
+}
+
+/** Rallye: Lösungsteil – eine kürzeste Ableitung als Folge von Satzformen. */
+export function rallyeLoesung(grammatik, ziel, sep = '') {
+  const g = parseGrammar(grammatik);
+  const r = derive(g, ziel);
+  return { ableitung: r.derivation ? r.derivation.map((d) => symbolsToString(d.form, sep)) : null, schritte: r.derivation ? r.derivation.length - 1 : null };
 }

@@ -4,14 +4,14 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, kellerFolge, pruefeKellerTabelle, pruefeKellerRueckwaerts, kellerTabellenLoesung } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, kellerFolge, pruefeKellerTabelle, pruefeKellerRueckwaerts, kellerTabellenLoesung, pruefeRallye, rallyeLoesung } from '../js/engine/pruefer.js';
 import { pda, runPDA } from '../js/engine/pda.js';
 import { nfa, runNFA, subsetConstruction } from '../js/engine/nfa.js';
 import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
-  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'ueberliste']);
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'rallye', 'ueberliste']);
   assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
   assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
@@ -112,6 +112,13 @@ test('Demo-Keller: Automat = Prädikat, Tabellen und Rückwärts wie auf dem Ser
   const folge = kellerFolge(x.automat, x.rueckwaerts[0]);
   assert.equal(pruefeKellerRueckwaerts(x.automat, folge, { wort: x.rueckwaerts[0] }).ok, true);
   assert.equal(pruefeKellerRueckwaerts(x.automat, folge, { wort: 'acb' }).ok, false);
+});
+
+test('Demo-Rallye: Zielwort ableitbar, Prüfung wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.modul === 'rallye').daten;
+  assert.equal(rallyeLoesung(x.grammatik, x.ziel).schritte, 4);
+  assert.equal(pruefeRallye(x.grammatik, x.ziel, 'ableiten', { regeln: [['S', 0], ['A', 0], ['A', 1], ['A', 2]] }).ok, true);
+  assert.equal(pruefeRallye(x.grammatik, x.ziel, 'ableiten', { regeln: [['S', 1]] }).ok, false);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

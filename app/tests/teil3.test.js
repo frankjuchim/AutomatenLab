@@ -8,7 +8,7 @@ import { enumerateWords } from '../js/engine/tokenize.js';
 import { parseGrammar, derive, derivationToTree, languageUpTo, isRightRegular, tokenizeWord } from '../js/engine/grammar.js';
 import { tm, runTM, countOnes, tmToGraph } from '../js/engine/turing.js';
 import { UEBERLISTE_STUFEN, UEBERLISTE_BONUS, bauAutomat } from '../../inhalte/ueberliste.js';
-import { RALLYE_AUFGABEN } from '../js/data/rallye.js';
+import { RALLYE_AUFGABEN } from '../../inhalte/rallye.js';
 import { GRAMMATIK_CHALLENGES } from '../js/data/grammatik.js';
 import { SORTIERER_KARTEN, FAECHER } from '../js/data/sortierer.js';
 import { TURING_PROGRAMME, TURING_CHALLENGES } from '../js/data/turing.js';

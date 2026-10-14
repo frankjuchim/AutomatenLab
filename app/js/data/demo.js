@@ -135,3 +135,13 @@ DEMO.push(
   { modul: 'keller', art: 'tabelle', id: 'demo:keller:tabelle', titel: 'Demo: aⁿ c bⁿ – Tabellen-Trainer', daten: ACB },
   { modul: 'keller', art: 'rueckwaerts', id: 'demo:keller:rueckwaerts', titel: 'Demo: aⁿ c bⁿ – Rückwärts', daten: ACB },
 );
+
+// Rallye-Demo: eine eigene kleine Grammatik (Binärzahlen ohne führende Null)
+DEMO.push({
+  modul: 'rallye', id: 'demo:rallye', titel: 'Demo: Binärzahlen ohne führende Null',
+  daten: {
+    id: 'demo-binaer', stufe: 1, titel: 'Binärzahlen ohne führende Null',
+    kontext: 'Die Grammatik erzeugt alle Binärzahlen ohne führende Null: 0 allein oder eine 1 mit beliebigen weiteren Ziffern.',
+    grammatik: 'S → 1A | 0\nA → 0A | 1A | ε', ziel: '101',
+  },
+});

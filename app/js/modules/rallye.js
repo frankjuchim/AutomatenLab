@@ -1,40 +1,54 @@
 // Ableitungs-Rallye (#/rallye): Regeln auf das linkeste Nichtterminal anwenden, bis das Zielwort dasteht.
 // Ableitungsfolge (S ⇒ …) und Ableitungsbaum wachsen live. Sackgassen-Erkennung über die Engine.
 // Modus „Baum“ (Mehrdeutigkeit): zwei verschiedene Ableitungsbäume für dasselbe Wort finden.
-// Deep-Link: #/rallye?aufgabe=n (n = 1 …)
+// Deep-Link: #/rallye?aufgabe=n (n = 1 …), #/rallye?demo=1 (Demo-Aufgabe im Gastmodus)
+// Die fertige Ableitung prüft die Quelle (Server bzw. Demo); Punkte vergibt nur der Server. Sackgassen und die kürzeste
+// Ableitungslänge rechnet die Engine im Browser (Grammatik und Zielwort sind Gegenstand der Aufgabe).
 
 import { h, clear } from '../core/dom.js';
-import { RALLYE_AUFGABEN } from '../data/rallye.js';
 import { parseGrammar, derive, symbolsToString, ruleToString, tokenizeWord } from '../engine/grammar.js';
 import { EPS } from '../engine/tokenize.js';
 import { DerivationTree } from '../components/derivation-tree.js';
 
-const AUFGABEN = RALLYE_AUFGABEN.map((a, i) => {
+/** Aufgabe aus der Quelle für das Spiel vorbereiten (Grammatik parsen, Zielwort zerlegen, kürzeste Ableitung). */
+function vorbereiten(a) {
   const g = parseGrammar(a.grammatik);
   if (!g.ok) throw new Error(`Rallye ${a.id}: ${g.errors.join(' ')}`);
   const tk = tokenizeWord(g, a.ziel);
   if (!tk.ok) throw new Error(`Rallye ${a.id}: Zielwort passt nicht zu T.`);
   const sep = a.sep ?? (g.terminals.some((t) => t.length > 1) ? ' ' : '');
   const best = derive(g, a.ziel);
-  return { ...a, nr: i + 1, g, ziel: tk.tokens, sep, optimal: best.derivation ? best.derivation.length - 1 : null, modus: a.modus ?? 'ableiten' };
-});
+  return { ...a, g, ziel: tk.tokens, sep, optimal: best.derivation ? best.derivation.length - 1 : null, modus: a.modus ?? 'ableiten' };
+}
 
 export default {
   title: 'Ableitungs-Rallye',
   mount(el, ctx) {
-    const n = Number(ctx.params.get('aufgabe'));
-    if (n >= 1 && n <= AUFGABEN.length) return play(AUFGABEN[n - 1]);
-    showList();
-    return null;
+    const q = ctx.quelle; // Server (angemeldet) oder Demo (Gastmodus)
+    let aktiv = true;
+    let aufraeumen = null;
+    let LISTE = [];
+    const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
+    clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    (async () => {
+      LISTE = await q.liste('rallye');
+      if (!aktiv) return;
+      const n = Number(ctx.params.get('aufgabe'));
+      const e = q.demo ? LISTE[0] : LISTE.find((x) => x.nr === n);
+      if (!e) { showList(); return; }
+      const d = await q.aufgabe(e.id);
+      if (aktiv) aufraeumen = play({ ...vorbereiten(d.aufgabe), aufgabeId: e.id, nr: e.nr ?? 0, zustand: d.zustand });
+    })().catch(fehler);
+    return () => { aktiv = false; aufraeumen?.(); };
 
     function showList() {
       ctx.setSubtitle('Wähle Regel für Regel – immer für das linkeste Nichtterminal – bis das Zielwort dasteht.');
       clear(el,
-        h('p', { class: 'lead' }, 'Die Ableitung wird mitgeschrieben (S ⇒ … ⇒ Wort), der Ableitungsbaum wächst mit. Wenige Schritte und wenig Zeit geben Bonuspunkte.'),
-        h('ol', { class: 'challenge-grid' }, AUFGABEN.map((a) => {
-          const solved = ctx.progress.isSolved('rallye', a.id);
-          return h('li', null, h('a', { class: ['challenge-card', solved && 'is-solved', a.modus === 'baum' ? 'stufe-3' : 'stufe-2'], href: ctx.link('rallye', { aufgabe: a.nr }) },
-            h('span', { class: 'case-nr' }, `Aufgabe ${a.nr}${a.modus === 'baum' ? ' · Baum-Modus' : ''}`),
+        h('p', { class: 'lead' }, 'Die Ableitung wird mitgeschrieben (S ⇒ … ⇒ Wort), der Ableitungsbaum wächst mit. Schaffst du es in der kürzesten Ableitung?'),
+        h('ol', { class: 'challenge-grid' }, LISTE.map((a) => {
+          const solved = ctx.progress.isSolved('rallye', a.schluessel);
+          return h('li', null, h('a', { class: ['challenge-card', solved && 'is-solved', `stufe-${a.stufe}`], href: ctx.link('rallye', { aufgabe: a.nr }) },
+            h('span', { class: 'case-nr' }, `Aufgabe ${a.nr}`),
             h('span', { class: 'case-title' }, a.titel),
             h('span', { class: 'case-state' }, solved ? 'gelöst' : `${a.punkte} Punkte`)));
         })));
@@ -42,7 +56,7 @@ export default {
 
     function play(a) {
       const g = a.g;
-      ctx.setSubtitle(`Aufgabe ${a.nr}: ${a.titel}`);
+      ctx.setSubtitle(q.demo ? `Demo: ${a.titel} (ohne Punkte)` : `Aufgabe ${a.nr}: ${a.titel}`);
       const zielText = a.ziel.length ? a.ziel.join(a.sep) : EPS;
       const st = { root: null, history: [], steps: 0, t0: performance.now(), done: false, trees: [], timer: null };
       const baum = a.modus === 'baum';
@@ -134,12 +148,13 @@ export default {
         else clear(notice);
       }
 
-      function finish() {
+      async function finish() {
         const seq = st.history.map((nd) => ruleToString(nd.rule)).join(' ; ');
+        const regeln = st.history.map((nd) => [nd.rule.lhs, g.byLhs.get(nd.rule.lhs).indexOf(nd.rule)]);
         const secs = Math.round((performance.now() - st.t0) / 1000);
         if (baum) {
           if (st.trees.length === 0) {
-            st.trees.push(seq);
+            st.trees.push(seq); st.regeln = regeln;
             clear(savedBox, h('h3', null, 'Baum 1 gespeichert'), h('div', { class: 'tree-mini' }, tree.svgClone()),
               h('p', { class: 'muted' }, 'Jetzt dasselbe Wort noch einmal ableiten – aber mit einem anderen Baum. Wähle an einer Stelle eine andere Regel.'));
             clear(notice, h('div', { class: 'notice notice-success' }, h('p', null, h('strong', null, 'Ziel erreicht – Baum 1 steht. '), 'Nochmal von vorn: Finde einen zweiten, verschiedenen Ableitungsbaum.'),
@@ -153,23 +168,21 @@ export default {
           }
           savedBox.append(h('h3', null, 'Baum 2'), h('div', { class: 'tree-mini' }, tree.svgClone()));
         }
+        let res;
+        try { res = await q.pruefen(a.aufgabeId, baum ? { baeume: [st.regeln, regeln] } : { regeln }); } catch (e) { clear(notice, h('p', { class: 'notice notice-error' }, e.message)); return; }
+        if (!res.rueckmeldung.richtig) { clear(notice, h('p', { class: 'notice notice-error' }, 'Die Ableitung wurde nicht anerkannt. Prüfe die Schritte und versuche es noch einmal.')); return; }
         st.done = true;
         clearInterval(st.timer);
         const perfect = !baum && a.optimal != null && st.steps <= a.optimal;
-        const pts = a.punkte + (perfect ? 5 : 0);
-        const { first } = ctx.progress.solve('rallye', a.id, pts);
-        ctx.progress.award('rallye-erste');
-        if (baum) ctx.progress.award('rallye-mehrdeutig');
-        if (AUFGABEN.every((x) => ctx.progress.isSolved('rallye', x.id))) ctx.progress.award('rallye-alle');
-        if (first) ctx.toast(`+${pts} Punkte`, { type: 'success' });
-        const next = AUFGABEN[a.nr];
+        if (res.punkteErhalten) ctx.toast(`+${res.punkteErhalten} Punkte`, { type: 'success' });
+        const next = q.demo ? null : LISTE.find((x) => x.nr === a.nr + 1);
         clear(notice, h('div', { class: 'notice notice-success' },
           h('p', null, h('strong', null, baum ? 'Mehrdeutigkeit gezeigt! ' : 'Ziel erreicht! '),
-            baum ? `Zwei verschiedene Ableitungsbäume für „${zielText}“ – die Grammatik ist mehrdeutig.` : `${st.steps} Schritte in ${secs} s.${a.optimal != null ? perfect ? ' Das ist die kürzeste Ableitung – Bonus!' : ` Kürzeste Ableitung: ${a.optimal} Schritte.` : ''}`),
+            baum ? `Zwei verschiedene Ableitungsbäume für „${zielText}“ – die Grammatik ist mehrdeutig.` : `${st.steps} Schritte in ${secs} s.${a.optimal != null ? perfect ? ' Das ist die kürzeste Ableitung!' : ` Kürzeste Ableitung: ${a.optimal} Schritte.` : ''}`),
           h('div', { class: 'start-actions' },
             next ? h('a', { class: 'btn btn-primary', href: ctx.link('rallye', { aufgabe: next.nr }) }, `Weiter zu Aufgabe ${next.nr}`) : null,
             h('button', { type: 'button', class: 'btn', onclick: () => { st.done = false; st.trees = []; clear(savedBox); st.timer = setInterval(tick, 1000); reset(); } }, 'Nochmal'),
-            h('a', { class: 'btn btn-ghost', href: ctx.link('rallye') }, 'Alle Aufgaben'))));
+            q.demo ? h('a', { class: 'btn btn-ghost', href: ctx.link('gast') }, 'Weitere Demo-Aufgaben') : h('a', { class: 'btn btn-ghost', href: ctx.link('rallye') }, 'Alle Aufgaben'))));
         render();
       }
 
@@ -197,10 +210,10 @@ export default {
           h('div', { class: 'rallye-right' },
             h('div', { class: 'panel' }, formEl, derivEl, notice),
             treeBox, savedBox)),
-        h('nav', { class: 'case-nav', 'aria-label': 'Aufgaben' },
+        q.demo ? h('p', { class: 'notice gast-hinweis' }, h('strong', null, 'Demo. '), 'Eine eigene Grammatik zum Ausprobieren – ohne Punkte. Die 13 Rallye-Aufgaben gibt es nach der Anmeldung.') : h('nav', { class: 'case-nav', 'aria-label': 'Aufgaben' },
           a.nr > 1 ? h('a', { class: 'btn btn-ghost', href: ctx.link('rallye', { aufgabe: a.nr - 1 }) }, `‹ Aufgabe ${a.nr - 1}`) : h('span'),
           h('a', { class: 'btn btn-ghost', href: ctx.link('rallye') }, 'Alle Aufgaben'),
-          a.nr < AUFGABEN.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('rallye', { aufgabe: a.nr + 1 }) }, `Aufgabe ${a.nr + 1} ›`) : h('span')));
+          a.nr < LISTE.length ? h('a', { class: 'btn btn-ghost', href: ctx.link('rallye', { aufgabe: a.nr + 1 }) }, `Aufgabe ${a.nr + 1} ›`) : h('span')));
       reset();
       return () => clearInterval(st.timer);
     }

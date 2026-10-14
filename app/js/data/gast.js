@@ -1,7 +1,7 @@
 // Gastmodus (#/gast, Vertrag InfoLabs §4/§9; Entscheidung V2): Ohne Anmeldung gibt es je Modul genau EINE Aufgabe
 // zum Ausprobieren. Alle anderen Routen führen ohne Sitzung zur Anmeldung beim Portal (und danach genau dorthin).
 //
-// • Module mit Prüfung auf dem Server (quiz, detektiv, baukasten, minimierer, mealy, ueberliste, parallelwelten, keller): eigene Demo-Aufgaben aus data/demo.js (?demo=1).
+// • Module mit Prüfung auf dem Server (quiz, detektiv, baukasten, minimierer, mealy, ueberliste, parallelwelten, keller, rallye): eigene Demo-Aufgaben aus data/demo.js (?demo=1).
 // • Module, die noch im Browser prüfen: vorerst die erste Aufgabe des Moduls. Sobald ein Modul auf den Server
 //   umzieht (Roadmap Phase 4), bekommt es hier eine eigene Demo-Aufgabe.
 //
@@ -15,7 +15,7 @@ export const GAST = [
   { route: 'parallelwelten', titel: 'Parallelwelten', text: 'Ein NEA mit ε-Übergängen: simulieren, Figuren setzen, Teilmengen bilden.', params: { demo: '1' }, erlaubt: ['modus', 'wort'] },
   { route: 'keller', titel: 'Keller-Labor', text: 'Ein Kellerautomat für aⁿcbⁿ: simulieren, Tabelle führen, rückwärts denken.', params: { demo: '1' }, erlaubt: ['modus', 'wort'] },
   { route: 'ueberliste', titel: 'Überliste den Automaten', text: 'Der Kontostand: Finde das Wort, bei dem der Automat irrt.', params: { demo: '1' } },
-  { route: 'rallye', titel: 'Ableitungs-Rallye', text: 'Glal I – die erste Ableitung.', params: { aufgabe: '1' } },
+  { route: 'rallye', titel: 'Ableitungs-Rallye', text: 'Eine Binärzahl Schritt für Schritt ableiten.', params: { demo: '1' } },
   { route: 'grammatik', titel: 'Grammatik-Tester', text: 'Challenge 1: aⁿbⁿ.', params: { challenge: '1' } },
   { route: 'sortierer', titel: 'Chomsky-Sortierer', text: 'Eine Runde mit zehn Karten.', params: { runde: '1' } },
   { route: 'turing', titel: 'Turing-Labor', text: 'Die Turingmaschine „Binärzahl + 1“.', params: {} },

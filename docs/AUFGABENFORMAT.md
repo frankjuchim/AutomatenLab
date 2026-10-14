@@ -37,6 +37,7 @@ findet er einen, schlägt die Prüfung fehl.
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
 | Mealy-Maschine | 7 × „Was kommt raus?“ + 7 Bug-Jagden | Vorhersage 10 (Anteil im ersten Versuch); Bug-Jagd Basis/Standard/Profi → 10/20/30 | 10 je Wort, 10 gefunden, 30 repariert |
+| Ableitungs-Rallye | 13 Aufgaben | nach Schwierigkeit 10/20/30 (Baum-Modus 30) | 10–25 (+5 für die kürzeste Ableitung) |
 | Keller-Labor | 10 × Tabellen-Trainer + 10 × Rückwärts | Tabellen 10 (alle Wörter eines Automaten), Rückwärts 20 | 20 je Tabelle bzw. Rückwärts-Wort |
 | Parallelwelten | 6 × Rätsel + 5 Teilmengenkonstruktionen | Rätsel 10 × Anteil im ersten Versuch; Teilmengen 20 | 10 je Rätselwort, Teilmengen 30 |
 | Überliste den Automaten | 5 Stufen + Bonus | Stufe 1: 10, Stufen 2–4: 20, Stufe 5: 30; Bonus 20 × Anteil | 30–50 je Stufe (−5 je Tipp), Bonus 20 |
@@ -99,6 +100,14 @@ findet er einen, schlägt die Prüfung fehl.
   erlaubt und kostet nichts; gelöst, sobald der Automat irrt. Tipps einzeln abrufbar (kosten Punkte nach §2).
   Lösungsteil: ein Beispielwort der Form Präfixⁿ Fortsetzungᵐ.
 * Bonus `ueberliste:bonus`: vier Fragen wie beim Quiz (erster Durchgang zählt, kein „Lösung zeigen“).
+
+### Ableitungs-Rallye (`rallye`)
+* Öffentlich: Grammatik (Abi-Notation), Zielwort, Modus. Die App rechnet Sackgassen und die kürzeste Ableitungslänge
+  mit der Engine (Gegenstand der Aufgabe).
+* Antwort `{ regeln: [[linke Seite, Index der Alternative], …] }`; der Server spielt die Linksableitung nach und prüft,
+  dass genau das Zielwort entsteht (falsch = Fehlversuch). Baum-Modus: `{ baeume: [regeln1, regeln2] }` – zwei
+  verschiedene Linksableitungen (= Ableitungsbäume) desselben Worts. Lösungsteil: eine kürzeste Ableitung.
+* Den Bonus für die kürzeste Ableitung gibt es nicht mehr (Standardpunkte nach §9); die App lobt sie weiterhin.
 
 ### Keller-Labor (`keller`)
 * Je Kellerautomat `keller:<schlüssel>:tabelle` (alle Wörter des Tabellen-Trainers) und `keller:<schlüssel>:rueckwaerts`.
