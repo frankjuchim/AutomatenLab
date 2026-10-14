@@ -5,6 +5,7 @@
 //   #/lehrkraft?kurs=<id>&tab=<reiter>   Kursseite mit Reitern 👥 Schüler · 🔗 Beitritt · 📊 Auswertung · 🏆 Rangliste ·
 //                                        ⚙️ Einstellungen (reiter: schueler | beitritt | auswertung | rangliste | einstellungen)
 //   #/lehrkraft?teil=aufgaben            Aufgaben der Welten (nach Level, mit Link ins Modul)
+//   #/lehrkraft?teil=urkunden&kurs=<id>  Urkunden des Kurses zum Drucken (wie Algo Quest)
 // Was das Portal verwaltet (Kurse anlegen/löschen, Kurscode, Schülerkonten), steht hier nur als Hinweis.
 // Ohne Sitzung leitet die Seite still zum Portal (INTEGRATION.md §3.1).
 
@@ -112,6 +113,7 @@ export default {
       }
       try {
         if (teil === 'aufgaben') await aufgabenSeite();
+        else if (teil === 'urkunden' && kursId) await urkundenSeite(kursId);
         else if (kursId) await kursSeite(kursId, ctx.params.get('tab') || 'schueler');
         else await kursListe(konto);
       } catch (e) { if (aktiv) fehlerSeite(e); }
@@ -146,7 +148,8 @@ export default {
       seite(
         h('p', { class: 'lk-krumen' }, h('a', { href: '#/lehrkraft' }, 'Kurse'), ' › ', kurs.name),
         h('div', { class: 'lk-kurskopf' },
-          h('h2', null, kurs.name, ' ', h('span', { class: 'niveau-pille niveau-alle' }, KURSART[kurs.einstellungen.kursart]))),
+          h('h2', null, kurs.name, ' ', h('span', { class: 'niveau-pille niveau-alle' }, KURSART[kurs.einstellungen.kursart])),
+          h('a', { class: 'btn btn-small', href: `#/lehrkraft?${new URLSearchParams({ teil: 'urkunden', kurs: id })}` }, '🏅 Urkunden')),
         h('nav', { class: 'mode-tabs lk-reiter', 'aria-label': 'Kurs' }, REITER.map(([r, text]) =>
           h('a', { href: kurslink(id, r), ...(r === tab ? { 'aria-current': 'page', class: 'is-active' } : {}) }, text))),
         inhalt);
@@ -155,7 +158,7 @@ export default {
         if (tab === 'schueler') zeige(...reiterSchueler(await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/schueler`)));
         else if (tab === 'beitritt') zeige(...reiterBeitritt(kurs));
         else if (tab === 'auswertung') zeige(...reiterAuswertung(id, await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/auswertung`)));
-        else if (tab === 'rangliste') zeige(...reiterRangliste(await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/schueler`)));
+        else if (tab === 'rangliste') zeige(...reiterRangliste(await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/schueler`), kurs));
         else zeige(...reiterEinstellungen(id, kurs));
       } catch (e) {
         if (e.status === 401) { location.replace(anmeldeLink(location.pathname + location.hash)); return; }
@@ -267,11 +270,15 @@ export default {
     }
 
     /* 🏆 Rangliste */
-    function reiterRangliste(liste) {
+    function reiterRangliste(liste, kurs) {
       const sortiert = [...liste].sort((x, y) => x.rang - y.rang || x.name.localeCompare(y.name, 'de'));
+      const e = kurs.einstellungen;
       return [h('div', { class: 'panel lk-karte' },
         h('h3', null, 'Rangliste nach Punkten'),
-        h('p', { class: 'muted klein' }, 'Nur für Sie sichtbar – Schülerinnen und Schüler sehen in AutomatenLab keine Rangliste. Punkte aus Aufgaben und Training.'),
+        h('p', { class: 'muted klein' }, e.scoreboard
+          ? 'Ihre Schülerinnen und Schüler sehen diese Rangliste ebenfalls (Startseite → „🏆 Rangliste“), gesamt oder je Welt. Punkte aus Aufgaben und Training.'
+          : 'Nur für Sie sichtbar. Unter ⚙️ Einstellungen können Sie die Rangliste für Ihre Schülerinnen und Schüler einschalten. Punkte aus Aufgaben und Training.'),
+        e.beamer.aktiv ? h('p', null, h('a', { class: 'btn btn-small', href: `/board/${e.beamer.token}`, target: '_blank', rel: 'noopener' }, '📽️ Beamer-Board öffnen')) : null,
         sortiert.length
           ? tabelle(['Platz', 'Name', 'Punkte', 'Abzeichen', 'gelöst'], sortiert.map((s) => h('tr', null,
             h('td', { class: 'zahl' }, `${s.rang}.`), h('td', null, s.name), h('td', { class: 'zahl' }, String(s.punkte)), h('td', { class: 'zahl' }, String(s.abzeichen)), h('td', { class: 'zahl' }, String(s.geloest)))))
@@ -292,12 +299,30 @@ export default {
       const auftragText = h('textarea', { id: 'lk-auftrag', rows: 3, maxlength: 400, placeholder: 'z. B. „Bis Freitag: Baukasten Stufe 1 und das Exit-Ticket DS03“' }, e0.auftrag?.text ?? '');
       const auftragLevel = WORLDS.flatMap((w) => w.levels).map((n) => h('label', { class: 'check lk-check-klein' },
         h('input', { type: 'checkbox', name: 'auftrag-level', value: String(n), checked: (e0.auftrag?.level ?? []).includes(n) }), ` ${n}`));
+      // Rangliste für Schüler und Beamer-Board (wie Algo Quest; beide standardmäßig aus)
+      const scoreboardBox = h('input', { type: 'checkbox', name: 'scoreboard', checked: !!e0.scoreboard });
+      const beamerBox = h('input', { type: 'checkbox', name: 'beamer', checked: !!e0.beamer?.aktiv });
+      const boardLink = h('p', { class: 'lk-board-link' });
+      const zeigeBoardLink = (b) => clear(boardLink, b?.aktiv && b.token
+        ? [h('span', { class: 'muted klein' }, 'Link für den Beamer (ohne Anmeldung): '), h('a', { href: `/board/${b.token}`, target: '_blank', rel: 'noopener' }, h('code', null, `${location.origin}/board/${b.token}`)), ' ',
+          h('button', { type: 'button', class: 'btn btn-small', onclick: async () => {
+            if (!window.confirm('Neuen Link erzeugen? Der bisherige Link funktioniert danach nicht mehr.')) return;
+            try {
+              const r = await api('PATCH', `/api/lehrer/kurse/${encodeURIComponent(id)}`, { einstellungen: { beamer: { aktiv: true, neu: true } } });
+              kurs.einstellungen = r.einstellungen; zeigeBoardLink(r.einstellungen.beamer);
+              status.textContent = 'Neuer Link erzeugt.';
+            } catch (err) { status.textContent = err.message; }
+          } }, 'Neuen Link erzeugen')]
+        : []);
+      zeigeBoardLink(e0.beamer);
       const form = h('form', { class: 'lk-form', onsubmit: async (e) => {
         e.preventDefault();
         const einstellungen = {
           kursart: form.querySelector('input[name=kursart]:checked')?.value,
           levelArt: Object.fromEntries([...form.querySelectorAll('select[name^="level-"]')].map((x) => [x.name.slice(6), x.value])),
           auftrag: auftragText.value.trim() ? { text: auftragText.value.trim(), level: [...form.querySelectorAll('input[name=auftrag-level]:checked')].map((x) => Number(x.value)) } : null,
+          scoreboard: scoreboardBox.checked,
+          beamer: { aktiv: beamerBox.checked },
         };
         status.textContent = 'Speichere …';
         try {
@@ -306,6 +331,7 @@ export default {
           status.textContent = 'Gespeichert. Ihre Schülerinnen und Schüler sehen die Änderungen beim nächsten Öffnen der Startseite.';
           const pille = el.querySelector('.lk-kurskopf .niveau-pille');
           if (pille) pille.textContent = KURSART[r.einstellungen.kursart];
+          zeigeBoardLink(r.einstellungen.beamer);
         } catch (err) { status.textContent = err.message; }
       } },
         h('fieldset', null, h('legend', null, 'Kursart'), ...auswahl,
@@ -315,6 +341,12 @@ export default {
           auftragText,
           h('p', { class: 'muted klein' }, 'Dazu passende Level hervorheben (höchstens vier):'),
           h('div', { class: 'lk-check-reihe' }, auftragLevel)),
+        h('fieldset', null, h('legend', null, 'Rangliste und Beamer-Board'),
+          h('label', { class: 'check' }, scoreboardBox, ' Rangliste für Schülerinnen und Schüler sichtbar'),
+          h('p', { class: 'muted klein' }, 'Zeigt allen im Kurs Platz, Anzeigename und Punkte (gesamt oder je Welt). Die Anzeigenamen wählen die Schülerinnen und Schüler im Portal selbst.'),
+          h('label', { class: 'check' }, beamerBox, ' Beamer-Board eingeschaltet'),
+          h('p', { class: 'muted klein' }, 'Eine Seite für den Beamer mit den 15 Besten, dem Fortschritt des Kurses je Welt und den letzten Abzeichen. Sie ist ohne Anmeldung über einen zufälligen Link erreichbar – nur wer den Link kennt, sieht sie. Ausschalten sperrt den Link sofort.'),
+          boardLink),
         h('fieldset', null, h('legend', null, 'Level: Pflicht, Vertiefung, Bonus oder später'),
           h('p', { class: 'muted klein' }, 'So erscheinen die Level auf der Level-Karte Ihrer Schülerinnen und Schüler. „Später“ graut ein Level aus – gesperrt wird nichts: QR-Codes und Links auf Arbeitsblättern führen immer zur Aufgabe.'),
           tabelle(['Level', 'Thema', 'Art'], levelZeilen, { klasse: 'lk-level-tabelle' })),
@@ -356,6 +388,58 @@ export default {
           }))));
     }
 
-    return () => { aktiv = false; };
+    /* ───────────── 🏅 Urkunden (wie Algo Quest: im Browser drucken, kein PDF auf dem Server) ───────────── */
+    async function urkundenSeite(id) {
+      const u = await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/urkunden`);
+      if (!aktiv) return;
+      document.documentElement.classList.add('druck-urkunden');
+      const heute = new Date().toISOString().slice(0, 10);
+      const wahl = new Set(u.schueler.map((s) => s.id));
+      const opt = { platz: 'alle', datum: heute, unterschrift: 'Kursleitung', namenszeile: false };
+      const blaetter = h('div', { class: 'urkunden' });
+      const datumText = () => (opt.datum ? new Date(`${opt.datum}T12:00:00`).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '');
+
+      const urkunde = (s) => h('article', { class: 'urkunde' },
+        h('div', { class: 'urkunde-rahmen' },
+          h('p', { class: 'urkunde-marke', 'aria-hidden': 'true' }, '→◎'),
+          h('h2', { class: 'urkunde-titel' }, 'Urkunde'),
+          h('p', { class: 'urkunde-lab' }, 'AutomatenLab – Maschinen, die Sprache verstehen'),
+          h('p', { class: 'urkunde-text' }, `Im Kurs ${u.kurs.name} hat`),
+          h('p', { class: 'urkunde-name' }, s.name),
+          opt.namenszeile ? h('p', { class: 'urkunde-namenszeile' }, 'Name: ', h('span', { class: 'urkunde-linie' })) : null,
+          h('p', { class: 'urkunde-text' }, 'den Rang erreicht'),
+          h('p', { class: 'urkunde-rang' }, s.rang),
+          h('ol', { class: 'urkunde-leiter', 'aria-label': 'Ränge' }, u.raenge.map((r) => h('li', { class: r === s.rang ? 'is-aktuell' : null }, r))),
+          h('ul', { class: 'urkunde-fakten' },
+            h('li', null, h('strong', null, String(s.punkte)), ' Punkte'),
+            h('li', null, h('strong', null, String(s.geloest)), s.geloest === 1 ? ' Aufgabe gelöst' : ' Aufgaben gelöst'),
+            opt.platz === 'alle' || (opt.platz === 'top3' && s.platz <= 3) ? h('li', null, h('strong', null, `${s.platz}.`), ` Platz von ${u.anzahl}`) : null,
+            h('li', null, h('strong', null, String(s.abzeichen.length)), ' Abzeichen')),
+          s.abzeichen.length ? h('p', { class: 'urkunde-abzeichen' }, s.abzeichen.join(' · ')) : null,
+          h('div', { class: 'urkunde-fuss' },
+            h('p', null, datumText()),
+            h('p', { class: 'urkunde-unterschrift' }, h('span', { class: 'urkunde-linie' }), opt.unterschrift))));
+      const zeichne = () => clear(blaetter, u.schueler.filter((s) => wahl.has(s.id)).map(urkunde));
+
+      const liste = h('div', { class: 'lk-check-reihe urkunden-auswahl' }, u.schueler.map((s) => h('label', { class: 'check' },
+        h('input', { type: 'checkbox', checked: true, onchange: (e) => { if (e.target.checked) wahl.add(s.id); else wahl.delete(s.id); zeichne(); } }), ` ${s.name}`)));
+      const optionen = h('div', { class: 'panel lk-karte no-print' },
+        h('h3', null, 'Urkunden drucken'),
+        h('p', { class: 'muted klein' }, 'Je Schülerin und Schüler eine A4-Seite mit Anzeigename, Rang (Anteil der Level-Punkte im Kursumfang), Punkten, gelösten Aufgaben, Platz und Abzeichen. Drucken Sie mit 100 % und eingeschalteten Hintergrundgrafiken. Eine Namenszeile lässt Platz für den echten Namen von Hand – er wird nirgends gespeichert.'),
+        u.schueler.length ? liste : leer(),
+        h('div', { class: 'lk-form urkunden-optionen' },
+          h('label', null, 'Platz zeigen ', h('select', { onchange: (e) => { opt.platz = e.target.value; zeichne(); } },
+            h('option', { value: 'alle' }, 'bei allen'), h('option', { value: 'top3' }, 'nur Plätze 1–3'), h('option', { value: 'keiner' }, 'nie'))),
+          h('label', null, 'Datum ', h('input', { type: 'date', value: heute, onchange: (e) => { opt.datum = e.target.value; zeichne(); } })),
+          h('label', null, 'Unterschrift ', h('input', { type: 'text', value: opt.unterschrift, maxlength: 60, oninput: (e) => { opt.unterschrift = e.target.value; zeichne(); } })),
+          h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e) => { opt.namenszeile = e.target.checked; zeichne(); } }), ' Namenszeile zum Ausfüllen')),
+        h('p', null, h('button', { type: 'button', class: 'btn btn-primary', onclick: () => window.print() }, '🖨 Drucken')));
+      seite(
+        h('p', { class: 'lk-krumen no-print' }, h('a', { href: '#/lehrkraft' }, 'Kurse'), ' › ', h('a', { href: kurslink(id) }, u.kurs.name), ' › Urkunden'),
+        optionen, blaetter);
+      zeichne();
+    }
+
+    return () => { aktiv = false; document.documentElement.classList.remove('druck-urkunden'); };
   },
 };

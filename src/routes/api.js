@@ -52,6 +52,17 @@ function apiRoutes(app, h) {
   // Schüler: Einstellungen der eigenen Kurse für die Startseite (Level-Art, Kursart, Auftrag der Lehrkraft)
   api.get('/meine-kurse', nurAngemeldet, (req, res) => res.json(svc.auswertung.meineKurse(req.konto.sub)));
 
+  // Schüler: Rangliste der eigenen Kurse, in denen die Lehrkraft sie eingeschaltet hat (gesamt oder je Welt)
+  api.get('/rangliste', nurAngemeldet, (req, res) => res.json(svc.auswertung.rangliste(req.konto.sub, req.query.welt ? String(req.query.welt) : null)));
+
+  // Beamer-Board: öffentlich über den zufälligen Link aus den Kurs-Einstellungen, nur wenn eingeschaltet (sonst 404)
+  const limitBoard = new S.Limiter({ max: 60, windowMs: 60 * 1000 });
+  api.get('/board/:token', (req, res) => {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    if (!limitBoard.take('b:' + (req.ip || ''))) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte warte einen Moment.' });
+    res.json(svc.auswertung.board(String(req.params.token)));
+  });
+
   // Kurs der Lehrkraft (laut letztem Token) – sonst 404, damit fremde Kurse nicht erkennbar sind
   const meinKurs = (req, res, next) => {
     const id = String(req.params.id);
@@ -68,6 +79,7 @@ function apiRoutes(app, h) {
   });
   api.get('/lehrer/kurse/:id/schueler', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.schueler(req.kurs)));
   api.get('/lehrer/kurse/:id/auswertung', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.kursAuswertung(req.kurs)));
+  api.get('/lehrer/kurse/:id/urkunden', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.urkunden(req.kurs)));
   api.get('/lehrer/kurse/:id/export.csv', nurLehrkraft, meinKurs, (req, res) => {
     const art = String(req.query.art || 'uebersicht');
     const text = svc.auswertung.export(req.kurs, art);

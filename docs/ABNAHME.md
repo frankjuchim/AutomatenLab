@@ -26,6 +26,8 @@ Dauer: etwa 30 Minuten mit einem Lehrkraft-Konto und einem Test-Schülerkonto im
 - [ ] Kurs öffnen: 👥 Schüler zeigt das Test-Konto mit Punkten; 🏆 Rangliste; 🔗 Beitritt verweist aufs Portal.
 - [ ] 📊 Auswertung: Lernstand-Matrix, Aufgabenstatistik mit häufigen falschen Antworten, drei CSV-Exporte öffnen sich in Excel/LibreOffice.
 - [ ] ⚙️ Einstellungen: Grundkurs wählen, einen Auftrag mit Level schreiben, ein Level auf „später“ setzen, speichern → beim Schüler sichtbar; QR-Link auf das „später“-Level funktioniert trotzdem.
+- [ ] ⚙️ Einstellungen: Rangliste und Beamer-Board einschalten → Schüler sehen „🏆 Rangliste deines Kurses“; der Board-Link öffnet sich ohne Anmeldung auf dem Beamer; „Neuen Link erzeugen“ sperrt den alten.
+- [ ] 🏅 Urkunden: Vorschau prüfen, als PDF drucken (A4, eine Seite je Schüler).
 - [ ] 📖 Aufgaben: „Vorschau mit Lösung“ bei drei Modulen öffnen (z. B. Turing, Keller, Quiz) – Lösung eingesetzt, „Ohne Lösung ausprobieren“ geht, der eigene Lernstand bleibt leer.
 - [ ] 📂 Materialien: Lehrkraft-PDF einer Doppelstunde öffnet sich.
 

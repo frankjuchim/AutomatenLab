@@ -2,6 +2,18 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Rangliste, Beamer-Board und Urkunden wie Algo Quest (1.18.0)
+Frank wünscht die Funktionen von Algo Quest. Übernommen: Rangliste für Schüler (gesamt oder je Welt, gleiche Punkte =
+gleicher Platz, eigener Eintrag markiert, keine Konto-IDs), Beamer-Board (Top 15, Kursdurchschnitt je Welt, letzte 8
+Abzeichen, lädt alle 20 s neu), Urkunden (eine A4-Seite je Schüler, im Browser gedruckt, Optionen wie Algo Quest).
+Abweichungen: (1) **Beide Anzeigen standardmäßig aus** (Algo Quest: Rangliste an) – bisher galt hier „Schüler sehen
+keine Rangliste“; die Lehrkraft entscheidet je Kurs. (2) Das Board hängt an einem **zufälligen Link**
+(`/board/<16 Zeichen>`) statt am Kurscode, den die Plattform nicht kennt; „Neuen Link erzeugen“ macht den alten
+ungültig. (3) **Erfolge** sind die Abzeichen aus der Tabelle `abzeichen` – keine neue Tabelle, Name immer aktuell.
+(4) Ränge der Urkunde im Thema der Einheit: Startzustand · Zwischenzustand · Übergangsprofi · Endzustand in Sicht ·
+Akzeptiert! (Schwellen 0/10/30/55/80 % der Level-Punkte im Kursumfang wie Algo Quest). Manifest: `faehigkeiten` um
+`scoreboard`, `beamer`, `urkunden` und das schon vorhandene `fallen-profil` ergänzt.
+
 ## 2026-10-14 · Ziel nach der Anmeldung passt zur Rolle (1.17.1)
 Angleichung an Algo Quest 2.8.3: Wer sich mit Ziel „/“ anmeldet (Knopf auf der Startseite) und Lehrkraft oder Admin
 ist, landet im Lehrkraft-Bereich (`/#/lehrkraft`); Schüler, deren Ziel der Lehrkraft-Bereich wäre, landen auf der

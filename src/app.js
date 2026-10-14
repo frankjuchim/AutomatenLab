@@ -197,7 +197,7 @@ function createApp(opts) {
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
     umfang: katalog.umfang,
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
-    faehigkeiten: ['gast', 'themen', 'training', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
+    faehigkeiten: ['gast', 'themen', 'training', 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
 
   app.get('/api/plattform', (req, res) => {
@@ -224,6 +224,13 @@ function createApp(opts) {
   app.use('/api', (req, res) => res.status(404).json({ error: 'Unbekannte API-Route.' }));
 
   /* ---------- Vertragspfade → Hash-Routen ---------- */
+
+  // Beamer-Board (PR 8): kurzer Link für den Beamer, führt auf die Hash-Route der App; nicht in Suchmaschinen
+  app.get('/board/:token', (req, res) => {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    const t = String(req.params.token);
+    res.redirect(302, /^[A-Za-z0-9_-]{16}$/.test(t) ? `/#/board?t=${t}` : '/#/board');
+  });
 
   for (const [pfad, ziel] of Object.entries(WEITERLEITUNGEN)) {
     app.get(pfad, (req, res) => res.redirect(302, ziel));

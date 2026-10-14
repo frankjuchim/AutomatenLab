@@ -833,3 +833,64 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .lk-balken-fuellung { display: block; height: 100%; background: var(--ocker); border-radius: 999px; }
 .lk-falle-zahl { font-size: var(--fs-s); color: var(--ink-2); white-space: nowrap; }
 @media (max-width: 700px) { .lk-fallen li { grid-template-columns: 1fr; } .lk-falle-zahl { white-space: normal; } }
+
+/* ───── Rangliste, Beamer-Board, Urkunden (PR 8) ───── */
+.lk-kurskopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
+.rangliste-tabelle tr.is-ich td { background: var(--ocker-soft); font-weight: 700; }
+.lk-board-link { margin: 0.25rem 0 0; overflow-wrap: anywhere; }
+.chip-row a.chip { text-decoration: none; display: inline-flex; align-items: center; }
+.chip-row a.chip[aria-current='page'] { background: var(--ocker-fill); border-color: var(--ink); font-weight: 700; }
+
+.board-page { max-width: 1400px; }
+.board-kopf { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; }
+.board-kopf h1 { margin: 0; }
+.board-hinweis:empty { display: none; }
+.board-hinweis { color: var(--reject); font-weight: 700; }
+.board-raster { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+@media (max-width: 860px) { .board-raster { grid-template-columns: minmax(0, 1fr); } }
+.board-rechts { display: grid; gap: var(--gap); }
+.board-plaetze { list-style: none; margin: 0; padding: 0; }
+.board-plaetze li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding: 0.4rem 0.25rem; border-bottom: 1px solid var(--line); font-size: var(--fs-l); }
+.board-plaetze li:last-child { border-bottom: 0; }
+.board-platz { font-weight: 800; text-align: center; }
+.board-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-punkte { font-weight: 800; color: var(--teal); font-variant-numeric: tabular-nums; }
+.board-platz-1 { background: var(--ocker-soft); border-radius: var(--r-s); }
+.board-welten { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.board-welten li { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr) 3.5rem; align-items: center; gap: 0.6rem; }
+.board-welt-zahl { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.board-erfolge { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+.urkunden-optionen { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; margin: 0.75rem 0; }
+.urkunden { display: grid; gap: var(--gap); justify-items: center; }
+.urkunde { width: min(100%, 210mm); aspect-ratio: 210 / 297; background: #fff; color: var(--ink); box-shadow: var(--shadow); padding: 12mm; box-sizing: border-box; }
+.urkunde-rahmen { height: 100%; box-sizing: border-box; border: 3px double var(--teal); outline: 1px solid var(--ocker); outline-offset: -9px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 14mm 12mm 10mm; gap: 0.35rem; }
+.urkunde-marke { font-size: 2.2rem; color: var(--teal); margin: 0; letter-spacing: -0.1em; }
+.urkunde-titel { font-size: 3.2rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal-deep); margin: 0.2rem 0 0; }
+.urkunde-lab { color: var(--ink-2); margin: 0 0 1.2rem; }
+.urkunde-text { margin: 0.4rem 0 0; font-size: 1.1rem; }
+.urkunde-name { font-size: 2.1rem; font-weight: 800; margin: 0.2rem 0; color: var(--ink); }
+.urkunde-namenszeile { display: flex; align-items: flex-end; gap: 0.5rem; width: 70%; margin: 0.2rem 0; }
+.urkunde-linie { flex: 1; display: inline-block; min-width: 50%; border-bottom: 1px solid var(--ink-2); height: 1.4rem; }
+.urkunde-rang { font-size: 2.4rem; font-weight: 800; color: var(--ocker); margin: 0.2rem 0 0.4rem; }
+.urkunde-leiter { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem; padding: 0; margin: 0.2rem 0 1rem; font-size: 0.85rem; }
+.urkunde-leiter li { padding: 0.15rem 0.5rem; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-2); }
+.urkunde-leiter li.is-aktuell { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 700; }
+.urkunde-fakten { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.5rem; padding: 0; margin: 0.5rem 0; font-size: 1.05rem; }
+.urkunde-fakten strong { font-size: 1.4rem; color: var(--teal-deep); }
+.urkunde-abzeichen { font-size: 0.9rem; color: var(--ink-2); max-width: 85%; margin: 0.3rem 0; }
+.urkunde-fuss { margin-top: auto; width: 100%; display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; }
+.urkunde-fuss p { margin: 0; }
+.urkunde-unterschrift { display: flex; flex-direction: column; align-items: center; min-width: 45%; color: var(--ink-2); }
+.urkunde-unterschrift .urkunde-linie { width: 100%; margin-bottom: 0.25rem; }
+
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  .druck-urkunden body { background: #fff; }
+  .druck-urkunden .site-header, .druck-urkunden .site-footer, .druck-urkunden .lk-nav, .druck-urkunden .back-link,
+  .druck-urkunden .lk-page > h1, .druck-urkunden .no-print, .druck-urkunden .skip-link { display: none !important; }
+  .druck-urkunden main, .druck-urkunden .page { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .druck-urkunden .urkunden { display: block; }
+  .druck-urkunden .urkunde { width: 210mm; height: 297mm; aspect-ratio: auto; box-shadow: none; break-after: page; break-inside: avoid;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
