@@ -42,7 +42,34 @@ function apiRoutes(app, h) {
   // Lehrkraft: Kurse, in denen sie laut letztem Token Lehrkraft ist (Superadmin: alle Kurse dieser Plattform aus dem Token)
   api.get('/lehrer/kurse', nurLehrkraft, (req, res) => {
     const kurse = svc.konten.kurseVon(req.konto.sub).filter((k) => k.rolle === 'lehrkraft');
-    res.json(kurse.map((k) => ({ id: k.id, name: k.name, schueler: svc.konten.mitglieder(k.id).length })));
+    res.json(kurse.map((k) => {
+      const m = svc.konten.mitglieder(k.id);
+      const zuletzt = m.map((x) => x.last_active_at).filter(Boolean).sort().pop() || null;
+      return { id: k.id, name: k.name, schueler: m.length, zuletztAktiv: zuletzt, ...svc.auswertung.einstellungen(svc.konten.kurs(k.id)) };
+    }));
+  });
+
+  // Kurs der Lehrkraft (laut letztem Token) – sonst 404, damit fremde Kurse nicht erkennbar sind
+  const meinKurs = (req, res, next) => {
+    const id = String(req.params.id);
+    const k = svc.konten.kurseVon(req.konto.sub).find((x) => x.id === id && x.rolle === 'lehrkraft');
+    if (!k) return res.status(404).json({ error: 'Diesen Kurs gibt es nicht.' });
+    req.kurs = svc.konten.kurs(id);
+    next();
+  };
+  api.get('/lehrer/kurse/:id', nurLehrkraft, meinKurs, (req, res) => {
+    res.json({ id: req.kurs.id, name: req.kurs.name, schueler: svc.konten.mitglieder(req.kurs.id).length, einstellungen: svc.auswertung.einstellungen(req.kurs) });
+  });
+  api.patch('/lehrer/kurse/:id', nurLehrkraft, meinKurs, (req, res) => {
+    res.json({ einstellungen: svc.auswertung.einstellungenSetzen(req.kurs, (req.body || {}).einstellungen) });
+  });
+  api.get('/lehrer/kurse/:id/schueler', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.schueler(req.kurs)));
+  api.get('/lehrer/kurse/:id/auswertung', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.kursAuswertung(req.kurs)));
+  api.get('/lehrer/kurse/:id/export.csv', nurLehrkraft, meinKurs, (req, res) => {
+    const art = String(req.query.art || 'uebersicht');
+    const text = svc.auswertung.export(req.kurs, art);
+    const datei = `automatenlab-${req.kurs.id.replace(':', '')}-${art}.csv`;
+    res.set('Content-Type', 'text/csv; charset=utf-8').set('Content-Disposition', `attachment; filename="${datei}"`).send(text);
   });
 
   /* ---------- Aufgaben mit Prüfung auf dem Server (Vertrag §9) ---------- */

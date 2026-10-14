@@ -125,7 +125,7 @@ function createApp(opts) {
   const ctx = { db, now, log };
   const konten = createKonten(ctx);
   const training = createTraining(ctx, { aufgaben: opts.aufgaben });
-  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog }), training, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training }) };
+  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog, aufgaben: opts.aufgaben, training }), training, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training }) };
 
   const app = express();
   app.disable('x-powered-by');

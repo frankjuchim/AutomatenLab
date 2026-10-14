@@ -2,6 +2,21 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Lehrkraft-Bereich im Aufbau wie Algo Quest (PR 6)
+Wunsch von Frank: Lehrkräfte sollen sich in allen Labs gleich zurechtfinden. Übernommen wird der Aufbau des
+Lehrkraft-Bereichs von Algo Quest (`public/static/js/lehrer.js`), nicht das Design: Navigation 📚 Kurse · 📖 Aufgaben ·
+📂 Materialien · 🗺️ Themen · ⌂ Portal; „Meine Kurse“ als Tabelle mit „Öffnen“; Kursseite mit Brotkrumen und den
+Reitern 👥 Schüler · 🔗 Beitritt · 📊 Auswertung · 🏆 Rangliste · ⚙️ Einstellungen in derselben Reihenfolge (Algo
+Quest: „Beitritt & QR“, „Scoreboard“). Was das Portal verwaltet (Kurs anlegen/löschen, Kurscode, QR, Konten, Codes),
+steht an derselben Stelle als Hinweis mit Link ins Portal – wie Algo Quest es bei Portal-Kursen tut.
+Abweichungen: Die Rangliste sieht nur die Lehrkraft (kein Scoreboard für Schüler, kein Beamer-Board – das wäre eine
+didaktische Entscheidung für später); kein Boss- und kein Fallen-Profil (gibt es im AutomatenLab nicht bzw. erst mit
+V3); keine „häufigen falschen Antworten“ (bräuchte eine eigene Tabelle). Die Aufgaben-Seite listet die Aufgaben nach
+Level mit Link ins Modul; eine Vorschau mit eingesetzter Lösung je Modul folgt (PR 6b). Einstellung zunächst nur die
+Kursart (gA/eA, gespeichert in `kurse.einstellungen`); sie bestimmt den Kursumfang der Portal-Kennzahlen und die
+Markierung in der Matrix. Jede Aufgabe zählt in der Matrix zu genau einem Level (erstes Level; Welt-Quiz beim letzten
+Level der Welt). Neue Routen nur ergänzt: `#/lehrkraft?kurs=…&tab=…`, `#/lehrkraft?teil=aufgaben`.
+
 ## 2026-10-14 · Welten B–D auf dem Server (PR 5)
 Überliste, Parallelwelten, Keller-Labor, Ableitungs-Rallye, Grammatik-Tester und Turing-Labor prüfen auf dem Server;
 ihre Daten liegen in `inhalte/`, die Prüflogik ohne Daten in `app/js/engine/pruefer.js`. Punkte nach Stufe (10/20/30)

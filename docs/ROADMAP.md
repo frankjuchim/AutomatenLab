@@ -45,11 +45,12 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 
 ## Grund- und Leistungskurs (Vertrag v1.2)
 - ✅ Niveaus nach KC 2017 (gA + eA / nur eA / Zusatz) für Level, Boss-Level, Module, Merkblätter; Niveau-Übersicht `/niveaus` (= `#/themen?teil=niveaus`), Manifest v1.2 (`kurs`, `niveaus`, `urls.niveaus`), Etiketten in der App, Niveau im Kopf aller Materialien, Abschnitt in der Einheitsplanung
-- [ ] Kurs-Einstellung „Kursart“ (Grundkurs/Leistungskurs) wie Algo Quest: eA-Level im Grundkurs als „freiwillig“, Kursübersicht für das Portal nur über die Level des Kurses (mit PR 7)
+- [ ] Kurs-Einstellung „Kursart“ (Grundkurs/Leistungskurs) wie Algo Quest: ✅ Einstellung, Lernstand-Matrix und Kursübersicht für das Portal nur über die Level des Kurses (PR 6); offen: eA-Level im Grundkurs auch für Schüler als „freiwillig“ (mit PR 7)
 - ✅ Übungsklausur für den Grundkurs „Fahrradverleih“ (90 min, 30 BE, DEA/Mealy/Grenzen, alle Automaten geprüft)
 
 ## Phase 5 – Lehrkraft-Bereich
-- [ ] PR 6: Lernstand-Matrix Level 1–16 × Schüler wie Algo Quest, Aufgabenstatistik, Fallen-Profil (nach V3), CSV, Aufgaben-Vorschau mit Lösungen; Kursübersicht für das Portal mit echten Kennzahlen
+- ✅ PR 6 (1.10.0): Lehrkraft-Bereich im Aufbau wie Algo Quest – Navigation (Kurse · Aufgaben · Materialien · Themen · Portal), Meine Kurse, Kursseite mit Reitern Schüler · Beitritt · Auswertung (Lernstand-Matrix Level 1–16 × Schüler, Aufgabenstatistik, CSV) · Rangliste · Einstellungen (Kursart gA/eA); Aufgaben der Welten nach Level; Kursübersicht für das Portal mit echten Kennzahlen (Kursumfang je Kursart)
+- [ ] PR 6b: Aufgaben-Vorschau mit Lösungen (nur lesend, ohne eigenen Lernstand), Fallen-Profil (nach V3), häufige falsche Antworten (braucht eigene Tabelle)
 - [ ] PR 7: Kurs-Einstellungen (Freischaltung Pflicht/Vertiefung/Bonus, Aufträge auf der Startseite), Datenschutzhinweise der Plattform, Löschung über die Verbund-API vollständig getestet, Doku, Abnahme
 
 ## Phase 6 – Materialien ↔ Plattform
