@@ -270,6 +270,47 @@ test('Parallelwelten: Rätsel wie ein Quiz, Teilmengenkonstruktion Zeile für Ze
   assert.equal((await pr(tid, { menge: ['S1', 'S3'], ziele: {} })).status, 400, 'Menge kommt nicht vor');
 });
 
+test('Keller-Labor: Tabelle vollständig geprüft (Lauf + Entscheidung), Rückwärts nur mit Folge, Wort bleibt auf dem Server', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=keller')).body.aufgaben;
+  assert.equal(k.length, 20);
+  const { kellerTabellenLoesung } = await import('../app/js/engine/pruefer.js');
+  const pr = (id, antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // Tabellen-Trainer aⁿbⁿ: aabb, aab, abb
+  const tid = 'keller:anbn:tabelle';
+  const ta = (await s.get(`/api/aufgaben/${tid}`)).body.aufgabe;
+  assert.deepEqual(ta.worte, ['aabb', 'aab', 'abb']);
+  const L = kellerTabellenLoesung(ta.automat, ta.worte).tabellen;
+  const tabelle = (w) => L.find((t) => t.wort === w);
+  const t0 = tabelle('aabb');
+  let r = (await pr(tid, { wort: 0, zeilen: t0.zeilen, akzeptiert: false })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.rueckmeldung.fehler.grund, 'akzeptanz');
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr(tid, { wort: 0, zeilen: t0.zeilen.slice(0, 3), akzeptiert: true })).body;
+  assert.equal(r.rueckmeldung.fehler.grund, 'unvollstaendig');
+  const kaputt = t0.zeilen.map((z, i) => (i === 2 ? { ...z, keller: 'A#' } : z));
+  r = (await pr(tid, { wort: 0, zeilen: kaputt, akzeptiert: true })).body;
+  assert.deepEqual(r.rueckmeldung.fehler, { zeile: 2, grund: 'uebergang' });
+  for (let i = 0; i < 3; i++) r = (await pr(tid, { wort: i, zeilen: tabelle(ta.worte[i]).zeilen, akzeptiert: tabelle(ta.worte[i]).akzeptiert })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 3, 0));
+  assert.equal(r.loesung.tabellen.length, 3);
+  // Rückwärts: öffentlich nur die Folge
+  const rid = 'keller:anbn:rueckwaerts';
+  const ra = (await s.get(`/api/aufgaben/${rid}`)).body.aufgabe;
+  assert.ok(Array.isArray(ra.folge) && ra.folge.length > 3);
+  assert.doesNotMatch(JSON.stringify(ra), /aaabbb/);
+  r = (await pr(rid, { wort: 'aabb' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.zustand.fehlversuche, 1);
+  r = (await pr(rid, { wort: 'aaabbb' })).body;
+  assert.equal(r.geloest, true);
+  assert.ok(r.rueckmeldung.zeilen.length === ra.folge.length);
+  assert.equal(r.loesung.wort, 'aaabbb');
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

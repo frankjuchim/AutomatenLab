@@ -43,10 +43,10 @@ const STATUS = {
     return `Rätsel ${solvedOf('parallelwelten', r)}/${r.length} · Teilmengen ${solvedOf('parallelwelten', t)}/${t.length}`;
   },
   keller: async () => {
-    const { KELLER_AUTOMATEN: K } = await import('../data/keller.js');
-    const t = K.flatMap((x) => x.tabelle.map((w) => `${x.id}:${w}`));
-    const r = K.flatMap((x) => x.rueckwaerts.map((w) => `${x.id}:${w}`));
-    return `Tabellen ${solvedOf('keller-t', t)}/${t.length} · Rückwärts ${solvedOf('keller-r', r)}/${r.length}`;
+    const K = await katalog('keller');
+    const t = K.filter((a) => a.art === 'tabelle').map((a) => a.schluessel);
+    const r = K.filter((a) => a.art === 'rueckwaerts').map((a) => a.schluessel);
+    return `Tabellen ${solvedOf('keller', t)}/${t.length} · Rückwärts ${solvedOf('keller', r)}/${r.length}`;
   },
   rallye: async () => { const { RALLYE_AUFGABEN: A } = await import('../data/rallye.js'); return geloest(solvedOf('rallye', A.map((x) => x.id)), A.length); },
   grammatik: async () => { const { GRAMMATIK_CHALLENGES: C } = await import('../data/grammatik.js'); return geloest(solvedOf('grammatik', C.map((x) => x.id)), C.length); },

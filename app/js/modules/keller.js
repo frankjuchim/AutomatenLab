@@ -2,20 +2,20 @@
 // und Rückwärts-Aufgaben (Eingabewort aus Zustands-/Kellerfolge bestimmen, wie Abi 2022 C c).
 // Notation: (oberstes Kellerzeichen, Eingabezeichen) : Ablage – rechtes Zeichen zuerst abgelegt, Vorbelegung #,
 // Akzeptanz: Endzustand nach vollständig gelesener Eingabe.
-// Deep-Links: #/keller?automat=<id>&modus=sim|tabelle|rueckwaerts  (&wort=… für sim/tabelle)
+// Deep-Links: #/keller?automat=<id>&modus=sim|tabelle|rueckwaerts  (&wort=… für sim/tabelle),
+//             #/keller?demo=1[&modus=…] (Demo-Automat im Gastmodus)
+// Tabellen und Rückwärts-Aufgaben prüft die Quelle (Server bzw. Demo), Punkte vergibt nur der Server. Die Zeilen des
+// Tabellen-Trainers gibt die Engine sofort zurück (der Automat ist Gegenstand der Aufgabe); gewertet wird die fertige
+// Tabelle. Ein eigenes Wort (&wort= außerhalb der Liste) ist Übung ohne Punkte.
 
 import { h, clear, quote } from '../core/dom.js';
-import { KELLER_AUTOMATEN } from '../data/keller.js';
 import { pda, runPDA, successors, initialConfig, searchFrom, runToTable, transitionLabel, isDeterministic, matchesConfigSequence } from '../engine/pda.js';
 import { tokenize, wordToString, isEpsilon, EPS } from '../engine/tokenize.js';
 import { GraphView } from '../components/graph-view.js';
 import { WordTape } from '../components/word-tape.js';
 import { StackView } from '../components/stack-view.js';
 
-const AUTOMATEN = KELLER_AUTOMATEN.map((k, i) => ({ ...k, nr: i + 1, P: pda(k.automat) }));
-AUTOMATEN.forEach((k) => { k.det = isDeterministic(k.P); });
 const MODI = { sim: 'Simulator', tabelle: 'Tabellen-Trainer', rueckwaerts: 'Rückwärts' };
-const PUNKTE = 20;
 const stackText = (st) => (st.length ? st.join('') : EPS);
 const shown = (tokens, P) => (tokens.length ? quote(wordToString(tokens, P.inputAlphabet)) : 'ε');
 const TABLE_HEAD = ['Zustand', 'Belegung Kellerspeicher', 'oberstes Kellersymbol', 'verarbeitetes Eingabezeichen'];
@@ -42,33 +42,51 @@ function abiTable(rows, extra) {
 export default {
   title: 'Keller-Labor',
   mount(el, ctx) {
+    const q = ctx.quelle; // Server (angemeldet) oder Demo (Gastmodus)
     const p = ctx.params;
-    const award = () => {
-      if (ctx.progress.solvedIds('keller-t').length + ctx.progress.solvedIds('keller-r').length >= 10) ctx.progress.award('keller-profi');
-    };
-    const k = AUTOMATEN.find((x) => x.id === p.get('automat')) ?? AUTOMATEN[Number(p.get('aufgabe')) - 1] ?? null;
-    const modus = MODI[p.get('modus')] ? p.get('modus') : 'sim';
-    if (!k) { overview(); return null; }
-    ctx.setSubtitle(`${MODI[modus]} · ${k.titel}`);
-    const head = [modeTabs(k, modus), taskPanel(k)];
-    if (modus === 'tabelle') return tabelle(k, head, p.get('wort'));
-    if (modus === 'rueckwaerts') return rueckwaerts(k, head);
-    return sim(k, head, p.get('wort'));
+    let aktiv = true;
+    let aufraeumen = null;
+    let GRUPPEN = []; // [{ nr, schluessel, titel, t: Tabellen-Eintrag, r: Rückwärts-Eintrag }]
+    const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
+    const par = (x, extra = {}) => (q.demo ? { demo: 1, ...extra } : { automat: x.schluessel ?? x.id, ...extra });
+    clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    (async () => {
+      const liste = await q.liste('keller');
+      if (!aktiv) return;
+      const byNr = new Map();
+      for (const e of liste) {
+        const nr = e.nr ?? 0;
+        if (!byNr.has(nr)) byNr.set(nr, { nr, schluessel: (e.schluessel ?? '').split(':')[0], titel: e.titel.replace(/^Demo: /, '').replace(/(: | – )(Tabellen-Trainer|Rückwärts)$/, '') });
+        byNr.get(nr)[e.art === 'rueckwaerts' ? 'r' : 't'] = e;
+      }
+      GRUPPEN = [...byNr.values()].sort((x, y) => x.nr - y.nr);
+      const g = q.demo ? GRUPPEN[0] : (GRUPPEN.find((x) => x.schluessel === p.get('automat')) ?? GRUPPEN.find((x) => x.nr === Number(p.get('aufgabe'))) ?? null);
+      if (!g) { overview(); return; }
+      const modus = MODI[p.get('modus')] ? p.get('modus') : 'sim';
+      const d = await q.aufgabe(modus === 'rueckwaerts' ? g.r.id : g.t.id);
+      if (!aktiv) return;
+      const P = pda(d.aufgabe.automat);
+      const k = { ...d.aufgabe, id: g.schluessel, schluessel: g.schluessel, aufgabeId: d.id, nr: g.nr, gruppe: g, P, det: isDeterministic(P), tabelle: d.aufgabe.worte, zustand: d.zustand, loesung: d.loesung ?? null };
+      ctx.setSubtitle(q.demo ? `${MODI[modus]} · Demo: ${g.titel} (ohne Punkte)` : `${MODI[modus]} · ${g.titel}`);
+      const head = [modeTabs(k, modus), taskPanel(k)];
+      aufraeumen = modus === 'tabelle' ? tabelle(k, head, p.get('wort')) : modus === 'rueckwaerts' ? rueckwaerts(k, head) : sim(k, head, p.get('wort'));
+    })().catch(fehler);
+    return () => { aktiv = false; aufraeumen?.(); };
 
     // ───────────────────────── Übersicht ─────────────────────────
     function overview() {
       ctx.setSubtitle('Kellerautomaten Schritt für Schritt – mit Stapel, Abi-Tabelle und Rückwärts-Rätseln.');
-      const solved = (x) => [...x.tabelle.map((w) => ['keller-t', `${x.id}:${w}`]), ...x.rueckwaerts.map((w) => ['keller-r', `${x.id}:${w}`])].filter(([m, id]) => ctx.progress.isSolved(m, id)).length;
       clear(el,
         h('div', { class: 'panel me-intro' },
           h('p', { class: 'lead' }, 'Ein Kellerautomat ist ein endlicher Automat mit Gedächtnis: einem Stapel (Kellerspeicher), auf den er Zeichen ablegen und von dem er das oberste Zeichen lesen und entfernen kann.'),
           notation()),
-        h('ol', { class: 'case-grid' }, AUTOMATEN.map((x) => {
-          const s = solved(x); const total = x.tabelle.length + x.rueckwaerts.length;
-          return h('li', null, h('a', { class: ['case-card', s === total && 'is-solved'], href: ctx.link('keller', { automat: x.id }) },
-            h('span', { class: 'case-nr' }, `${x.det ? 'DKA' : 'NKA – rät'} · ${x.P.states.length} Zustände`),
-            h('span', { class: 'case-title' }, x.titel),
-            h('span', { class: 'case-state' }, `${s} von ${total} Aufgaben`)));
+        h('ol', { class: 'case-grid' }, GRUPPEN.map((g) => {
+          const t = ctx.progress.isSolved('keller', g.t.schluessel);
+          const r = ctx.progress.isSolved('keller', g.r.schluessel);
+          return h('li', null, h('a', { class: ['case-card', t && r && 'is-solved'], href: ctx.link('keller', { automat: g.schluessel }) },
+            h('span', { class: 'case-nr' }, `Automat ${g.nr}`),
+            h('span', { class: 'case-title' }, g.titel),
+            h('span', { class: 'case-state' }, `Tabellen ${t ? '✓' : `${g.t.punkte} P.`} · Rückwärts ${r ? '✓' : `${g.r.punkte} P.`}`)));
         })));
     }
 
@@ -83,12 +101,13 @@ export default {
 
     function modeTabs(x, active) {
       return h('nav', { class: 'mode-tabs', 'aria-label': 'Modus' }, Object.entries(MODI).map(([m, label]) =>
-        h('a', { href: ctx.link('keller', { automat: x.id, modus: m }), 'aria-current': m === active ? 'page' : null }, label)));
+        h('a', { href: ctx.link('keller', par(x, { modus: m })), 'aria-current': m === active ? 'page' : null }, label)));
     }
 
     function taskPanel(x) {
       const P = x.P;
       return h('div', { class: 'panel task-panel' },
+        q.demo ? h('p', { class: 'notice gast-hinweis' }, h('strong', null, 'Demo. '), 'Ein eigener Kellerautomat zum Ausprobieren – ohne Punkte. Die zehn Automaten gibt es nach der Anmeldung.') : null,
         h('p', { class: 'task-text' }, x.kontext),
         h('p', { class: 'sigma' }, `Σ = {${P.inputAlphabet.join(', ')}} · Γ = {${P.stackAlphabet.join(', ')}} · Vorbelegung ${P.initial} · Startzustand ${P.start} · Endzustände ${P.accepting.join(', ')} · ${x.det ? 'deterministisch (DKA)' : 'nichtdeterministisch (NKA)'}`),
         h('div', { class: 'kl-details' }, notation(),
@@ -96,11 +115,12 @@ export default {
     }
 
     function caseNav(x, mod) {
-      const prev = AUTOMATEN[x.nr - 2]; const next = AUTOMATEN[x.nr];
+      if (q.demo) return h('nav', { class: 'case-nav', 'aria-label': 'Automaten' }, h('a', { class: 'btn btn-ghost', href: ctx.link('gast') }, 'Weitere Demo-Aufgaben'));
+      const prev = GRUPPEN.find((y) => y.nr === x.nr - 1); const next = GRUPPEN.find((y) => y.nr === x.nr + 1);
       return h('nav', { class: 'case-nav', 'aria-label': 'Automaten' },
-        prev ? h('a', { class: 'btn btn-ghost', href: ctx.link('keller', { automat: prev.id, modus: mod }) }, `‹ ${prev.titel}`) : h('span'),
+        prev ? h('a', { class: 'btn btn-ghost', href: ctx.link('keller', { automat: prev.schluessel, modus: mod }) }, `‹ ${prev.titel}`) : h('span'),
         h('a', { class: 'btn btn-ghost', href: ctx.link('keller') }, 'Alle Automaten'),
-        next ? h('a', { class: 'btn btn-ghost', href: ctx.link('keller', { automat: next.id, modus: mod }) }, `${next.titel} ›`) : h('span'));
+        next ? h('a', { class: 'btn btn-ghost', href: ctx.link('keller', { automat: next.schluessel, modus: mod }) }, `${next.titel} ›`) : h('span'));
     }
 
     function graphPanel(x, extraClass) {
@@ -233,6 +253,8 @@ export default {
       const P = x.P;
       const words = [...new Set([...(wort != null ? [wort] : []), ...x.tabelle])];
       const w = words[0];
+      const wortNr = x.tabelle.indexOf(w); // −1 = eigenes Wort: Übung ohne Punkte
+      let zustand = x.zustand;
       const tk = tokenize(w, P.inputAlphabet);
       if (!tk.ok) { clear(el, ...headEls, h('p', { class: 'notice notice-error' }, tk.message)); return null; }
       const tokens = tk.tokens;
@@ -297,7 +319,7 @@ export default {
         clear(fb, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Diese Zeile stimmt nicht. '), tips.join(' '))));
       }
 
-      function finish(saysYes) {
+      async function finish(saysYes) {
         if (finished) return;
         const c = hist.at(-1).config;
         const accRow = c.pos === tokens.length && P.accepting.includes(c.state);
@@ -312,22 +334,28 @@ export default {
         if (!saysYes && !stuck) { clear(fb, h('p', { class: 'notice notice-warn' }, 'Richtig, das Wort wird nicht akzeptiert – dokumentiere aber den Lauf, bis kein Übergang mehr möglich ist.')); return; }
         finished = true;
         paint();
-        const { first } = ctx.progress.solve('keller-t', `${x.id}:${w}`, PUNKTE);
-        ctx.progress.award('keller-tabelle'); award();
-        if (first) ctx.toast(`+${PUNKTE} Punkte`, { type: 'success' });
-        const nextW = x.tabelle[x.tabelle.indexOf(w) + 1];
+        let r = null;
+        if (wortNr >= 0) {
+          try { r = await q.pruefen(x.aufgabeId, { wort: wortNr, zeilen: runToTable(hist), akzeptiert: saysYes }); } catch (e) { clear(fb, h('p', { class: 'notice notice-error' }, e.message)); return; }
+          zustand = r.zustand ?? zustand;
+          if (r.punkteErhalten) ctx.toast(`+${r.punkteErhalten} Punkte`, { type: 'success' });
+          if (!r.rueckmeldung.richtig) { finished = false; paint(); clear(fb, h('p', { class: 'notice notice-error' }, 'Die Tabelle wurde nicht anerkannt – prüfe Zeilen und Entscheidung.')); return; }
+        }
+        const nextW = x.tabelle[wortNr + 1];
         clear(fb, h('div', { class: 'notice notice-success' }, h('p', null, h('strong', null, 'Tabelle vollständig! '), `Eingabe wird akzeptiert: ${saysYes ? 'ja' : 'nein'}.`),
-          !x.det ? h('p', { class: 'muted' }, 'Bei einem NKA genügt es, einen akzeptierenden Lauf zu dokumentieren.') : null),
+          !x.det ? h('p', { class: 'muted' }, 'Bei einem NKA genügt es, einen akzeptierenden Lauf zu dokumentieren.') : null,
+          wortNr < 0 ? h('p', { class: 'muted' }, 'Eigenes Wort: Übung ohne Punkte.') : r && !q.demo ? h('p', { class: 'muted' }, `${r.rueckmeldung.erledigt} von ${r.rueckmeldung.von} Tabellen zu diesem Automaten geschafft${r.rueckmeldung.fertig ? ' – Aufgabe gelöst' : ''}.`) : null),
         h('div', { class: 'start-actions' },
-          nextW ? h('a', { class: 'btn btn-primary', href: ctx.link('keller', { automat: x.id, modus: 'tabelle', wort: nextW }) }, `Nächstes Wort: ${nextW}`) : null,
-          h('a', { class: 'btn', href: ctx.link('keller', { automat: x.id, modus: 'rueckwaerts' }) }, 'Rückwärts-Aufgabe')));
+          nextW ? h('a', { class: 'btn btn-primary', href: ctx.link('keller', par(x, { modus: 'tabelle', wort: nextW })) }, `Nächstes Wort: ${nextW}`) : null,
+          h('a', { class: 'btn', href: ctx.link('keller', par(x, { modus: 'rueckwaerts' })) }, 'Rückwärts-Aufgabe')));
       }
 
       const right = h('div', { class: 'stack-col' },
         h('div', { class: 'panel' },
           h('p', { class: 'kl-task' }, h('strong', null, 'Dokumentiere '), `die Verarbeitung der Eingabe ${shown(tokens, P)} in Form einer Tabelle.`),
-          h('div', { class: 'chip-row', 'aria-label': 'Andere Wörter' }, x.tabelle.map((v) => h('a', { class: ['chip', v === w && 'is-on'], href: ctx.link('keller', { automat: x.id, modus: 'tabelle', wort: v }) },
-            v, ctx.progress.isSolved('keller-t', `${x.id}:${v}`) ? ' ✓' : ''))),
+          h('div', { class: 'chip-row', 'aria-label': 'Andere Wörter' }, x.tabelle.map((v) => h('a', { class: ['chip', v === w && 'is-on'], href: ctx.link('keller', par(x, { modus: 'tabelle', wort: v })) }, v))),
+          !q.demo && zustand ? h('p', { class: 'muted' }, zustand.status === 'geloest' ? 'Alle Tabellen zu diesem Automaten hast du schon geschafft – zum Üben kannst du sie wiederholen.'
+            : zustand.status === 'offen' ? `Die Aufgabe ist gelöst, wenn alle ${x.tabelle.length} Tabellen stimmen. Eine abgegebene falsche Tabelle kostet Punkte (jetzt noch ${zustand.moeglich} von ${zustand.maxPunkte}).` : '') : null,
           h('form', { class: 'kl-table-form', onsubmit: (e) => { e.preventDefault(); checkRow(); } },
             h('div', { class: 'table-scroll' }, h('table', { class: 'abi-table kl-abi kl-trainer' },
               h('thead', null, headRow()), tbody)),
@@ -346,9 +374,9 @@ export default {
     // ───────────────────────── Rückwärts ─────────────────────────
     function rueckwaerts(x, headEls) {
       const P = x.P;
-      const w = x.rueckwaerts[0];
-      const run = runPDA(P, w).run;
-      const seq = run.map((r) => ({ state: r.config.state, stack: r.config.stack }));
+      const seq = x.folge;
+      let zustand = x.zustand;
+      let loesung = x.loesung;
       // Mehrdeutig? (verschiedene Eingabezeichen führen zur selben nächsten Konfiguration)
       const ambiguous = seq.slice(0, -1).some((c, i) => {
         const inputs = new Set(P.transitions.filter((t) => t.from === c.state && t.top === c.stack[0] && t.to === seq[i + 1].state
@@ -365,29 +393,42 @@ export default {
       const msg = h('p', { class: 'field-msg', 'aria-live': 'polite' });
       const fb = h('div', { 'aria-live': 'polite' });
       let tries = 0;
-      const check = () => {
+      const showBtn = h('button', { type: 'button', class: 'btn btn-ghost btn-small', hidden: !loesung, onclick: () => aufdecken() }, 'Lösung zeigen');
+      const erfolg = (tokens, zeilen, text) => clear(fb, h('div', { class: 'notice notice-success' },
+        h('p', null, h('strong', null, text), `${shown(tokens, P)} passt zur Folge.${ambiguous ? ' Hier gibt es mehrere mögliche Eingabewörter: An mindestens einer Stelle führen verschiedene Eingabezeichen zur selben Konfiguration.' : ''}`)),
+      h('h3', { class: 'me-h2' }, 'Die Verarbeitung als Tabelle'), abiTable(zeilen),
+      h('div', { class: 'start-actions' }, h('a', { class: 'btn', href: ctx.link('keller', par(x, { modus: 'sim', wort: wordToString(tokens, P.inputAlphabet) })) }, 'Im Simulator ansehen'),
+        !q.demo && GRUPPEN.find((y) => y.nr === x.nr + 1) ? h('a', { class: 'btn btn-primary', href: ctx.link('keller', { automat: GRUPPEN.find((y) => y.nr === x.nr + 1).schluessel, modus: 'rueckwaerts' }) }, 'Nächste Rückwärts-Aufgabe') : null));
+      const check = async () => {
         const tk = tokenize(input.value, P.inputAlphabet);
         if (!tk.ok) { msg.textContent = tk.message; input.setAttribute('aria-invalid', 'true'); return; }
         msg.textContent = ''; input.removeAttribute('aria-invalid');
+        let res;
+        try { res = await q.pruefen(x.aufgabeId, { wort: wordToString(tk.tokens, P.inputAlphabet).replace(/^ε$/, '') }); } catch (e) { msg.textContent = e.message; return; }
         tries++;
-        const r = matchesConfigSequence(P, tk.tokens, seq);
-        if (r.ok) {
-          const { first } = ctx.progress.solve('keller-r', `${x.id}:${w}`, PUNKTE);
-          ctx.progress.award('keller-rueckwaerts'); award();
-          if (first) ctx.toast(`+${PUNKTE} Punkte`, { type: 'success' });
-          const rows = runToTable(seq.map((c, i) => ({ config: c, t: i ? r.transitions[i - 1] : null })));
-          clear(fb, h('div', { class: 'notice notice-success' },
-            h('p', null, h('strong', null, 'Richtig! '), `${shown(tk.tokens, P)} passt zur Folge.${ambiguous ? ' Hier gibt es mehrere mögliche Eingabewörter: An mindestens einer Stelle führen verschiedene Eingabezeichen zur selben Konfiguration.' : ''}`)),
-          h('h3', { class: 'me-h2' }, 'Die Verarbeitung als Tabelle'), abiTable(rows),
-          h('div', { class: 'start-actions' }, h('a', { class: 'btn', href: ctx.link('keller', { automat: x.id, modus: 'sim', wort: wordToString(tk.tokens, P.inputAlphabet) }) }, 'Im Simulator ansehen'),
-            AUTOMATEN[x.nr] ? h('a', { class: 'btn btn-primary', href: ctx.link('keller', { automat: AUTOMATEN[x.nr].id, modus: 'rueckwaerts' }) }, 'Nächste Rückwärts-Aufgabe') : null));
+        zustand = res.zustand ?? zustand;
+        if (res.loesung) loesung = res.loesung;
+        const r = res.rueckmeldung;
+        if (r.richtig) {
+          if (res.punkteErhalten) ctx.toast(`+${res.punkteErhalten} Punkte`, { type: 'success' });
+          erfolg(tk.tokens, r.zeilen, 'Richtig! ');
         } else {
+          if (tries >= 3) showBtn.hidden = false;
           clear(fb, h('div', { class: 'notice notice-error' },
             h('p', null, h('strong', null, 'Passt nicht. '), r.at === 0 ? 'Schon der erste Schritt lässt sich mit deinem Wort nicht erklären.' : `Bis Schritt ${r.at} passt dein Wort, danach führt kein Übergang mit dem nächsten Zeichen zur angegebenen Konfiguration.`),
             h('p', null, 'Vergleiche je zwei benachbarte Bilder: Welches Kellerzeichen lag oben, was wurde abgelegt, welcher Zustand folgt? Daraus ergibt sich der Übergang – und sein Eingabezeichen (ε-Übergänge lesen keins).'),
-            tries >= 3 ? h('p', null, `Eine Lösung: ${quote(w)}`) : null));
+            !q.demo && zustand?.status === 'offen' ? h('p', { class: 'muted' }, `Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.`) : null));
         }
       };
+      /** „Lösung zeigen“: ein passendes Eingabewort – danach gibt es für diese Rückwärts-Aufgabe keine Punkte mehr. */
+      async function aufdecken() {
+        if (!loesung) {
+          if (!q.demo && zustand?.status === 'offen' && !window.confirm('Wenn du die Lösung ansiehst, bekommst du für diese Aufgabe keine Punkte mehr. Trotzdem anzeigen?')) return;
+          try { const r = await q.aufdecken(x.aufgabeId); zustand = r.zustand; loesung = r.loesung; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
+        }
+        const tk = tokenize(loesung.wort, P.inputAlphabet);
+        erfolg(tk.tokens, loesung.zeilen, 'Eine Lösung: ');
+      }
       const right = h('div', { class: 'stack-col' },
         h('div', { class: 'panel' },
           h('p', { class: 'kl-task' }, h('strong', null, 'Bestimme '), 'das Eingabewort für die angegebene Folge von Zuständen und Kellerbelegungen (oberstes Zeichen oben).'),
@@ -395,6 +436,7 @@ export default {
           h('form', { class: 'word-form', onsubmit: (e) => { e.preventDefault(); check(); } },
             h('label', { for: 'kl-rw' }, 'Eingabewort'),
             h('div', { class: 'input-row' }, input, h('button', { type: 'submit', class: 'btn btn-primary' }, 'Prüfen')), msg),
+          h('p', null, showBtn),
           fb));
       clear(el, ...headEls, h('div', { class: 'two-col kl-rw' }, h('div', { class: 'kl-sticky' }, left), right), caseNav(x, 'rueckwaerts'));
       return null;

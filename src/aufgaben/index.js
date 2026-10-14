@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -53,10 +53,11 @@ async function ladeAufgaben(secret) {
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'arena.js')),
     lade(path.join(ENGINE, 'training.js')),
     lade(path.join(INHALTE, 'ueberliste.js')),
-    lade(path.join(INHALTE, 'parallelwelten.js'))
+    lade(path.join(INHALTE, 'parallelwelten.js')),
+    lade(path.join(INHALTE, 'keller.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -316,6 +317,48 @@ async function ladeAufgaben(secret) {
   pwD.PARALLELWELTEN.forEach((x, i) => {
     liste.push({ id: `parallelwelten:${x.id}:raetsel`, typ: PW_RAETSEL, modul: 'parallelwelten', nr: i + 1, titel: `${x.titel}: Wo stehen die Figuren?`, art: 'raetsel', stufe: 1, punkte: PUNKTE_STUFE[1], levels: [8], daten: x, tipps: [] });
     if (x.teilmengen) liste.push({ id: `parallelwelten:${x.id}`, typ: PW_TEILMENGEN, modul: 'parallelwelten', nr: i + 1, titel: `${x.titel}: Teilmengenkonstruktion`, art: 'teilmengen', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [8], daten: x, tipps: [] });
+  });
+
+  /* ---------- Keller-Labor: Tabellen-Trainer (je Automat alle Wörter) und Rückwärts (Wort aus der Folge) ---------- */
+  const kellerOeffentlich = (a) => {
+    const x = a.daten;
+    return { id: x.id, nr: a.nr, titel: x.titel, kontext: x.kontext, automat: x.automat, beispiele: x.beispiele, keller: x.keller, sim: x.sim, worte: x.tabelle };
+  };
+  const KELLER_TABELLE = {
+    modul: 'keller',
+    oeffentlich: kellerOeffentlich,
+    /** antwort: { wort: Index, zeilen, akzeptiert } – vollständige Tabelle; falsch = Fehlversuch. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeKellerTabelle(a.daten.automat, a.daten.tabelle, z.daten.stand, antwort);
+      return { ...erg, daten: { stand: erg.stand } };
+    },
+    loesungsteil(a) {
+      return kellerTabellenLoesung(a.daten.automat, a.daten.tabelle);
+    },
+    abzeichen({ zeilen }) {
+      const n = zeilen.filter((r) => r.aufgabe_id.startsWith('keller:') && (r.status === 'geloest' || r.nachgeloest)).length;
+      return ['keller-tabelle', ...(n >= 10 ? ['keller-profi'] : [])];
+    }
+  };
+  const KELLER_RUECKWAERTS = {
+    modul: 'keller',
+    // ohne Beispiele und Simulator-Wörter: dort kann das gesuchte Wort stehen
+    oeffentlich: (a) => { const { beispiele, sim, ...rest } = kellerOeffentlich(a); return { ...rest, folge: a.folge }; },
+    /** antwort: { wort } – passt es zur Folge der Konfigurationen? */
+    pruefe(a, antwort) {
+      return pruefeKellerRueckwaerts(a.daten.automat, a.folge, antwort);
+    },
+    loesungsteil(a) {
+      return kellerRueckwaertsLoesung(a.daten.automat, a.daten.rueckwaerts[0]);
+    },
+    abzeichen({ zeilen }) {
+      const n = zeilen.filter((r) => r.aufgabe_id.startsWith('keller:') && (r.status === 'geloest' || r.nachgeloest)).length;
+      return ['keller-rueckwaerts', ...(n >= 10 ? ['keller-profi'] : [])];
+    }
+  };
+  kellerD.KELLER_AUTOMATEN.forEach((x, i) => {
+    liste.push({ id: `keller:${x.id}:tabelle`, typ: KELLER_TABELLE, modul: 'keller', nr: i + 1, titel: `${x.titel}: Tabellen-Trainer`, art: 'tabelle', stufe: 1, punkte: PUNKTE_STUFE[1], levels: [9, 10], daten: x, tipps: [] });
+    liste.push({ id: `keller:${x.id}:rueckwaerts`, typ: KELLER_RUECKWAERTS, modul: 'keller', nr: i + 1, titel: `${x.titel}: Rückwärts`, art: 'rueckwaerts', stufe: 2, punkte: PUNKTE_STUFE[2], levels: [9, 10], daten: x, folge: kellerFolge(x.automat, x.rueckwaerts[0]), tipps: [] });
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));

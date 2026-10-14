@@ -119,3 +119,19 @@ DEMO.push(
   { modul: 'parallelwelten', art: 'raetsel', id: 'demo:parallelwelten:raetsel', titel: 'Demo: Beginnt mit 1 oder endet auf 0 – Wo stehen die Figuren?', daten: ODER },
   { modul: 'parallelwelten', art: 'teilmengen', id: 'demo:parallelwelten', titel: 'Demo: Beginnt mit 1 oder endet auf 0 – Teilmengenkonstruktion', daten: ODER },
 );
+
+// Keller-Demo: ein eigener Kellerautomat aⁿ c bⁿ (n ≥ 0) für Simulator, Tabellen-Trainer und Rückwärts
+const ACB = {
+  id: 'demo-acb', titel: 'aⁿ c bⁿ (n ≥ 0)',
+  kontext: 'Einige a, dann genau ein c als Mitte, dann genauso viele b wie a. L = {aⁿcbⁿ | n ≥ 0}, z. B. c, acb, aacbb.',
+  automat: { inputAlphabet: ['a', 'b', 'c'], stackAlphabet: ['#', 'A'], states: ['S0', 'S1', 'S2'], start: 'S0', accepting: ['S2'],
+    transitions: ['S0 -> S0 : (#, a) : A#', 'S0 -> S0 : (A, a) : AA', 'S0 -> S1 : (#, c) : #', 'S0 -> S1 : (A, c) : A', 'S1 -> S1 : (A, b) : ε', 'S1 -> S2 : (#, ε) : #'] },
+  pruefe: (w) => { const s = w.join(''); const m = /^(a*)c(b*)$/.exec(s); return !!m && m[1].length === m[2].length; },
+  beispiele: { ja: ['c', 'acb', 'aacbb'], nein: ['ε', 'ab', 'acbb', 'aacb', 'cb'] },
+  keller: 'Für jedes a liegt ein A im Keller. Das c wechselt nur den Zustand. Jedes b entfernt ein A; liegt danach wieder # oben, waren es gleich viele.',
+  sim: ['aacbb', 'acbb', 'c'], tabelle: ['acb', 'aacb'], rueckwaerts: ['aacbb'],
+};
+DEMO.push(
+  { modul: 'keller', art: 'tabelle', id: 'demo:keller:tabelle', titel: 'Demo: aⁿ c bⁿ – Tabellen-Trainer', daten: ACB },
+  { modul: 'keller', art: 'rueckwaerts', id: 'demo:keller:rueckwaerts', titel: 'Demo: aⁿ c bⁿ – Rückwärts', daten: ACB },
+);

@@ -13,7 +13,7 @@ import * as MK from '../js/engine/markierung.js';
 import { MINIMIERER_AUFGABEN, MINIMIERER_BEDEUTUNG } from '../../inhalte/minimierer.js';
 import { MEALY_AUFGABEN } from '../../inhalte/mealy.js';
 import { PARALLELWELTEN } from '../../inhalte/parallelwelten.js';
-import { KELLER_AUTOMATEN } from '../js/data/keller.js';
+import { KELLER_AUTOMATEN } from '../../inhalte/keller.js';
 import { BADGES } from '../js/data/badges.js';
 
 const maxLenFor = (alphabet, budget = 30000) => { let n = 0; while (alphabet.length ** (n + 1) < budget && n < 8) n++; return n; };

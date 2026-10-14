@@ -4,13 +4,14 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung, mealyFehlerVariante, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, kellerFolge, pruefeKellerTabelle, pruefeKellerRueckwaerts, kellerTabellenLoesung } from '../js/engine/pruefer.js';
+import { pda, runPDA } from '../js/engine/pda.js';
 import { nfa, runNFA, subsetConstruction } from '../js/engine/nfa.js';
 import { mealy, runMealy } from '../js/engine/mealy.js';
 import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe (Mealy: je Modus), IDs eindeutig mit Präfix „demo:“', () => {
-  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'ueberliste']);
+  assert.deepEqual([...new Set(DEMO.map((d) => d.modul))].sort(), ['baukasten', 'detektiv', 'keller', 'mealy', 'minimierer', 'parallelwelten', 'quiz', 'ueberliste']);
   assert.deepEqual(DEMO.filter((d) => d.modul === 'mealy').map((d) => d.art).sort(), ['bugjagd', 'vorhersage']);
   assert.equal(new Set(DEMO.map((d) => d.id)).size, DEMO.length);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
@@ -99,6 +100,18 @@ test('Demo-Parallelwelten: NEA = Prädikat, Rätsel und Teilmengen wie auf dem S
   let st = null;
   for (const z of subsetConstruction(N).table) { r = pruefeTeilmengenZeile(x.automat, st, { menge: z.set, ziele: z.targets }); st = r.stand; }
   assert.equal(r.ok, true);
+});
+
+test('Demo-Keller: Automat = Prädikat, Tabellen und Rückwärts wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.id === 'demo:keller:tabelle').daten;
+  const P = pda(x.automat);
+  for (const w of enumerateWords(P.inputAlphabet, 6)) assert.equal(runPDA(P, w).accepted, x.pruefe(w), w.join(''));
+  let stand = null; let r;
+  kellerTabellenLoesung(x.automat, x.tabelle).tabellen.forEach((t, i) => { r = pruefeKellerTabelle(x.automat, x.tabelle, stand, { wort: i, zeilen: t.zeilen, akzeptiert: t.akzeptiert }); stand = r.stand; });
+  assert.equal(r.ok, true);
+  const folge = kellerFolge(x.automat, x.rueckwaerts[0]);
+  assert.equal(pruefeKellerRueckwaerts(x.automat, folge, { wort: x.rueckwaerts[0] }).ok, true);
+  assert.equal(pruefeKellerRueckwaerts(x.automat, folge, { wort: 'acb' }).ok, false);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {
