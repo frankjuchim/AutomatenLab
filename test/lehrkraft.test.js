@@ -156,9 +156,11 @@ test('Löschung über die Verbund-API vollständig: jede Tabelle mit Konto-Bezug
   await mika.post(`/api/training/runde/${r.id}/ende`).set(ORIGIN).send({});
   await lk.patch('/api/lehrer/kurse/k%3A17').set(ORIGIN).send({ einstellungen: { auftrag: { text: 'Test' }, boss: 'offen' } });
   assert.equal((await mika.post('/api/boss/A/start').set(ORIGIN).send({})).status, 201); // Boss-Kampf
+  const jetzt = app.now();
+  assert.equal((await lk.post('/api/lehrer/kurse/k%3A17/challenges').set(ORIGIN).send({ titel: 'Team-Test', art: 'training', modul: 'arena', wertung: 'team', teams: 2, start: new Date(jetzt).toISOString(), ende: new Date(jetzt + 86400000).toISOString() })).status, 201); // Team-Zuordnung
   const tabellen = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").all().map((t) => t.name)
     .filter((t) => db.prepare(`PRAGMA table_info(${t})`).all().some((c) => c.name === 'sub'));
-  assert.deepEqual(tabellen.sort(), ['abzeichen', 'boss_versuche', 'falsche_antworten', 'fortschritt', 'konten', 'kurs_mitglieder', 'training'].sort(), 'neue Tabelle mit sub? Dann auch in konten.loescheKonto aufnehmen');
+  assert.deepEqual(tabellen.sort(), ['abzeichen', 'boss_versuche', 'challenge_teams', 'falsche_antworten', 'fortschritt', 'konten', 'kurs_mitglieder', 'training'].sort(), 'neue Tabelle mit sub? Dann auch in konten.loescheKonto aufnehmen');
   const zaehle = (sub) => Object.fromEntries(tabellen.map((t) => [t, db.prepare(`SELECT COUNT(*) AS n FROM ${t} WHERE sub = ?`).get(sub).n]));
   assert.ok(Object.values(zaehle('s:1042')).every((n) => n > 0), JSON.stringify(zaehle('s:1042')));
   const loeschen = (body) => request(app).post('/api/verbund/loeschen').set('Authorization', `Bearer ${H.verbundToken(app.now, 'loeschen')}`).send(body);

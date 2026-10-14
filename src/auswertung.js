@@ -369,6 +369,7 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null, bos
       liste: mitPlatz(punkteListe(kurs)).slice(0, 15).map(({ sub, ...z }) => z),
       welten,
       erfolge: erfolge(kurs),
+      challenges: api.challengesFuerBoard(kurs.id),
       stand: iso()
     };
   }
@@ -391,7 +392,8 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null, bos
     };
   }
 
-  return { kursUebersicht, schueler, kursAuswertung, einstellungen, einstellungenSetzen, meineKurse, rangliste, board, urkunden, export: export_, KURSARTEN, LEVEL_ARTEN, RAENGE };
+  const api = { challengesFuerBoard: () => [] }; // wird in src/app.js gesetzt (Klassen-Challenges)
+  return Object.assign(api, { kursUebersicht, schueler, kursAuswertung, einstellungen, einstellungenSetzen, meineKurse, rangliste, board, urkunden, export: export_, KURSARTEN, LEVEL_ARTEN, RAENGE });
 }
 
 module.exports = { createAuswertung, KURSARTEN, LEVEL_ARTEN, hauptLevel };

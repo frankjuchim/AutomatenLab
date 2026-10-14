@@ -2,6 +2,18 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Klassen-Challenges (1.21.0)
+Frank: „Beides wählbar, nur Challenge-Liste“. Die Lehrkraft legt im Kurs (Reiter 🎯 Challenges) eine Challenge an:
+Titel, Zeitraum (höchstens 60 Tage), was zählt – **Training** (richtige Antworten in beendeten Runden von Arena,
+Unterscheide! oder Sortierer) oder **ausgewählte Aufgaben** (im Zeitraum erstmals gelöst; Katalog und eigene
+Aufgaben des Kurses) – und die Wertung: **Einzel** (Rangliste mit Anzeigenamen, gleiche Werte = gleicher Platz) oder
+**Team** (2–6 zufällige, gleich große Teams; Neue kommen ins kleinste Team; Schüler sehen nur Team-Summen, Ø und den
+eigenen Beitrag, die Lehrkraft auch die Zusammensetzung). Die Wertung steht **nur in der Challenge-Liste** und auf dem
+Beamer-Board – keine zusätzlichen Punkte. Gezählt wird beim Abruf aus `training` bzw. `fortschritt` (keine doppelte
+Buchführung). Nach dem Ende einmalig Abzeichen „Challenge gewonnen“, „Auf dem Podest“ bzw. „Teamsieg“ (nur mit Wert
+> 0); die Lehrkraft kann vorzeitig beenden und Sieger-Urkunden drucken. Höchstens 10 laufende/geplante Challenges je
+Kurs. Tabellen `challenges` (mit dem Kurs gelöscht) und `challenge_teams` (mit Challenge bzw. Konto gelöscht).
+
 ## 2026-10-14 · Aufgaben-Editor für Lehrkräfte (1.20.0)
 Frank wünscht einen Editor. Lehrkräfte legen je Kurs eigene **Quizze** (1–12 Fragen: Multiple Choice mit 2–4
 Antworten oder Wahr/Falsch mit 2–3 Begründungen, optionale Erklärung) und **Baukasten-Challenges** (Aufgabentext,

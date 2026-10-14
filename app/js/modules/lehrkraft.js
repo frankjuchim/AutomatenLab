@@ -3,7 +3,8 @@
 //   Navigation  📚 Kurse · 📖 Aufgaben · 📂 Materialien · 🗺️ Themen · ⌂ Portal
 //   #/lehrkraft                          Meine Kurse (Tabelle, „Öffnen“)
 //   #/lehrkraft?kurs=<id>&tab=<reiter>   Kursseite mit Reitern 👥 Schüler · 🔗 Beitritt · 📊 Auswertung · 🏆 Rangliste ·
-//                                        ⚙️ Einstellungen (reiter: schueler | beitritt | auswertung | rangliste | einstellungen)
+//                                        🎯 Challenges · ⚙️ Einstellungen (reiter: schueler | beitritt | auswertung | rangliste |
+//                                        challenges [&challenge=<nr>] | einstellungen)
 //   #/lehrkraft?teil=aufgaben            Aufgaben der Welten (nach Level, mit Link ins Modul)
 //   #/lehrkraft?teil=urkunden&kurs=<id>  Urkunden des Kurses zum Drucken (wie Algo Quest)
 //   #/lehrkraft?teil=eigene[&kurs=<id>][&neu=quiz|baukasten|&aufgabe=<nr>]  Aufgaben-Editor: eigene Aufgaben je Kurs
@@ -25,6 +26,7 @@ const REITER = [
   ['beitritt', '🔗 Beitritt'],
   ['auswertung', '📊 Auswertung'],
   ['rangliste', '🏆 Rangliste'],
+  ['challenges', '🎯 Challenges'],
   ['einstellungen', '⚙️ Einstellungen'],
 ];
 const KURSART = { eA: 'Leistungskurs (eA)', gA: 'Grundkurs (gA)' };
@@ -163,6 +165,7 @@ export default {
         if (tab === 'schueler') zeige(...reiterSchueler(await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/schueler`)));
         else if (tab === 'beitritt') zeige(...reiterBeitritt(kurs));
         else if (tab === 'auswertung') zeige(...reiterAuswertung(id, await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/auswertung`)));
+        else if (tab === 'challenges') zeige(...(await reiterChallenges(id, kurs)));
         else if (tab === 'rangliste') zeige(...reiterRangliste(await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/schueler`), kurs));
         else zeige(...reiterEinstellungen(id, kurs));
       } catch (e) {
@@ -300,6 +303,112 @@ export default {
           ? tabelle(['Platz', 'Name', 'Punkte', 'Abzeichen', 'gelöst'], sortiert.map((s) => h('tr', null,
             h('td', { class: 'zahl' }, `${s.rang}.`), h('td', null, s.name), h('td', { class: 'zahl' }, String(s.punkte)), h('td', { class: 'zahl' }, String(s.abzeichen)), h('td', { class: 'zahl' }, String(s.geloest)))))
           : leer())];
+    }
+
+    /* 🎯 Challenges (PR 11): Einzel- oder Team-Wertung, nur in der Challenge-Liste */
+    async function reiterChallenges(id, kurs) {
+      const cid = ctx.params.get('challenge');
+      if (/^\d{1,9}$/.test(cid ?? '')) return challengeDetail(id, await api('GET', `/api/lehrer/challenges/${cid}`));
+      const [liste, { aufgaben: katalog }, eigeneListe] = await Promise.all([
+        api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/challenges`), api('GET', '/api/katalog'),
+        api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/eigene`).catch(() => [])]);
+      const status = h('p', { class: 'lk-status', 'aria-live': 'polite' });
+      const PHASE = { geplant: '🗓 geplant', laeuft: '🎯 läuft', beendet: '🏁 beendet' };
+      const datum = (iso) => new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const lokal = (ms) => { const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
+      const tabelleListe = liste.length ? tabelle(['Challenge', 'Wertung', 'Zeitraum', 'Status', ''], liste.map((c) => h('tr', null,
+        h('td', null, h('a', { href: `${kurslink(id, 'challenges')}&challenge=${c.id}` }, h('strong', null, c.titel)), h('br'), h('span', { class: 'muted klein' }, c.zaehlt)),
+        h('td', null, c.wertung === 'team' ? `Team (${c.teamAnzahl})` : 'Einzel'),
+        h('td', null, `${datum(c.start)} – ${datum(c.ende)}`),
+        h('td', null, PHASE[c.phase]),
+        h('td', { class: 'lk-aktionen' },
+          h('a', { class: 'btn btn-small', href: `${kurslink(id, 'challenges')}&challenge=${c.id}` }, 'Ansehen'),
+          h('button', { type: 'button', class: 'btn btn-small', onclick: async () => {
+            if (!window.confirm(`„${c.titel}“ löschen? Die Wertung verschwindet (Abzeichen bleiben).`)) return;
+            try { await api('DELETE', `/api/lehrer/challenges/${c.id}`); kursSeite(id, 'challenges'); } catch (e) { status.textContent = e.message; }
+          } }, 'Löschen'))))) : h('p', { class: 'muted' }, 'Noch keine Challenge in diesem Kurs.');
+
+      // Formular „Neue Challenge“
+      const titel = h('input', { type: 'text', id: 'ch-titel', maxlength: 80, placeholder: 'z. B. „Arena-Woche“' });
+      const wertung = (v) => h('input', { type: 'radio', name: 'ch-wertung', value: v, checked: v === 'einzel', onchange: () => { teams.disabled = v !== 'team'; } });
+      const teams = h('select', { id: 'ch-teams', disabled: true }, [2, 3, 4, 5, 6].map((n) => h('option', { value: String(n) }, `${n} Teams`)));
+      const artWahl = (v) => h('input', { type: 'radio', name: 'ch-art', value: v, checked: v === 'training', onchange: () => { trainingBox.hidden = v !== 'training'; aufgabenBox.hidden = v !== 'aufgaben'; } });
+      const modul = h('select', { id: 'ch-modul' }, [['arena', 'Akzeptor-Arena'], ['unterscheide', 'Unterscheide!'], ['sortierer', 'Chomsky-Sortierer']].map(([k, t]) => h('option', { value: k }, t)));
+      const trainingBox = h('div', null, h('label', { for: 'ch-modul' }, 'Training '), modul, h('p', { class: 'muted klein' }, 'Es zählen die richtigen Antworten in beendeten Runden.'));
+      const haupt = (a) => { const l = a.levels || []; return a.modul === 'quiz' && l.length > 1 ? l[l.length - 1] : l[0]; };
+      const box = (wert, text) => h('label', { class: 'check lk-check-klein' }, h('input', { type: 'checkbox', name: 'ch-aufgabe', value: wert }), ` ${text}`);
+      const aufgabenBox = h('div', { hidden: true },
+        h('p', { class: 'muted klein' }, 'Es zählen Aufgaben, die im Zeitraum zum ersten Mal gelöst werden.'),
+        eigeneListe.length ? h('details', { class: 'ch-gruppe' }, h('summary', null, `✏️ Eigene Aufgaben (${eigeneListe.length})`), h('div', { class: 'lk-check-reihe' }, eigeneListe.map((x) => box(x.id, x.titel)))) : null,
+        WORLDS.map((w) => h('details', { class: 'ch-gruppe' }, h('summary', null, `Welt ${w.id} – ${w.title}`),
+          w.levels.map((n) => { const l = katalog.filter((a) => haupt(a) === n); return l.length ? h('div', null, h('p', { class: 'muted klein' }, `Level ${n}: ${LEVELS[n]}`), h('div', { class: 'lk-check-reihe' }, l.map((a) => box(a.id, `${a.titel} (${MODUL_TITEL[a.modul] ?? a.modul})`)))) : null; }))));
+      const jetzt = Date.now();
+      const start = h('input', { type: 'datetime-local', id: 'ch-start', value: lokal(jetzt) });
+      const ende = h('input', { type: 'datetime-local', id: 'ch-ende', value: lokal(jetzt + 7 * 86400000) });
+      const form = h('form', { class: 'lk-form ed-form', onsubmit: async (e) => {
+        e.preventDefault();
+        const art = form.querySelector('input[name=ch-art]:checked').value;
+        const body = {
+          titel: titel.value, art, wertung: form.querySelector('input[name=ch-wertung]:checked').value, teams: Number(teams.value),
+          start: new Date(start.value).toISOString(), ende: new Date(ende.value).toISOString(),
+          ...(art === 'training' ? { modul: modul.value } : { aufgaben: [...form.querySelectorAll('input[name=ch-aufgabe]:checked')].map((x) => x.value) }),
+        };
+        status.textContent = 'Speichere …';
+        try { const c = await api('POST', `/api/lehrer/kurse/${encodeURIComponent(id)}/challenges`, body); ctx.navigate('lehrkraft', { kurs: id, tab: 'challenges', challenge: String(c.id) }); } catch (err) { status.textContent = err.message; }
+      } },
+        h('label', { for: 'ch-titel' }, 'Titel'), titel,
+        h('fieldset', null, h('legend', null, 'Wertung'),
+          h('label', { class: 'check' }, wertung('einzel'), ' Einzeln – Rangliste mit Anzeigenamen'), h('br'),
+          h('label', { class: 'check' }, wertung('team'), ' Im Team – der Kurs wird zufällig in gleich große Teams geteilt; sichtbar sind nur die Team-Summen '), teams),
+        h('fieldset', null, h('legend', null, 'Was zählt'),
+          h('label', { class: 'check' }, artWahl('training'), ' Training'), ' ', h('label', { class: 'check' }, artWahl('aufgaben'), ' Ausgewählte Aufgaben'),
+          trainingBox, aufgabenBox),
+        h('fieldset', null, h('legend', null, 'Zeitraum'),
+          h('label', { for: 'ch-start' }, 'Beginn'), start, h('label', { for: 'ch-ende' }, 'Ende'), ende),
+        h('p', { class: 'muted klein' }, 'Die Wertung steht nur in der Challenge-Liste und auf dem Beamer-Board – sie gibt keine zusätzlichen Punkte. Nach dem Ende bekommen die Plätze 1–3 (bzw. das Gewinnerteam) ein Abzeichen.'),
+        h('button', { type: 'submit', class: 'btn btn-primary' }, 'Challenge anlegen'), status);
+      return [h('div', { class: 'panel lk-karte' }, h('h3', null, '🎯 Challenges'), tabelleListe),
+        h('details', { class: 'panel lk-karte', open: !liste.length }, h('summary', null, h('strong', null, '＋ Neue Challenge')), form)];
+    }
+
+    function challengeDetail(id, c) {
+      const status = h('p', { class: 'lk-status', 'aria-live': 'polite' });
+      const MED = { 1: '🥇', 2: '🥈', 3: '🥉' };
+      const ergebnis = c.liste
+        ? tabelle(['Platz', 'Name', c.art === 'training' ? 'richtige Antworten' : 'gelöste Aufgaben'], c.liste.map((z) => h('tr', null, h('td', { class: 'zahl' }, `${z.wert > 0 && MED[z.platz] ? MED[z.platz] + ' ' : ''}${z.platz}.`), h('td', null, z.name), h('td', { class: 'zahl' }, String(z.wert)))))
+        : tabelle(['Platz', 'Team', 'Summe', 'Ø', 'Mitglieder'], c.teams.map((t) => h('tr', null, h('td', { class: 'zahl' }, `${t.wert > 0 && MED[t.platz] ? MED[t.platz] + ' ' : ''}${t.platz}.`), h('td', null, h('strong', null, t.name)),
+          h('td', { class: 'zahl' }, String(t.wert)), h('td', { class: 'zahl' }, String(t.schnitt).replace('.', ',')), h('td', null, t.namen.join(', ') || '–'))));
+      const einheit = c.art === 'training' ? 'richtige Antworten' : 'gelöste Aufgaben';
+      const sieger = c.liste ? c.liste.filter((z) => z.wert > 0 && z.platz <= 3).map((z) => ({ name: z.name, zeile: `${z.platz}. Platz · ${z.wert} ${einheit}` }))
+        : c.teams.filter((t) => t.wert > 0 && t.platz === 1).flatMap((t) => t.namen.map((n) => ({ name: n, zeile: `Gewinnerteam „${t.name}“ · ${t.wert} ${einheit}` })));
+      const blaetter = h('div', { class: 'urkunden' });
+      const urkunden = () => {
+        document.documentElement.classList.add('druck-urkunden');
+        clear(blaetter, sieger.map((s) => h('article', { class: 'urkunde' }, h('div', { class: 'urkunde-rahmen' },
+          h('p', { class: 'urkunde-marke', 'aria-hidden': 'true' }, '→◎'), h('h2', { class: 'urkunde-titel' }, 'Urkunde'),
+          h('p', { class: 'urkunde-lab' }, 'AutomatenLab – Klassen-Challenge'),
+          h('p', { class: 'urkunde-text' }, `„${c.titel}“`), h('p', { class: 'urkunde-name' }, s.name),
+          h('p', { class: 'urkunde-rang' }, s.zeile), h('p', { class: 'urkunde-text' }, `Gezählt: ${c.zaehlt}`),
+          h('div', { class: 'urkunde-fuss' }, h('p', null, new Date(c.ende).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })),
+            h('p', { class: 'urkunde-unterschrift' }, h('span', { class: 'urkunde-linie' }), 'Kursleitung'))))));
+        setTimeout(() => window.print(), 300);
+      };
+      return [
+        h('p', { class: 'no-print' }, h('a', { href: kurslink(id, 'challenges') }, '‹ Alle Challenges')),
+        h('div', { class: 'panel lk-karte no-print' },
+          h('h3', null, `🎯 ${c.titel}`),
+          h('p', { class: 'muted' }, `${{ geplant: '🗓 geplant', laeuft: '🎯 läuft', beendet: '🏁 beendet' }[c.phase]} · ${c.wertung === 'team' ? `Team-Wertung (${c.teamAnzahl} Teams)` : 'Einzel-Wertung'} · ${new Date(c.start).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })} – ${new Date(c.ende).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}`),
+          h('p', null, `Zählt: ${c.zaehlt}.`),
+          c.aufgaben ? h('details', null, h('summary', null, `Aufgaben (${c.aufgaben.length})`), h('ul', null, c.aufgaben.map((a) => h('li', null, a.titel)))) : null,
+          h('h4', null, c.phase === 'beendet' ? 'Ergebnis' : 'Zwischenstand'), ergebnis,
+          h('p', { class: 'start-actions' },
+            c.phase !== 'beendet' ? h('button', { type: 'button', class: 'btn', onclick: async () => {
+              if (!window.confirm('Challenge jetzt beenden? Danach zählt nichts mehr, und die Abzeichen werden vergeben.')) return;
+              try { await api('POST', `/api/lehrer/challenges/${c.id}/beenden`, {}); kursSeite(id, 'challenges'); } catch (e) { status.textContent = e.message; }
+            } }, 'Jetzt beenden') : null,
+            sieger.length ? h('button', { type: 'button', class: 'btn btn-primary', onclick: urkunden }, `🏅 Urkunden drucken (${sieger.length})`) : null),
+          status),
+        blaetter];
     }
 
     /* ⚙️ Einstellungen */

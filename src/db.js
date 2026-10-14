@@ -164,6 +164,33 @@ const MIGRATIONEN = [
     updated_at TEXT NOT NULL
   );
   CREATE INDEX idx_eigene_kurs ON eigene_aufgaben(kurs_id);
+  `,
+  `
+  -- Klassen-Challenges (PR 11): Zeitraum, Inhalt (Training oder Aufgaben-Auswahl), Einzel- oder Team-Wertung.
+  -- Gewertet wird beim Abruf aus training bzw. fortschritt; abgeschlossen = Abzeichen nach dem Ende vergeben.
+  CREATE TABLE challenges (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    kurs_id       TEXT NOT NULL REFERENCES kurse(id) ON DELETE CASCADE,
+    autor_sub     TEXT,
+    titel         TEXT NOT NULL,
+    art           TEXT NOT NULL CHECK (art IN ('training', 'aufgaben')),
+    inhalt        TEXT NOT NULL,
+    wertung       TEXT NOT NULL CHECK (wertung IN ('einzel', 'team')),
+    teams         INTEGER NOT NULL DEFAULT 0,
+    start_at      TEXT NOT NULL,
+    ende_at       TEXT NOT NULL,
+    abgeschlossen INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL
+  );
+  CREATE INDEX idx_challenges_kurs ON challenges(kurs_id);
+  -- Team-Zuordnung je Challenge (zufällig, gleich groß); verschwindet mit Challenge bzw. Konto
+  CREATE TABLE challenge_teams (
+    challenge_id INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+    sub          TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    team         INTEGER NOT NULL,
+    PRIMARY KEY (challenge_id, sub)
+  );
+  CREATE INDEX idx_challenge_teams_sub ON challenge_teams(sub);
   `
 ];
 

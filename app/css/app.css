@@ -950,3 +950,21 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .eigene-liste li.is-geloest a { color: var(--teal-deep); }
 .ed-form input[type='text'] { font: inherit; padding: 0.45rem 0.6rem; border: 1.5px solid var(--line); border-radius: var(--r-s); min-height: 44px; background: var(--surface); color: var(--ink); }
 .ed-form input[type='text']:focus { outline: 3px solid var(--focus); outline-offset: 1px; }
+
+/* ───── Klassen-Challenges (PR 11) ───── */
+.challenge-teams { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.challenge-teams li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; grid-template-areas: 'platz name wert' 'platz info wert'; align-items: center; gap: 0 0.5rem; padding: 0.5rem; border: 1px solid var(--line); border-radius: var(--r-m); }
+.challenge-teams li > .board-platz { grid-area: platz; }
+.challenge-teams li > strong { grid-area: name; }
+.challenge-teams li > .muted { grid-area: info; font-size: var(--fs-s); }
+.challenge-teams li > .board-punkte { grid-area: wert; font-size: var(--fs-l); }
+.challenge-teams li.is-ich { background: var(--ocker-soft); }
+.challenge-aufgaben { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.challenge-beendet { opacity: 0.85; }
+.challenge-hinweis { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.ch-gruppe { margin: 0.4rem 0; }
+.ch-gruppe summary { cursor: pointer; font-weight: 700; }
+.board-challenge { border-top: 4px solid var(--ocker); }
+@media print {
+  .druck-urkunden .lk-kurskopf, .druck-urkunden .lk-reiter, .druck-urkunden .lk-krumen, .druck-urkunden .lk-nav { display: none !important; }
+}
