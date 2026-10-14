@@ -25,12 +25,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS01_Folien_Ein-Automat-hoert-zu_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS01_Folien_Ein-Automat-hoert-zu_Notizen.pdf",
      "original": "original/DS01_Folien_Ein-Automat-hoert-zu.pptx",
      "bytes": {
-      "schueler": 702018,
-      "lehrkraft": 481925,
-      "original": 755386
+      "schueler": 700545,
+      "lehrkraft": 482189,
+      "original": 755409
      },
      "demo": [
       "schueler",
@@ -273,12 +274,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS06_Folien_Automaten-die-antworten_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS06_Folien_Automaten-die-antworten_Notizen.pdf",
      "original": "original/DS06_Folien_Automaten-die-antworten.pptx",
      "bytes": {
-      "schueler": 756577,
-      "lehrkraft": 503914,
-      "original": 785181
+      "schueler": 754997,
+      "lehrkraft": 504274,
+      "original": 785198
      }
     },
     {
@@ -352,12 +354,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS07_Folien_Der-Automat-stoesst-an-Grenzen_Handout.pdf",
+     "hinweis": "3 Lösungsfolien nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS07_Folien_Der-Automat-stoesst-an-Grenzen_Notizen.pdf",
      "original": "original/DS07_Folien_Der-Automat-stoesst-an-Grenzen.pptx",
      "bytes": {
-      "schueler": 637618,
-      "lehrkraft": 447997,
-      "original": 569312
+      "schueler": 631554,
+      "lehrkraft": 448260,
+      "original": 569374
      }
     },
     {
@@ -403,12 +406,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS08_Folien_Raten-erlaubt_Handout.pdf",
+     "hinweis": "3 Lösungsfolien nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS08_Folien_Raten-erlaubt_Notizen.pdf",
      "original": "original/DS08_Folien_Raten-erlaubt.pptx",
      "bytes": {
-      "schueler": 748580,
-      "lehrkraft": 511479,
-      "original": 730151
+      "schueler": 744848,
+      "lehrkraft": 511708,
+      "original": 730212
      }
     },
     {
@@ -454,12 +458,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS09_Folien_Der-Automat-bekommt-ein-Gedaechtnis_Handout.pdf",
+     "hinweis": "4 Lösungsfolien nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS09_Folien_Der-Automat-bekommt-ein-Gedaechtnis_Notizen.pdf",
      "original": "original/DS09_Folien_Der-Automat-bekommt-ein-Gedaechtnis.pptx",
      "bytes": {
-      "schueler": 471270,
-      "lehrkraft": 362220,
-      "original": 365218
+      "schueler": 463660,
+      "lehrkraft": 362365,
+      "original": 365289
      }
     },
     {
@@ -505,12 +510,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS10_Folien_Keller-Profis_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS10_Folien_Keller-Profis_Notizen.pdf",
      "original": "original/DS10_Folien_Keller-Profis.pptx",
      "bytes": {
-      "schueler": 520143,
-      "lehrkraft": 445731,
-      "original": 448127
+      "schueler": 518317,
+      "lehrkraft": 445889,
+      "original": 448143
      }
     },
     {
@@ -574,12 +580,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS11_Folien_Sprache-natuerlich-oder-formal_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS11_Folien_Sprache-natuerlich-oder-formal_Notizen.pdf",
      "original": "original/DS11_Folien_Sprache-natuerlich-oder-formal.pptx",
      "bytes": {
-      "schueler": 328771,
-      "lehrkraft": 358291,
-      "original": 304375
+      "schueler": 326727,
+      "lehrkraft": 358438,
+      "original": 304395
      }
     },
     {
@@ -625,12 +632,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS12_Folien_Grammatik-trifft-Automat_Handout.pdf",
+     "hinweis": "2 Lösungsfolien nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS12_Folien_Grammatik-trifft-Automat_Notizen.pdf",
      "original": "original/DS12_Folien_Grammatik-trifft-Automat.pptx",
      "bytes": {
-      "schueler": 691665,
-      "lehrkraft": 492292,
-      "original": 660495
+      "schueler": 689884,
+      "lehrkraft": 492488,
+      "original": 660535
      }
     },
     {
@@ -838,12 +846,13 @@
      "titel": "Folien",
      "art": "folien",
      "schueler": "schueler/DS16_Folien_Ausblick-Turingmaschine_Handout.pdf",
+     "hinweis": "eine Lösungsfolie nur in der Lehrkraftfassung",
      "lehrkraft": "lehrkraft/DS16_Folien_Ausblick-Turingmaschine_Notizen.pdf",
      "original": "original/DS16_Folien_Ausblick-Turingmaschine.pptx",
      "bytes": {
-      "schueler": 580171,
-      "lehrkraft": 415111,
-      "original": 519226
+      "schueler": 577676,
+      "lehrkraft": 415276,
+      "original": 519249
      }
     },
     {

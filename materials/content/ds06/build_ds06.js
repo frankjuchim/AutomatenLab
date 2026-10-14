@@ -213,7 +213,7 @@ async function folien() {
     ['1212', K['1212'].steps, K['1212'].out],
     ['2221', K['2221'].steps, K['2221'].out],
     ['11111', K['11111'].steps, K['11111'].out],
-  ], colW: [1.6, 8.6, 1.9], size: 22, notes: 'Bei 1212 endet der Automat in S2: Die letzte Münze bleibt als Guthaben für die nächste Kundin (AB 1c).' });
+  ], colW: [1.6, 8.6, 1.9], size: 22, notes: '[NUR LEHRKRAFT] Bei 1212 endet der Automat in S2: Die letzte Münze bleibt als Guthaben für die nächste Kundin (AB 1c).' });
   d.table({ title: 'DEA und Mealy-Automat im Vergleich', rows: vergleichRows, colW: [3.1, 4.5, 4.5], size: 18, notes: 'Gemeinsamkeiten: endlich viele Zustände, Startzustand, deterministisch, kein weiterer Speicher. Abi 2024 Nachschreibtermin a: „Beschreiben Sie Gemeinsamkeiten und Unterschiede …“.' });
   d.section({ phase: 'Übung', title: 'Arbeitsblatt Level 6' });
   d.task({ title: 'Auftrag: AB06', steps: [

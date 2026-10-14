@@ -2,6 +2,13 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Lösungsfolien markiert (Schüler-Handouts)
+Alle 16 Foliensätze durchgesehen: Zusätzlich zu den vier per Titel erkannten Folien tragen 18 Folien den Vermerk
+`[NUR LEHRKRAFT]`, weil sie Aufgaben des Arbeitsblatts lösen (z. B. AB09 1a/1b/2, AB07 1a/3, AB08 1, AB12 2, AB16 1b)
+oder eine App-Aufgabe (Überliste, Stufe 1). Erklärende Beispiele der Erarbeitung (Markierungsverfahren am Smiley,
+Muster-Baukasten, Ableitungen) bleiben im Handout – sie stehen ohnehin in den Merkblättern. Lehrkräfte sehen alle
+Folien mit Notizen; im Notiztext steht der Vermerk sichtbar.
+
 ## 2026-10-12 · Arbeitsblätter je Welt auf der Startseite, Welten mit Thema vorn
 Unter den Modulen jeder Welt klappt „Arbeitsblätter, Folien & Merkblätter zu Welt X (PDF)“ auf: alle Level der Welt und das Boss-Level, darunter die Klausuren bei „Für alle Welten“. Es sind dieselben Daten und Rechte wie auf der Themenseite (`GET /api/material`, `materialLinks`): Schüler sehen Schülerfassungen, Lehrkräfte zusätzlich ihre Fassungen, Gäste die Demo und 🔒. Aufklappbar, damit die Modul-Kacheln vorn bleiben.
 Die Welt-Buchstaben A–D bleiben als Kurzname. Sie stehen im Manifest (`welten[].kennung`, Entscheidung V4), in den Boss-Leveln A–C, in den Kopfzeilen der gedruckten Materialien und im Quiz („Welt A“). Auf der Level-Karte steht aber das Thema groß („Endliche Automaten“) und „Welt A · Level 1–6“ klein darunter. Alternativen: Nummern 1–4, verworfen, weil sie sich mit den Level-Nummern verwechseln lassen; nur Themennamen, verworfen, weil die gedruckten Blätter und die Boss-Level die Buchstaben nutzen.

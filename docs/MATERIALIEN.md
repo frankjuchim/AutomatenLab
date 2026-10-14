@@ -47,7 +47,9 @@ Server unter `#/material` anbietet – sie zählen nicht für Punkte:
 
 * **Lösungsfolien:** `lib/deckstyle.js` merkt Folien mit Titel „Auflösung …“, „Lösung …“, „Ergebnis: …“, „Ein mögliches …“
   oder dem Vermerk `[NUR LEHRKRAFT]` in den Notizen und schreibt ihre Nummern in `out/*.folien.json`; das Handout lässt
-  sie weg.
+  sie weg. **Markiert wird jede Folie, die eine Aufgabe des Arbeitsblatts, eine App-Aufgabe oder eine Wettbewerbs- bzw.
+  Spielrunde löst** (z. B. ausgefüllte Abi-Tabellen zu AB-Aufgaben, Auflösungen, Musterlösungen). Erklärende
+  Beispiele aus der Erarbeitung bleiben im Handout. Stand: 22 Folien in 13 Foliensätzen.
 * **Whitelist:** `materials/pdf/verzeichnis.json` (Akten je Level, Boss-Level, Klausuren, Einheit). Der Server
   (`src/material.js`) liefert nur dort verzeichnete Dateien aus: Schüler-PDF für Angemeldete (Schüler nur mit
   freigeschaltetem Kurs), Lehrkraft-PDF für Lehrkräfte und Admin, Originale (einzeln oder als ZIP je Akte) nur für den
