@@ -22,6 +22,7 @@ const SPECIAL = {
   gast: () => import('./modules/gast.js'), // auch /gast: Demo-Aufgaben ohne Anmeldung
   material: () => import('./modules/material.js'), // Zusatzmaterial (PDF), nur angemeldet; auch /material
   rangliste: () => import('./modules/rangliste.js'), // Rangliste der eigenen Kurse (wenn die Lehrkraft sie einschaltet)
+  boss: () => import('./modules/boss.js'), // Boss-Kämpfe der Welten A–C (nur angemeldet)
   board: () => import('./modules/board.js'), // Beamer-Board, öffentlich nur über den Link der Lehrkraft (/board/<link>)
 };
 

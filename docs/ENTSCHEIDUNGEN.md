@@ -2,6 +2,21 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Boss-Kämpfe der Welten A–C wie Algo Quest (1.19.0)
+Übernommen aus Algo Quest: Kampf auf Zeit (A 20, B/C 25 Minuten), 8 Aufgaben nach Mix (3 Basis, 3 Standard, 2 Profi,
+leichte zuerst), keine Rückmeldung während des Kampfes, Antworten werden gespeichert und erst am Ende gewertet
+(30 s Kulanz), 12 Stunden Pause, bester Versuch zählt (zu den Punkten, in Ranglisten und Portal-Kennzahlen),
+besiegt ab 50 %, Abzeichen je Boss und „Makellos“. Kurs-Einstellung `boss`: automatisch ab 60 % der Level-Punkte
+der Welt im Kursumfang (Standard), offen oder gesperrt; bei mehreren Kursen gilt die günstigste. Abweichungen:
+(1) Bosse nur für die Welten A–C – passend zu den Boss-Leveln der Materialien (DS06, DS10, DS14); Welt D hat zwei
+Bonus-Level. (2) Aufgaben im **Format des Level-Quiz** (Multiple Choice, Wahr/Falsch mit Begründung, Zuordnung) mit
+abgebildetem Automaten bzw. Grammatik – geprüft wird wie beim Quiz, Wahr/Falsch und Zuordnung auch zur Hälfte.
+(3) Jede Aufgabe mit Automat oder Grammatik hat eine **Kontrolle gegen die Engine** (`test/boss-inhalte.test.js`):
+richtige Option richtig, jede falsche falsch (der Test fand dabei einen Fehler im Entwurf: „gerade Anzahl a und
+endet auf b“ braucht 3, nicht 4 Zustände). (4) Im Grundkurs werden nur Aufgaben „gA + eA“ gezogen, wenn genug da sind
+(Welt A); die Bosse B und C sind eA und erscheinen im Grundkurs als „freiwillig“. (5) Lehrkräfte dürfen jederzeit
+kämpfen und sehen den Pool mit Lösungen unter 📖 Aufgaben.
+
 ## 2026-10-14 · Rangliste, Beamer-Board und Urkunden wie Algo Quest (1.18.0)
 Frank wünscht die Funktionen von Algo Quest. Übernommen: Rangliste für Schüler (gesamt oder je Welt, gleiche Punkte =
 gleicher Platz, eigener Eintrag markiert, keine Konto-IDs), Beamer-Board (Top 15, Kursdurchschnitt je Welt, letzte 8

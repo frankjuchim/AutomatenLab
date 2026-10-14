@@ -78,7 +78,10 @@ function apiRoutes(app, h) {
     res.json({ einstellungen: svc.auswertung.einstellungenSetzen(req.kurs, (req.body || {}).einstellungen) });
   });
   api.get('/lehrer/kurse/:id/schueler', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.schueler(req.kurs)));
-  api.get('/lehrer/kurse/:id/auswertung', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.kursAuswertung(req.kurs)));
+  api.get('/lehrer/kurse/:id/auswertung', nurLehrkraft, meinKurs, (req, res) => res.json({
+    ...svc.auswertung.kursAuswertung(req.kurs),
+    ...(svc.boss ? { boss: svc.boss.kursErgebnisse(svc.konten.mitglieder(req.kurs.id)) } : {})
+  }));
   api.get('/lehrer/kurse/:id/urkunden', nurLehrkraft, meinKurs, (req, res) => res.json(svc.auswertung.urkunden(req.kurs)));
   api.get('/lehrer/kurse/:id/export.csv', nurLehrkraft, meinKurs, (req, res) => {
     const art = String(req.query.art || 'uebersicht');
@@ -125,6 +128,19 @@ function apiRoutes(app, h) {
   api.post('/training/:modul/neu', darfUeben, begrenzt, (req, res) => res.json(svc.training.neu(req.konto.sub, req.params.modul, req.body)));
   api.post('/training/runde/:id/antwort', darfUeben, begrenzt, (req, res) => res.json(svc.training.antwort(req.konto.sub, req.params.id, req.body)));
   api.post('/training/runde/:id/ende', darfUeben, begrenzt, (req, res) => res.json(svc.training.ende(req.konto.sub, req.params.id, req.body)));
+
+  // Boss-Kämpfe (wie Algo Quest): Status, Start, Kampf ansehen, Antwort speichern (ohne Wertung), abgeben
+  const ohneBoss = (req, res, next) => (svc.boss ? next() : res.status(404).json({ error: 'Boss-Kämpfe gibt es hier nicht.' }));
+  const limitBoss = new S.Limiter({ max: 90, windowMs: 60 * 1000 });
+  const bossBegrenzt = (req, res, next) => (limitBoss.take('b:' + req.konto.sub) ? next() : res.status(429).json({ error: 'Zu viele Anfragen. Bitte warte einen Moment.' }));
+  api.get('/boss', darfUeben, ohneBoss, (req, res) => res.json(svc.boss.uebersicht(req.konto)));
+  api.get('/boss/kampf/:id', darfUeben, ohneBoss, (req, res) => res.json(svc.boss.ansicht(req.konto, req.params.id)));
+  api.put('/boss/kampf/:id/antwort', darfUeben, ohneBoss, bossBegrenzt, (req, res) => res.json(svc.boss.antworten(req.konto, req.params.id, req.body || {})));
+  api.post('/boss/kampf/:id/beenden', darfUeben, ohneBoss, begrenzt, (req, res) => res.json(svc.boss.beenden(req.konto, req.params.id)));
+  api.get('/boss/:welt', darfUeben, ohneBoss, (req, res) => res.json(svc.boss.status(req.konto, req.params.welt)));
+  api.post('/boss/:welt/start', darfUeben, ohneBoss, begrenzt, (req, res) => res.status(201).json(svc.boss.starten(req.konto, req.params.welt)));
+  // Lehrkraft: Pool eines Bosses mit richtigen Antworten (Vorschau wie Algo Quest)
+  api.get('/lehrer/boss/:welt', nurLehrkraft, ohneBoss, (req, res) => res.json(svc.boss.pool(req.params.welt)));
 
   app.use('/api', api);
 }

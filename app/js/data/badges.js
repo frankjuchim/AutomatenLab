@@ -42,4 +42,9 @@ export const BADGES = [
   { id: 'turing-regel', titel: 'Maschinist', text: 'Eine Turingmaschine durch die fehlende Regel vervollständigt.' },
   { id: 'quiz-erstes', titel: 'Exit-Ticket', text: 'Das erste Level-Quiz abgeschlossen.' },
   { id: 'quiz-welt-perfekt', titel: 'Welt gemeistert', text: 'Ein Welt-Quiz mit 100 % abgeschlossen.' },
+  // Boss-Kämpfe (PR 9): besiegt ab 50 % der möglichen Punkte
+  { id: 'boss-A', titel: 'Wächter besiegt', text: 'Den Boss der Welt A (endliche Automaten) besiegt.' },
+  { id: 'boss-B', titel: 'Golem besiegt', text: 'Den Boss der Welt B (Grenzen und Keller) besiegt.' },
+  { id: 'boss-C', titel: 'Sphinx besiegt', text: 'Den Boss der Welt C (formale Sprachen) besiegt.' },
+  { id: 'boss-makellos', titel: 'Makellos', text: 'Einen Boss-Kampf mit allen möglichen Punkten beendet.' },
 ];

@@ -12,6 +12,7 @@ const S = require('./security');
 const { schluesselListe } = require('./jwt');
 const { createKonten } = require('./konten');
 const { createAuswertung } = require('./auswertung');
+const { createBoss } = require('./boss');
 const { createLernen } = require('./lernen');
 const { createTraining } = require('./training');
 const { ssoRoutes } = require('./routes/sso');
@@ -125,7 +126,12 @@ function createApp(opts) {
   const ctx = { db, now, log };
   const konten = createKonten(ctx);
   const training = createTraining(ctx, { aufgaben: opts.aufgaben });
-  const svc = { konten, auswertung: createAuswertung(ctx, { konten, katalog, aufgaben: opts.aufgaben, training }), training, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training }) };
+  // Boss-Kämpfe brauchen die Kurs-Einstellungen, die Auswertung die Boss-Punkte – daher späte Bindung
+  let boss = null;
+  const bossPunkte = (subs, welt) => (boss ? boss.bestePunkte(subs, welt) : new Map());
+  const auswertung = createAuswertung(ctx, { konten, katalog, aufgaben: opts.aufgaben, training, bossPunkte });
+  boss = opts.aufgaben?.boss ? createBoss(ctx, { aufgaben: opts.aufgaben, konten, katalog, auswertung }) : null;
+  const svc = { konten, auswertung, training, boss, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training, bossPunkte }) };
 
   const app = express();
   app.disable('x-powered-by');
@@ -197,7 +203,7 @@ function createApp(opts) {
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
     umfang: katalog.umfang,
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
-    faehigkeiten: ['gast', 'themen', 'training', 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
+    faehigkeiten: ['gast', 'themen', 'training', ...(boss ? ['boss'] : []), 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
 
   app.get('/api/plattform', (req, res) => {

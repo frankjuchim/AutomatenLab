@@ -242,6 +242,7 @@ export default {
             gA ? ' Gestrichelte Level gehören nicht zum Grundkurs-Umfang (freiwillig).' : ' Gestrichelte Level sind Zusatz über das Kerncurriculum hinaus.'),
           matrix,
           h('p', { class: 'lk-legende muted klein', 'aria-hidden': 'true' }, 'Legende: ', [0, 1, 2, 3, 4].map((s, i) => h('span', { class: ['lk-heat', `heat-${s}`] }, ['nichts', '< 25', '< 50', '< 75', '≥ 75'][i])))),
+        bossErgebnisse(a.boss),
         fallenProfil(a.fallen),
         h('div', { class: 'panel lk-karte' },
           h('h3', null, 'Aufgabenstatistik'),
@@ -251,6 +252,17 @@ export default {
             statBody)),
           h('p', { class: 'muted klein' }, '„versucht“ = mindestens einmal geprüft oder einen Tipp geholt; „angesehen“ = „Lösung zeigen“ benutzt (0 Punkte).')),
       ];
+    }
+
+    /** Boss-Ergebnisse (bester Versuch je Welt, wie Algo Quest). */
+    function bossErgebnisse(b) {
+      if (!b?.zeilen?.length) return null;
+      return h('div', { class: 'panel lk-karte' },
+        h('h3', null, '⚔️ Boss-Ergebnisse (bester Versuch)'),
+        tabelle(['Name', ...b.welten.map((w) => `Boss ${w.welt}`)], b.zeilen.map((z) => h('tr', null,
+          h('th', { scope: 'row' }, z.name),
+          z.werte.map((w) => h('td', { class: 'zahl' }, w ? `${w.punkte}/${w.max} (${Math.round((100 * w.punkte) / w.max)} %)${w.besiegt ? ' 🏆' : ''} · ${w.versuche}×` : '–'))))),
+        h('p', { class: 'muted klein' }, '🏆 = besiegt (ab 50 %). n× = Zahl der Kämpfe. Die Boss-Punkte zählen zu den Punkten (nur der beste Versuch je Welt).'));
     }
 
     /** Fallen-Profil des Kurses (wie Algo Quest): Balken je Falle P1–P10 mit Fehlversuchen und betroffenen Schülern. */
@@ -300,6 +312,8 @@ export default {
       const auftragLevel = WORLDS.flatMap((w) => w.levels).map((n) => h('label', { class: 'check lk-check-klein' },
         h('input', { type: 'checkbox', name: 'auftrag-level', value: String(n), checked: (e0.auftrag?.level ?? []).includes(n) }), ` ${n}`));
       // Rangliste für Schüler und Beamer-Board (wie Algo Quest; beide standardmäßig aus)
+      const bossWahl = h('select', { name: 'boss', id: 'lk-boss' }, [['auto', 'automatisch ab 60 % der Level-Punkte der Welt (Standard)'], ['offen', 'sofort offen'], ['gesperrt', 'gesperrt']]
+        .map(([k, text]) => h('option', { value: k, selected: (e0.boss ?? 'auto') === k }, text)));
       const scoreboardBox = h('input', { type: 'checkbox', name: 'scoreboard', checked: !!e0.scoreboard });
       const beamerBox = h('input', { type: 'checkbox', name: 'beamer', checked: !!e0.beamer?.aktiv });
       const boardLink = h('p', { class: 'lk-board-link' });
@@ -322,6 +336,7 @@ export default {
           levelArt: Object.fromEntries([...form.querySelectorAll('select[name^="level-"]')].map((x) => [x.name.slice(6), x.value])),
           auftrag: auftragText.value.trim() ? { text: auftragText.value.trim(), level: [...form.querySelectorAll('input[name=auftrag-level]:checked')].map((x) => Number(x.value)) } : null,
           scoreboard: scoreboardBox.checked,
+          boss: bossWahl.value,
           beamer: { aktiv: beamerBox.checked },
         };
         status.textContent = 'Speichere …';
@@ -341,6 +356,9 @@ export default {
           auftragText,
           h('p', { class: 'muted klein' }, 'Dazu passende Level hervorheben (höchstens vier):'),
           h('div', { class: 'lk-check-reihe' }, auftragLevel)),
+        h('fieldset', null, h('legend', null, 'Boss-Kämpfe'),
+          h('label', { for: 'lk-boss' }, 'Bosse der Welten A–C: '), bossWahl,
+          h('p', { class: 'muted klein' }, 'Ein Boss-Kampf ist eine Prüfung auf Zeit (20–25 Minuten, 8 zufällige Aufgaben im Abitur-Stil, Auswertung erst am Ende, danach 12 Stunden Pause). „Automatisch“ öffnet den Boss einer Welt, sobald jemand 60 % der Punkte in deren Leveln hat. Den Aufgabenpool sehen Sie unter 📖 Aufgaben.')),
         h('fieldset', null, h('legend', null, 'Rangliste und Beamer-Board'),
           h('label', { class: 'check' }, scoreboardBox, ' Rangliste für Schülerinnen und Schüler sichtbar'),
           h('p', { class: 'muted klein' }, 'Zeigt allen im Kurs Platz, Anzeigename und Punkte (gesamt oder je Welt). Die Anzeigenamen wählen die Schülerinnen und Schüler im Portal selbst.'),
@@ -359,6 +377,29 @@ export default {
       ];
     }
 
+    /** Pool des Bosses einer Welt (aufklappbar, lädt beim Öffnen; richtige Antwort markiert). */
+    function bossPool(welt) {
+      if (!['A', 'B', 'C'].includes(welt)) return null;
+      const inhalt = h('div', null, h('p', { class: 'muted' }, 'Lade …'));
+      let geladen = false;
+      return h('details', { class: 'panel lk-karte lk-boss-pool', ontoggle: async (e) => {
+        if (!e.currentTarget.open || geladen) return;
+        geladen = true;
+        try {
+          const p = await api('GET', `/api/lehrer/boss/${welt}`);
+          const antwort = (f) => (f.typ === 'mc' ? f.optionen[0] : f.typ === 'wf' ? `${f.wahr ? 'wahr' : 'falsch'} – ${f.begruendungen[0]}` : f.paare.map((x) => `${x[0]} → ${x[1]}`).join('; '));
+          clear(inhalt,
+            h('p', null, `${p.anzahl} von ${p.aufgaben.length} Aufgaben je Kampf (Basis ${p.mix[1]}, Standard ${p.mix[2]}, Profi ${p.mix[3]}), ${p.dauerMin} Minuten. Im Grundkurs werden nur Aufgaben „gA + eA“ gezogen, wenn genug da sind.`),
+            h('ol', { class: 'lk-boss-liste' }, p.aufgaben.map((a) => h('li', null,
+              h('p', null, h('strong', null, a.frage.frage ?? a.frage.aussage), ' ', h('span', { class: 'muted klein' }, `${STUFE[a.stufe]} · ${a.punkte} P. · ${NIVEAUS[a.niveau]?.kurz ?? a.niveau}`), ' ',
+                a.fallen.map((x) => h('span', { class: 'lk-falle', title: FALLE[x]?.titel ?? x }, x))),
+              a.bild?.art === 'grammatik' ? h('pre', { class: 'boss-grammatik' }, a.bild.text) : a.bild ? h('p', { class: 'muted klein' }, `(mit abgebildetem ${{ dea: 'DEA', nea: 'NEA', mealy: 'Mealy-Automaten', nka: 'Kellerautomaten' }[a.bild.typ]})`) : null,
+              h('p', { class: 'lk-boss-antwort' }, '✓ ', antwort(a.frage)),
+              a.frage.erklaerung ? h('p', { class: 'muted klein' }, a.frage.erklaerung) : null))));
+        } catch (err) { clear(inhalt, h('p', { class: 'notice notice-error' }, err.message)); }
+      } }, h('summary', null, h('strong', null, `⚔️ Boss der Welt ${welt}: Aufgabenpool mit Lösungen`)), inhalt);
+    }
+
     /* ───────────── 📖 Aufgaben der Welten ───────────── */
     async function aufgabenSeite() {
       const { aufgaben } = await api('GET', '/api/katalog');
@@ -373,6 +414,7 @@ export default {
         h('p', { class: 'lk-sprung' }, 'Welten: ', WORLDS.map((w, i) => [i ? ' · ' : '', h('a', { href: `#/lehrkraft?teil=aufgaben`, onclick: (e) => { e.preventDefault(); el.querySelector(`#lk-welt-${w.id}`)?.scrollIntoView({ behavior: 'smooth' }); } }, `Welt ${w.id}`)])),
         WORLDS.map((w) => h('section', { class: 'lk-welt-abschnitt', id: `lk-welt-${w.id}` },
           h('h3', null, `Welt ${w.id} – ${w.title}`),
+          bossPool(w.id),
           w.levels.map((n) => {
             const liste = jeLevel(n);
             return h('div', { class: 'panel lk-karte' },

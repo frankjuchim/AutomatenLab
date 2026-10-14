@@ -129,6 +129,24 @@ const MIGRATIONEN = [
   );
   CREATE INDEX idx_falsche_aufgabe ON falsche_antworten(aufgabe_id);
   CREATE INDEX idx_falsche_sub ON falsche_antworten(sub);
+  `,
+  `
+  -- Boss-Kämpfe (PR 9, wie Algo Quest): ein Versuch je Kampf; Aufgaben-IDs und Antworten als JSON, gewertet erst
+  -- am Ende (ende_at gesetzt). ergebnis = [{id, wert, punkte}]. Es zählt der beste Versuch je Welt.
+  CREATE TABLE boss_versuche (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    sub         TEXT NOT NULL REFERENCES konten(sub) ON DELETE CASCADE,
+    welt        TEXT NOT NULL,
+    aufgaben    TEXT NOT NULL,
+    antworten   TEXT NOT NULL DEFAULT '{}',
+    start_at    TEXT NOT NULL,
+    deadline_at TEXT NOT NULL,
+    ende_at     TEXT,
+    punkte      INTEGER NOT NULL DEFAULT 0,
+    max_punkte  INTEGER NOT NULL,
+    ergebnis    TEXT NOT NULL DEFAULT '[]'
+  );
+  CREATE INDEX idx_boss_sub ON boss_versuche(sub, welt);
   `
 ];
 

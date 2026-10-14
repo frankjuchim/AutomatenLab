@@ -11,7 +11,7 @@ function punkteFuer(punkte, fehlversuche, tipps) {
 
 const fehler = (status, text) => Object.assign(new Error(text), { status });
 
-function createLernen(ctx, { aufgaben, training = null }) {
+function createLernen(ctx, { aufgaben, training = null, bossPunkte = null }) {
   const { db } = ctx;
   const iso = () => new Date(ctx.now()).toISOString();
   const titelAbzeichen = aufgaben.abzeichen; // Titel und Text aus app/js/data/badges.js
@@ -218,6 +218,8 @@ function createLernen(ctx, { aufgaben, training = null }) {
       punkte += t.punkte;
       Object.assign(best, t.best);
     }
+    // Boss-Kämpfe: bester Versuch je Welt
+    if (bossPunkte) punkte += bossPunkte([sub]).get(sub) ?? 0;
     const badges = db.prepare('SELECT schluessel FROM abzeichen WHERE sub = ? ORDER BY at').all(sub).map((r) => r.schluessel);
     return { module: [...aufgaben.module], punkte, solved, best, badges };
   }

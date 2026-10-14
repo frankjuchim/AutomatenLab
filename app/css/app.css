@@ -894,3 +894,41 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
   .druck-urkunden .urkunde { width: 210mm; height: 297mm; aspect-ratio: auto; box-shadow: none; break-after: page; break-inside: avoid;
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ───── Boss-Kämpfe (PR 9) ───── */
+.boss-karten { list-style: none; padding: 0; margin: var(--gap) 0; display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.boss-karte { display: grid; gap: 0.3rem; text-decoration: none; color: inherit; border-top: 4px solid var(--ocker); height: 100%; box-sizing: border-box; }
+.boss-karte:hover, .boss-karte:focus-visible { border-color: var(--teal); }
+.boss-karte.is-besiegt { border-top-color: var(--teal); }
+.boss-karte-welt { font-size: var(--fs-s); color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; }
+.boss-karte-titel { font-size: var(--fs-l); }
+.boss-karte-stand { font-weight: 700; }
+.tile-boss .tile-link { border-top-color: var(--ocker); background: var(--ocker-soft); }
+.boss-kopf { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; }
+.boss-kopf h1 { margin: 0; font-size: var(--fs-xl); }
+.boss-uhr { position: fixed; right: 1rem; bottom: 1rem; z-index: 15; box-shadow: var(--shadow); border: 1.5px solid var(--teal); font-family: var(--mono); font-size: var(--fs-xl); font-weight: 800; padding: 0.15rem 0.75rem; border-radius: var(--r-m); background: var(--teal-mist); color: var(--teal-deep); font-variant-numeric: tabular-nums; }
+.boss-uhr.is-knapp { background: var(--reject-soft); color: var(--reject); border-color: var(--reject); }
+.boss-page { padding-bottom: 4.5rem; }
+.boss-reiter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0; }
+.boss-reiter-knopf { min-width: var(--touch); min-height: var(--touch); border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; cursor: pointer; }
+.boss-reiter-knopf.is-beantwortet { background: var(--teal-soft); border-color: var(--teal); }
+.boss-reiter-knopf[aria-current='step'] { outline: 3px solid var(--ocker-fill); outline-offset: 1px; }
+.boss-aufgabe .option[aria-pressed='true'], .boss-aufgabe .decide[aria-pressed='true'] { background: var(--ocker-fill); border-color: var(--ink); }
+.boss-bild { margin: 0.5rem 0; overflow-x: auto; }
+.boss-grammatik { font-family: var(--mono); background: var(--teal-mist); border-radius: var(--r-m); padding: 0.6rem 0.9rem; white-space: pre-wrap; margin: 0.5rem 0; font-size: 1.05rem; }
+.boss-fuss { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; margin-top: var(--gap); }
+.boss-weiter { margin-top: var(--gap); }
+.boss-ergebnis { text-align: center; display: grid; gap: 0.5rem; justify-items: center; }
+.boss-ergebnis .lk-balken { width: min(100%, 420px); }
+.boss-ergebnis.is-besiegt { border-top: 4px solid var(--teal); }
+.boss-ergebnis-titel { font-size: var(--fs-xl); font-weight: 800; margin: 0; }
+.boss-auswertung { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+.boss-auswertung details > summary { cursor: pointer; font-weight: 700; }
+.boss-auswertung details.is-yes { border-left: 4px solid var(--teal); }
+.boss-auswertung details.is-half { border-left: 4px solid var(--ocker); }
+.boss-auswertung details.is-no { border-left: 4px solid var(--reject); }
+.boss-versuche { margin: 0; padding-left: 1.2rem; }
+.lk-boss-pool summary { cursor: pointer; }
+.lk-boss-liste { display: grid; gap: 0.75rem; padding-left: 1.4rem; }
+.lk-boss-liste p { margin: 0.15rem 0; }
+.lk-boss-antwort { color: var(--teal-deep); font-weight: 700; }

@@ -93,8 +93,9 @@ test('Urkunden: je Schüler Name, Rang, Punkte, Platz, Abzeichen; nur Lehrkräft
   assert.equal((await fremd.get('/api/lehrer/kurse/k%3A17/urkunden')).status, 404);
 });
 
-test('Manifest nennt Rangliste, Beamer-Board, Urkunden und Fallen-Profil', async () => {
+test('Manifest nennt Rangliste, Beamer-Board, Urkunden, Fallen-Profil und Bosse', async () => {
   const app = await H.verbundApp();
   const f = (await request(app).get('/api/plattform')).body.faehigkeiten;
-  for (const x of ['scoreboard', 'beamer', 'urkunden', 'fallen-profil']) assert.ok(f.includes(x), x);
+  for (const x of ['scoreboard', 'beamer', 'urkunden', 'fallen-profil', 'boss']) assert.ok(f.includes(x), x);
+  assert.equal((await request(app).get('/api/plattform')).body.umfang.bosse, 3);
 });
