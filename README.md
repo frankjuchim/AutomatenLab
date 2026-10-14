@@ -49,4 +49,8 @@ Wichtig für alle Änderungen:
 
 ## Lizenz
 
-Noch festzulegen (Vorschlag: Code MIT, Unterrichtsmaterial CC BY-SA 4.0). Schriften in `materials/fonts/`: Caladea (Apache 2.0), Carlito (OFL 1.1); App-Schrift Atkinson Hyperlegible (OFL 1.1).
+* **Programmcode** (Web-App, Server, Material-Generator): MIT, siehe [`LICENSE`](LICENSE).
+* **Unterrichtsmaterial** (Arbeitsblätter, Folien, Merkblätter, Handreichungen, Videoreihe, Aufgabentexte in `inhalte/`): CC BY-SA 4.0, siehe [`materials/LIZENZ.md`](materials/LIZENZ.md); jede erzeugte Datei trägt den Vermerk in der Fußzeile.
+* Schriften in `materials/fonts/`: Caladea (Apache 2.0), Carlito (OFL 1.1); App-Schrift Atkinson Hyperlegible (OFL 1.1).
+
+Das Repository ist privat und wird nicht geteilt.

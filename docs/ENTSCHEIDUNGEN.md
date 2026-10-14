@@ -2,6 +2,16 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Lizenz: Code MIT, Material CC BY-SA 4.0 (1.17.0)
+Frank hat entschieden: Programmcode unter MIT (`LICENSE`, `package.json`), Unterrichtsmaterial unter CC BY-SA 4.0
+(`materials/LIZENZ.md`). Jedes erzeugte Dokument trägt „CC BY-SA 4.0 Frank Juchim“ in der Fußzeile, jede Folie rechts
+unten „CC BY-SA 4.0 · Frank Juchim“, die Video-Folien am Ende der Fußzeile – wer ein PDF weitergibt, gibt die Lizenz
+mit. Die Aufgabentexte, Tipps und Erklärungen in `inhalte/` zählen als Material. Ausgenommen: Schriften (eigene
+Lizenzen) und die unveränderten Portal-Kopien (`src/jwt.js`, `src/security.js`, `scripts/vertrag_pruefen.js`). Das
+Repository bleibt privat und wird nicht geteilt; die Lizenz regelt nur die Weitergabe einzelner Materialien. Alle
+Materialien und PDFs wurden neu erzeugt. Verworfen: CC BY-NC-SA (das NC-Merkmal schließt Fortbildungen und
+Schulbuch-Kooperationen unklar aus) und „alle Rechte vorbehalten“ (verhindert das Teilen unter Kolleginnen und Kollegen).
+
 ## 2026-10-14 · Fallen-Nummern in den Materialien (1.16.0)
 Jeder Warnkasten („Darauf achten“, „Typische Fehler“) der Lehrkraft-Handreichungen DS01–DS15 und der Merkblätter
 M02–M09 nennt am Ende die Fallen, die er behandelt („Abitur-Fallen: P2 Akzeptanz falsch entschieden · …“). Die
