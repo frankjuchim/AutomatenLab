@@ -3,7 +3,8 @@
 // Aufgabenkatalog – echte Aufgaben und ihre Lösungen liegen nur auf dem Server (inhalte/).
 // Notation nach docs/einheit/PLAN.md Abschnitt 1. Tests: app/tests/demo.test.js (gegen die Engine).
 //
-// Format wie in inhalte/: modul, id (Präfix „demo:“), titel, daten (Quiz: fragen; Detektiv: Fall; Baukasten: Challenge).
+// Format wie in inhalte/: modul, id (Präfix „demo:“), titel, daten (Quiz: fragen; Detektiv: Fall; Baukasten: Challenge;
+// Minimierer: Aufgabe mit Automat).
 
 const count = (w, s) => w.filter((x) => x === s).length;
 
@@ -50,6 +51,18 @@ export const DEMO = [
       beispiele: { ja: ['ε', 'ab', 'ba', 'aaaa'], nein: ['a', 'b', 'aba'] },
       tipp: 'Zwei Zustände genügen: „bisher gerade viele Zeichen gelesen“ und „bisher ungerade viele“.',
       pruefe: (w) => w.length % 2 === 0,
+    },
+  },
+  {
+    modul: 'minimierer', id: 'demo:minimierer', titel: 'Demo: Endet auf a – doppelt gemerkt',
+    daten: {
+      id: 'demo-endet-a', stufe: 1, titel: 'Endet auf a – doppelt gemerkt',
+      kontext: 'Der Automat akzeptiert alle Wörter über {a, b}, die auf a enden. Er unterscheidet aber, ob vor dem letzten a schon ein b kam.',
+      frage: 'Bestimme mit dem Markierungsverfahren, welche Zustände zusammengefasst werden können.',
+      automat: { alphabet: ['a', 'b'], start: 'S0', accepting: ['S1', 'S3'],
+        delta: { S0: { a: 'S1', b: 'S2' }, S1: { a: 'S1', b: 'S2' }, S2: { a: 'S3', b: 'S2' }, S3: { a: 'S1', b: 'S2' } } },
+      klassen: [['S0', 'S2'], ['S1', 'S3']],
+      merke: 'Für die Sprache zählt nur das letzte Zeichen: S1 und S3 bedeuten beide „zuletzt a“, S0 und S2 „nicht auf a“. Zwei Zustände reichen.',
     },
   },
 ];

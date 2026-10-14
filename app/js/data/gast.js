@@ -1,7 +1,7 @@
 // Gastmodus (#/gast, Vertrag InfoLabs §4/§9; Entscheidung V2): Ohne Anmeldung gibt es je Modul genau EINE Aufgabe
 // zum Ausprobieren. Alle anderen Routen führen ohne Sitzung zur Anmeldung beim Portal (und danach genau dorthin).
 //
-// • Module mit Prüfung auf dem Server (quiz, detektiv, baukasten): eigene Demo-Aufgaben aus data/demo.js (?demo=1).
+// • Module mit Prüfung auf dem Server (quiz, detektiv, baukasten, minimierer): eigene Demo-Aufgaben aus data/demo.js (?demo=1).
 // • Module, die noch im Browser prüfen: vorerst die erste Aufgabe des Moduls. Sobald ein Modul auf den Server
 //   umzieht (Roadmap Phase 4), bekommt es hier eine eigene Demo-Aufgabe.
 //
@@ -10,7 +10,7 @@ export const GAST = [
   { route: 'arena', titel: 'Akzeptor-Arena', text: 'Eine Übungsrunde ohne Zeitlimit (Stufe 1).', params: { stufe: '1', ueben: '1' } },
   { route: 'detektiv', titel: 'Sprach-Detektiv', text: 'Ein Demo-Fall: Welche Sprache erkennt der Automat?', params: { demo: '1' } },
   { route: 'baukasten', titel: 'Automaten-Baukasten', text: 'Eine Demo-Challenge: DEA für Wörter gerader Länge.', params: { demo: '1' } },
-  { route: 'minimierer', titel: 'Minimierer', text: 'Markierungsverfahren am Smiley-Erkenner.', params: { aufgabe: '1' }, erlaubt: ['modus'] },
+  { route: 'minimierer', titel: 'Minimierer', text: 'Eine Demo-Aufgabe zum Markierungsverfahren.', params: { demo: '1' }, erlaubt: ['modus'] },
   { route: 'mealy', titel: 'Mealy-Maschine', text: 'Der Süßigkeitenautomat.', params: { aufgabe: '1' }, erlaubt: ['modus'] },
   { route: 'parallelwelten', titel: 'Parallelwelten', text: 'NEA „LOL-Suche“ simulieren.', params: { aufgabe: '1' }, erlaubt: ['modus', 'wort'] },
   { route: 'keller', titel: 'Keller-Labor', text: 'Kellerautomat für aⁿbⁿ Schritt für Schritt.', params: { automat: 'anbn' }, erlaubt: ['modus', 'wort'] },

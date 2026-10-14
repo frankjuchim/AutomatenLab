@@ -10,7 +10,7 @@ import { mealy, runMealy, mealyEquivalent, mealyCompleteness, outputLabel } from
 import { nfa, runNFA, moveSet, epsilonClosure, subsetConstruction } from '../js/engine/nfa.js';
 import { pda, runPDA, searchFrom, initialConfig, matchesConfigSequence, isDeterministic, successors } from '../js/engine/pda.js';
 import * as MK from '../js/engine/markierung.js';
-import { MINIMIERER_AUFGABEN, MINIMIERER_BEDEUTUNG } from '../js/data/minimierer.js';
+import { MINIMIERER_AUFGABEN, MINIMIERER_BEDEUTUNG } from '../../inhalte/minimierer.js';
 import { MEALY_AUFGABEN } from '../js/data/mealy.js';
 import { PARALLELWELTEN } from '../js/data/parallelwelten.js';
 import { KELLER_AUTOMATEN } from '../js/data/keller.js';

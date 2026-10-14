@@ -32,7 +32,7 @@ app/
    };
    ```
 2. In `js/modules/manifest.js` beim Eintrag `load: () => import('./minimierer.js')` setzen. Fertig – Kachel, Level-Karte und Route aktualisieren sich automatisch.
-3. Inhalte nach `js/data/minimierer.js`, Tests nach `tests/data.test.js` (Beispielwörter gegen die Engine prüfen!).
+3. Inhalte nach `js/data/<modul>.js` (mit Prüfung auf dem Server: `inhalte/<modul>.js`, siehe `docs/AUFGABENFORMAT.md`), Tests nach `tests/data.test.js` (Beispielwörter gegen die Engine prüfen!).
 
 **Lebenszyklus:** Jede Änderung des Hashs (auch nur der Parameter) baut das Modul neu auf: vorherige Cleanup-Funktion → `mount` neu. Zustand, der einen Wechsel überleben soll, gehört in `progress.setDraft()`.
 

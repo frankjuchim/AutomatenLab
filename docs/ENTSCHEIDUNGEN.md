@@ -2,6 +2,15 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-14 · Minimierer auf dem Server (PR 4a)
+Jede Runde des Markierungsverfahrens prüft der Server; er hält den Stand (bestätigte Paare) und zählt jede falsch
+geprüfte Runde als Fehlversuch. Punkte nach Stufe statt pauschal 30: Smiley und „gerade Anzahl a“ Basis (10), fünf
+Aufgaben Standard (20), Prüfnummern (Abi 2025) Profi (30). „Unterscheide!“ bringt vorerst keine Punkte: Die Antworten
+folgen aus dem sichtbaren Automaten, und 5 Punkte je Paar (über 100 Paare) hätten die Punkte verzerrt; es wird in PR 4c
+zum Training (1 Punkt je Aufgabe, Tageshöchstwert, Vertrag-Umsetzung `docs/VERBUND.md` §6). Gäste bekommen eine eigene
+Demo-Aufgabe („Endet auf a – doppelt gemerkt“) statt Aufgabe 1. Verworfen: Prüfung nur des Endergebnisses (Klassen) –
+das Verfahren Runde für Runde ist der Lerninhalt und Abi-relevant.
+
 ## 2026-10-14 · Lösungsfolien markiert (Schüler-Handouts)
 Alle 16 Foliensätze durchgesehen: Zusätzlich zu den vier per Titel erkannten Folien tragen 18 Folien den Vermerk
 `[NUR LEHRKRAFT]`, weil sie Aufgaben des Arbeitsblatts lösen (z. B. AB09 1a/1b/2, AB07 1a/3, AB08 1, AB12 2, AB16 1b)

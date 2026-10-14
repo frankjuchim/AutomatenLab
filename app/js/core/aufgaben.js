@@ -8,7 +8,7 @@ import { api as apiRoh } from './api.js';
 import { anmeldeLink } from './sitzung.js';
 import { progress } from './progress.js';
 import { DEMO } from '../data/demo.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten } from '../engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung } from '../engine/pruefer.js';
 
 const pfad = (id, was = '') => `/api/aufgaben/${encodeURIComponent(id)}${was}`;
 
@@ -58,6 +58,9 @@ function vorbereiten(d) {
   } else if (d.modul === 'detektiv') {
     const f = d.daten;
     oeffentlich = { titel: f.titel, nr: 0, automat: f.automat, vorschlaege: f.vorschlaege ?? [], optionen: mische(f.optionen.map((o, j) => ({ id: idVon(0, j), text: o.text }))) };
+  } else if (d.modul === 'minimierer') {
+    const x = d.daten;
+    oeffentlich = { id: x.id, nr: 0, stufe: x.stufe, titel: x.titel, kontext: x.kontext, frage: x.frage, automat: x.automat };
   } else {
     const c = d.daten;
     oeffentlich = { id: c.id, nr: 0, stufe: c.stufe, titel: c.titel, aufgabe: c.aufgabe, alphabet: c.referenz.alphabet, beispiele: c.beispiele, tippsAnzahl: c.tipp ? 1 : 0 };
@@ -73,7 +76,7 @@ export function demoQuelle() {
   };
   const zustand = (s) => ({ status: s.geloest ? 'geloest' : s.angesehen ? 'angesehen' : 'offen', fehlversuche: s.fehlversuche, tippsGenutzt: s.tippsGenutzt, tippsAnzahl: s.tipps.length,
     tipps: s.tipps.slice(0, s.geloest || s.angesehen ? s.tipps.length : s.tippsGenutzt), punkte: 0, maxPunkte: 0, moeglich: 0 });
-  const loesung = (s) => (s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
+  const loesung = (s) => (s.d.modul === 'minimierer' ? minimiererLoesung(s.d.daten.automat, s.d.daten.merke) : s.d.modul === 'detektiv' ? { richtig: s.idVon(0, 0), richtigText: s.d.daten.optionen[0].text, bedeutung: s.d.daten.bedeutung ?? null }
     : s.d.modul === 'baukasten' ? { musterloesung: s.d.daten.referenz }
       : { ergebnis: { prozent: Math.round((100 * Object.values(s.antworten).reduce((a, b) => a + b, 0)) / s.d.daten.fragen.length) } });
   return {
@@ -96,10 +99,13 @@ export function demoQuelle() {
         const j = s.d.daten.optionen.findIndex((_, k) => s.idVon(0, k) === antwort?.wahl);
         if (j < 0) throw Object.assign(new Error('Bitte wähle eine Beschreibung.'), { status: 400 });
         erg = pruefeDetektiv(s.d.daten, j);
+      } else if (s.d.modul === 'minimierer') {
+        erg = pruefeMinimiererRunde(s.d.daten.automat, s.stand, antwort);
+        s.stand = erg.stand;
       } else {
         erg = pruefeBaukasten(s.d.daten.referenz, antwort?.automat);
       }
-      if (s.d.modul !== 'quiz') { if (erg.ok) s.geloest = true; else if (!s.geloest && !s.angesehen) s.fehlversuche++; }
+      if (s.d.modul !== 'quiz') { if (erg.ok) s.geloest = true; else if (!s.geloest && !s.angesehen && (erg.zaehltFehler ?? true)) s.fehlversuche++; }
       const fertig = erg.fertig ?? erg.ok;
       return { ...erg, fertig, zustand: zustand(s), geloest: fertig, punkteErhalten: 0, neueAbzeichen: [], ...(fertig || s.angesehen ? { loesung: loesung(s) } : {}) };
     },

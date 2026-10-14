@@ -106,6 +106,53 @@ test('Baukasten: Gegenbeispiel, Tipp kostet Punkte, richtiger DEA → Punkte; un
   }
 });
 
+test('Minimierer: Runden auf dem Server, falsche Runde = Fehlversuch, Stand-Fehler 409, Lösung erst danach', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const id = 'minimierer:smiley';
+  const k = (await s.get('/api/katalog?modul=minimierer')).body.aufgaben;
+  assert.equal(k.length, 7);
+  assert.deepEqual(k[0], { id, modul: 'minimierer', nr: 1, titel: 'Smiley-Erkenner', stufe: 1, punkte: 10, levels: [5], schluessel: 'smiley' });
+  const a = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.ok(a.aufgabe.automat && a.aufgabe.frage);
+  assert.doesNotMatch(JSON.stringify(a), /klassen|merke|Kein Wort kann sie unterscheiden/);
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  // Runde 0 mit einem falschen Paar: Fehlversuch, keine Lösung
+  let r = (await pr({ runde: 0, markiert: ['S3|S4'] })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.deepEqual(r.rueckmeldung.falsch, ['S3|S4']);
+  assert.ok(r.rueckmeldung.fehlendAnzahl > 0);
+  assert.equal(r.zustand.fehlversuche, 1);
+  assert.equal(r.loesung, undefined);
+  // falsche Runde → 409, unbekanntes Paar → 400
+  assert.equal((await pr({ runde: 3, markiert: [] })).status, 409);
+  assert.equal((await pr({ runde: 0, markiert: ['S0|X9'] })).status, 400);
+  // richtige Runden: Paare aus der Rückmeldung des Servers (Runde 0) und per Engine (Folgerunden)
+  const { markierungsTabelle, loesung } = await import('../app/js/engine/markierung.js');
+  const { dfa } = await import('../app/js/engine/dfa.js');
+  const L = loesung(markierungsTabelle(dfa(a.aufgabe.automat)));
+  let runde = 0;
+  for (;;) {
+    const markiert = [...L.marked].filter(([, x]) => x === runde).map(([key]) => key);
+    r = (await pr({ runde, markiert })).body;
+    assert.equal(r.rueckmeldung.richtig, true, `Runde ${runde}`);
+    if (r.rueckmeldung.fertig) break;
+    assert.equal(r.loesung, undefined);
+    runde = r.rueckmeldung.naechsteRunde;
+  }
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(10, 1, 0));
+  assert.deepEqual(r.loesung.klassen, [['S3', 'S4']]);
+  assert.equal(r.loesung.nachher, 5);
+  assert.match(r.loesung.merke, /S3 und S4/);
+  assert.ok(r.neueAbzeichen.some((b) => b.id === 'minimierer-erste'));
+  // nach dem Lösen: neuer Durchgang ab Runde 0 ist Übung ohne Punkte
+  r = (await pr({ runde: 0, markiert: L.marked.size ? [...L.marked].filter(([, x]) => x === 0).map(([key]) => key) : [] })).body;
+  assert.equal(r.rueckmeldung.richtig, true);
+  assert.equal(r.punkteErhalten, 0);
+  assert.ok((await s.get('/api/lernstand')).body.solved[id]);
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

@@ -4,10 +4,11 @@ import assert from 'node:assert/strict';
 import { DEMO } from '../js/data/demo.js';
 import { dfa, runDFA, normalizeDFA } from '../js/engine/dfa.js';
 import { enumerateWords, tokenize } from '../js/engine/tokenize.js';
-import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort } from '../js/engine/pruefer.js';
+import { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, unterscheidendesWort, pruefeMinimiererRunde, minimiererLoesung } from '../js/engine/pruefer.js';
+import { markierungsTabelle, loesung } from '../js/engine/markierung.js';
 
 test('je Modul eine Demo-Aufgabe, IDs mit Präfix „demo:“', () => {
-  assert.deepEqual(DEMO.map((d) => d.modul).sort(), ['baukasten', 'detektiv', 'quiz']);
+  assert.deepEqual(DEMO.map((d) => d.modul).sort(), ['baukasten', 'detektiv', 'minimierer', 'quiz']);
   assert.ok(DEMO.every((d) => d.id.startsWith('demo:')));
 });
 
@@ -28,6 +29,25 @@ test('Demo-Baukasten: Beispiele und Prädikat passen zur Referenz', () => {
   for (const w of c.beispiele.nein) assert.equal(lauf(w), false, w);
   for (const w of enumerateWords(A.alphabet, 8)) assert.equal(runDFA(A, w).accepted, c.pruefe(w));
   assert.equal(pruefeBaukasten(c.referenz, c.referenz).ok, true);
+});
+
+test('Demo-Minimierer: erwartete Klassen = Markierungsverfahren, Runden wie auf dem Server', () => {
+  const x = DEMO.find((d) => d.modul === 'minimierer').daten;
+  const L = minimiererLoesung(x.automat, x.merke);
+  assert.deepEqual(L.klassen.map((c) => [...c].sort().join()).sort(), x.klassen.map((c) => [...c].sort().join()).sort());
+  const M = loesung(markierungsTabelle(dfa(x.automat)));
+  let stand = null; let r;
+  for (let runde = 0; ; runde++) {
+    r = pruefeMinimiererRunde(x.automat, stand, { runde, markiert: [...M.marked].filter(([, k]) => k === runde).map(([key]) => key) });
+    stand = r.stand;
+    assert.equal(r.rueckmeldung.richtig, true);
+    if (r.fertig) break;
+  }
+  assert.equal(r.ok, true);
+  assert.throws(() => pruefeMinimiererRunde(x.automat, stand, { runde: 5, markiert: [] }), (e) => e.status === 409);
+  const falsch = pruefeMinimiererRunde(x.automat, null, { runde: 0, markiert: ['S0|S2'] });
+  assert.equal(falsch.zaehltFehler, true);
+  assert.equal(falsch.ok, false);
 });
 
 test('Demo-Quiz: Bewertung wie auf dem Server', () => {

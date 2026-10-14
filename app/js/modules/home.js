@@ -30,7 +30,7 @@ const STATUS = {
   // Module mit Prüfung auf dem Server: Aufgabenliste aus dem öffentlichen Katalog (ohne Lösungen)
   detektiv: async () => { const F = await katalog('detektiv'); return geloest(solvedOf('detektiv', F.map((f) => `fall-${f.nr}`)), F.length); },
   baukasten: async () => { const C = await katalog('baukasten'); return geloest(solvedOf('baukasten', C.map((c) => c.schluessel)), C.length); },
-  minimierer: async () => { const { MINIMIERER_AUFGABEN: A } = await import('../data/minimierer.js'); return geloest(solvedOf('minimierer', A.map((x) => x.id)), A.length); },
+  minimierer: async () => { const A = await katalog('minimierer'); return geloest(solvedOf('minimierer', A.map((x) => x.schluessel)), A.length); },
   mealy: async () => { const { MEALY_AUFGABEN: A } = await import('../data/mealy.js'); return geloest(solvedOf('mealy', A.map((x) => x.id)), A.length, 'repariert'); },
   ueberliste: async () => {
     const { UEBERLISTE_STUFEN: S } = await import('../data/ueberliste.js');

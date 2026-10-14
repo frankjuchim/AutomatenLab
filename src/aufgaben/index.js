@@ -41,16 +41,17 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, dfaM, pruefer, badgesM] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, dfaM, pruefer, badgesM] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
+    lade(path.join(INHALTE, 'minimierer.js')),
     lade(path.join(ENGINE, 'dfa.js')),
     lade(path.join(ENGINE, 'pruefer.js')),
     lade(path.join(__dirname, '..', '..', 'app', 'js', 'data', 'badges.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -158,6 +159,30 @@ async function ladeAufgaben(secret) {
   };
   baukasten.BAUKASTEN_CHALLENGES.forEach((c, i) => {
     liste.push({ id: `baukasten:${c.id}`, typ: BAUKASTEN, modul: 'baukasten', nr: i + 1, titel: c.titel, stufe: c.stufe, punkte: PUNKTE_STUFE[c.stufe], levels: c.stufe === 3 ? [4, 12] : [3, 4], daten: c, ref: normalizeDFA(c.referenz), tipps: c.tipp ? [c.tipp] : [] });
+  });
+
+  /* ---------- Minimierer: Markierungsverfahren Runde für Runde (Stand auf dem Server) ---------- */
+  const MINIMIERER = {
+    modul: 'minimierer',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, kontext: x.kontext, frage: x.frage, automat: x.automat };
+    },
+    /** antwort: { runde, markiert: ["p|q", …] } – Runde 0 beginnt neu; der Stand liegt in fortschritt.daten. */
+    pruefe(a, antwort, z) {
+      const erg = pruefeMinimiererRunde(a.daten.automat, z.daten.stand, antwort);
+      return { ...erg, daten: { stand: erg.stand } };
+    },
+    loesungsteil(a) {
+      return minimiererLoesung(a.daten.automat, a.daten.merke);
+    },
+    abzeichen({ alleGeloest }) {
+      return ['minimierer-erste', ...(alleGeloest ? ['minimierer-alle'] : [])];
+    }
+  };
+  minimierer.MINIMIERER_AUFGABEN.forEach((x, i) => {
+    dfa(x.automat);
+    liste.push({ id: `minimierer:${x.id}`, typ: MINIMIERER, modul: 'minimierer', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [5], daten: x, tipps: [] });
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));

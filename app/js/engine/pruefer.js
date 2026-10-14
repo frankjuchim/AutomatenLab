@@ -1,7 +1,8 @@
 // Prüffunktionen der Aufgabentypen – DOM-frei, ohne Lösungsdaten. Genutzt vom Server (echte Aufgaben, Lösungen in
 // inhalte/) und im Browser nur für die Demo-Aufgaben des Gastmodus. So prüfen beide genau gleich.
 
-import { dfa, runDFA, normalizeDFA, equivalent } from './dfa.js';
+import { dfa, runDFA, normalizeDFA, equivalent, minimizeDFA } from './dfa.js';
+import * as MK from './markierung.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -63,4 +64,58 @@ export function pruefeBaukasten(referenz, automat) {
   const r = equivalent(A, ref);
   if (r.equivalent) return { ok: true, rueckmeldung: { richtig: true, zustaende: A.states.length } };
   return { ok: false, rueckmeldung: { richtig: false, gegenbeispiel: { wort: wordToString(r.counterexample, A.alphabet), symbole: r.counterexample, akzeptiertVonDir: r.acceptedByA } } };
+}
+
+/**
+ * Minimierer: eine Runde des Markierungsverfahrens prüfen.
+ * stand = { runde, bestaetigt: { "p|q": Runde }, versuche, fertig } (gespeichert vom Server bzw. von der Demo-Quelle),
+ * antwort = { runde, markiert: ["p|q", …] } – die in dieser Runde neu markierten Paare. Runde 0 beginnt neu.
+ * Liefert { ok (= Verfahren beendet), fertig, zaehltFehler, stand, rueckmeldung } oder wirft (400; 409 = Stand passt nicht).
+ */
+export function pruefeMinimiererRunde(automat, stand0, antwort) {
+  const ungueltig = (t, status = 400) => Object.assign(new Error(t), { status });
+  const runde = antwort?.runde;
+  if (!Number.isInteger(runde) || runde < 0) throw ungueltig('Die Runde fehlt.');
+  if (!Array.isArray(antwort.markiert) || antwort.markiert.length > 500) throw ungueltig('Die Markierungen fehlen.');
+  const T = MK.markierungsTabelle(dfa(automat));
+  const stand = runde === 0 ? { runde: 0, bestaetigt: {}, versuche: 0, fertig: false }
+    : { runde: stand0?.runde ?? 0, bestaetigt: { ...(stand0?.bestaetigt ?? {}) }, versuche: stand0?.versuche ?? 0, fertig: !!stand0?.fertig };
+  if (stand.fertig || runde !== stand.runde) throw ungueltig('Der Stand passt nicht mehr zu dieser Aufgabe – bitte beginne neu.', 409);
+  const markiert = new Set();
+  for (const k of antwort.markiert) {
+    const [p, q] = typeof k === 'string' ? k.split('|') : [];
+    if (!p || !q || p === q || !T.states.includes(p) || !T.states.includes(q)) throw ungueltig('Unbekanntes Zustandspaar.');
+    const key = T.key(p, q);
+    if (!(key in stand.bestaetigt)) markiert.add(key);
+  }
+  const r = MK.pruefeRunde(T, new Set(Object.keys(stand.bestaetigt)), markiert, runde);
+  stand.versuche++;
+  if (r.ok) {
+    for (const k of markiert) stand.bestaetigt[k] = runde;
+    stand.fertig = r.fertig || Object.keys(stand.bestaetigt).length === T.pairs.length;
+    stand.runde = runde + 1;
+    stand.versuche = 0;
+  }
+  return {
+    ok: stand.fertig, fertig: stand.fertig, zaehltFehler: !r.ok, stand,
+    rueckmeldung: { runde, richtig: r.ok, fertig: stand.fertig, naechsteRunde: stand.runde, bestaetigt: stand.bestaetigt, neu: r.ok ? markiert.size : 0,
+      vorgezogen: r.ok ? r.vorgezogen.length : 0, falsch: r.ok ? [] : r.falsch, fehlendAnzahl: r.ok ? 0 : r.fehlend.length,
+      fehlend: !r.ok && stand.versuche >= 2 ? r.fehlend : [] },
+  };
+}
+
+/** Minimierer: Lösungsteil – vollständige Markierung, Klassen, zusammengefasster Automat (Fehlerzustand wieder implizit). */
+export function minimiererLoesung(automat, merke) {
+  const A = dfa(automat);
+  const T = MK.markierungsTabelle(A);
+  const m = minimizeDFA(A, { mergedName: (c) => c.join('/') });
+  let M = m.dfa;
+  const err = m.addedErrorState;
+  if (err && M.states.includes(err)) {
+    const delta = {};
+    for (const s of M.states) if (s !== err) { delta[s] = {}; for (const c of M.alphabet) if (M.delta[s][c] !== err) delta[s][c] = M.delta[s][c]; }
+    M = { ...M, states: M.states.filter((s) => s !== err), delta, implicitError: true };
+  }
+  return { klassen: m.classes.filter((c) => c.length > 1), vorher: T.states.length, nachher: m.dfa.states.length, mitFehlerzustand: !!err,
+    automat: M, markierung: Object.fromEntries(MK.loesung(T).marked), merke: merke ?? null };
 }

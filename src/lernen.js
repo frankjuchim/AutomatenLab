@@ -160,7 +160,7 @@ function createLernen(ctx, { aufgaben }) {
   function katalog(modul) {
     return aufgaben.liste
       .filter((a) => !modul || a.modul === modul)
-      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(a.modul === 'baukasten' ? { schluessel: a.daten.id } : {}) }));
+      .map((a) => ({ id: a.id, modul: a.modul, nr: a.nr ?? null, titel: a.titel, stufe: a.stufe, punkte: a.punkte, levels: a.levels, ...(['baukasten', 'minimierer'].includes(a.modul) ? { schluessel: a.daten.id } : {}) }));
   }
 
   return { abrufen, pruefen, tipp, aufdecken, lernstand, katalog, punkteFuer };

@@ -36,6 +36,7 @@ findet er einen, schlägt die Prüfung fehl.
 | Automaten-Baukasten | 18 Challenges | Basis 1 / Standard 2 / Profi 3 → 10/20/30 | 20/30/40 |
 | Sprach-Detektiv | 12 Fälle | Fall 1–4: 1, 5–8: 2, 9–12: 3 → 10/20/30 | 30/20/10 nach Versuchen |
 | Level-Quiz | 16 Exit-Tickets + 4 Welt-Quizze | – | 10 bzw. 30 × Bestwert |
+| Minimierer | 7 Aufgaben (Markierungsverfahren) | Basis 1 (Smiley, gerade Anzahl a) / Standard 2 / Profi 3 (Prüfnummern) → 10/20/30 | 30 je Aufgabe, „Unterscheide!“ 5 je Paar |
 
 ## 3. Interaktionen
 
@@ -57,6 +58,21 @@ findet er einen, schlägt die Prüfung fehl.
 * Antwort: `{ automat }` im Engine-Format (wie `DfaEditor.toJSON()`, höchstens 40 Zustände, Σ der Aufgabe).
   Geprüft wird die **Sprache** (jeder äquivalente DEA ist richtig); falsch → kürzestes Gegenbeispiel.
 * Tipps einzeln abrufbar (kosten Punkte). Lösungsteil: Musterlösung (DEA).
+
+### Minimierer (`minimierer`)
+* Öffentlich: Aufgabentext, Auftrag, der Automat (er ist Gegenstand der Aufgabe). ID = `minimierer:<schlüssel>`
+  (`minimierer:smiley` …), Deep-Links unverändert `#/minimierer?aufgabe=n`.
+* Antwort je Runde: `{ runde, markiert: ["p|q", …] }` – die in dieser Runde neu markierten Paare. Den Stand
+  (bestätigte Paare mit Runde) hält der Server in `fortschritt.daten`; `runde: 0` beginnt neu, eine andere Runde als
+  die erwartete → 409 (die App beginnt dann neu). Großzügig wie im Unterricht: in derselben Runde schon begründbare
+  Paare gelten als richtig („vorgezogen“).
+* Rückmeldung: `richtig`, `fertig`, `naechsteRunde`, `bestaetigt`, `falsch` (zu Unrecht markierte Paare),
+  `fehlendAnzahl`; ab dem zweiten falschen Versuch derselben Runde auch `fehlend` (Paare). Jede falsch geprüfte
+  Runde ist ein Fehlversuch (Punkteformel §2). Gelöst ist die Aufgabe, wenn keine Runde mehr etwas markiert.
+* Lösungsteil: vollständige Markierung (Paar → Runde), Klassen, Zustandszahl vorher/nachher, zusammengefasster
+  Automat, Merksatz. „Lösung zeigen“ wie bei allen Aufgaben.
+* „Unterscheide!“ ist Übung ohne Punkte (Paare und unterscheidende Wörter folgen aus dem sichtbaren Automaten). Das
+  Abzeichen „Unterscheider“ kommt mit dem Training (Roadmap PR 4c).
 
 ## 4. API (angemeldet; Schüler nur mit freigeschaltetem Kurs, Vertrag §4)
 
