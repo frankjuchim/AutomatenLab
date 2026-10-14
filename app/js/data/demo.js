@@ -145,3 +145,17 @@ DEMO.push({
     grammatik: 'S → 1A | 0\nA → 0A | 1A | ε', ziel: '101',
   },
 });
+
+// Grammatik-Demo: eine eigene rechtsreguläre Challenge
+DEMO.push({
+  modul: 'grammatik', id: 'demo:grammatik', titel: 'Demo: Beginnt mit a',
+  daten: {
+    id: 'demo-beginnt-a', stufe: 2, titel: 'Beginnt mit a',
+    aufgabe: 'Entwirf eine rechtsreguläre Grammatik für alle Wörter über Σ = {a, b}, die mit a beginnen.',
+    alphabet: ['a', 'b'], regulaer: true, maxLen: 8,
+    pruefe: (w) => w[0] === 'a',
+    beispiele: { ja: ['a', 'ab', 'aba', 'abbb'], nein: ['ε', 'b', 'ba', 'bab'] },
+    tipp: 'Die erste Regel legt das a fest; danach darf ein zweites Nichtterminal beliebig viele a und b erzeugen – und mit ε aufhören.',
+    musterloesung: 'S → aA\nA → aA | bA | ε',
+  },
+});

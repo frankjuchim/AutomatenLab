@@ -349,6 +349,35 @@ test('Rallye: Linksableitung auf dem Server nachgespielt, Baum-Modus braucht zwe
   assert.ok(r.neueAbzeichen.some((b) => b.id === 'rallye-mehrdeutig'));
 });
 
+test('Grammatik-Tester: Sprache bis maxLen, rechtsregulär verlangt, Tipp kostet, Musterlösung erst danach', async () => {
+  const app = await H.verbundApp();
+  const s = await H.angemeldet(app);
+  const k = (await s.get('/api/katalog?modul=grammatik')).body.aufgaben;
+  assert.ok(k.length >= 8);
+  const id = 'grammatik:anbn';
+  const a = (await s.get(`/api/aufgaben/${id}`)).body;
+  assert.doesNotMatch(JSON.stringify(a), /musterloesung|aSb/);
+  const pr = (antwort) => post(s, `/api/aufgaben/${id}/pruefen`, { antwort });
+  let r = (await pr({ grammatik: 'S → aSb | ε' })).body;
+  assert.equal(r.rueckmeldung.richtig, false);
+  assert.equal(r.rueckmeldung.grund, 'sprache');
+  assert.deepEqual(r.rueckmeldung.zuviel, []);
+  assert.equal((await pr({ grammatik: 'S → → x' })).status, 400);
+  assert.equal((await post(s, `/api/aufgaben/${id}/tipp`)).body.zustand.tipps.length, 1);
+  r = (await pr({ grammatik: 'S → aSb | ab' })).body;
+  assert.equal(r.geloest, true);
+  assert.equal(r.punkteErhalten, punkteFuer(20, 1, 1));
+  assert.equal(r.loesung.musterloesung, 'S → aSb | ab');
+  // rechtsregulär verlangt: kontextfreie Grammatik der richtigen Sprache reicht nicht
+  const reg = k.find((x) => x.stufe === 2 && x.schluessel !== 'anbn' && x.schluessel !== 'palindrome');
+  const ra = (await s.get(`/api/aufgaben/${reg.id}`)).body.aufgabe;
+  if (ra.regulaer) {
+    const { GRAMMATIK_CHALLENGES } = await import('../inhalte/grammatik.js');
+    const mu = GRAMMATIK_CHALLENGES.find((c) => c.id === reg.schluessel).musterloesung;
+    assert.equal((await post(s, `/api/aufgaben/${reg.id}/pruefen`, { antwort: { grammatik: mu } })).body.rueckmeldung.richtig, true);
+  }
+});
+
 test('„Lösung zeigen“: 0 Punkte, Lösung sichtbar, danach selbst gelöst = nachgelöst ohne Punkte', async () => {
   const app = await H.verbundApp();
   const s = await H.angemeldet(app);

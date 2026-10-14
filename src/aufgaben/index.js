@@ -41,7 +41,7 @@ function createHilfe(secret) {
 
 async function ladeAufgaben(secret) {
   const h = createHilfe(secret);
-  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD] = await Promise.all([
+  const [quiz, detektiv, baukasten, minimierer, mealyD, dfaM, pruefer, badgesM, arenaD, trainingM, ueberlisteD, pwD, kellerD, rallyeD, grammatikD] = await Promise.all([
     lade(path.join(INHALTE, 'quiz.js')),
     lade(path.join(INHALTE, 'detektiv.js')),
     lade(path.join(INHALTE, 'baukasten.js')),
@@ -55,10 +55,11 @@ async function ladeAufgaben(secret) {
     lade(path.join(INHALTE, 'ueberliste.js')),
     lade(path.join(INHALTE, 'parallelwelten.js')),
     lade(path.join(INHALTE, 'keller.js')),
-    lade(path.join(INHALTE, 'rallye.js'))
+    lade(path.join(INHALTE, 'rallye.js')),
+    lade(path.join(INHALTE, 'grammatik.js'))
   ]);
   const { dfa, normalizeDFA } = dfaM;
-  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung } = pruefer;
+  const { pruefeQuizFrage, pruefeDetektiv, pruefeBaukasten, pruefeMinimiererRunde, minimiererLoesung, pruefeMealyVorhersage, pruefeMealyTest, pruefeMealyReparatur, mealyLoesung, mealyFehlerVariante, pruefeUeberliste, ueberlisteBeispiel, pruefeNeaRaetsel, pruefeTeilmengenZeile, teilmengenLoesung, kellerFolge, pruefeKellerTabelle, kellerTabellenLoesung, pruefeKellerRueckwaerts, kellerRueckwaertsLoesung, pruefeRallye, rallyeLoesung, pruefeGrammatikChallenge } = pruefer;
   const liste = [];
 
   /* ---------- Level-Quiz: Exit-Tickets (eine Aufgabe je Quiz, Fragen einzeln beantwortet) ---------- */
@@ -382,6 +383,28 @@ async function ladeAufgaben(secret) {
   };
   rallyeD.RALLYE_AUFGABEN.forEach((x, i) => {
     liste.push({ id: `rallye:${x.id}`, typ: RALLYE, modul: 'rallye', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [11, 13], daten: x, tipps: [] });
+  });
+
+  /* ---------- Grammatik-Tester: eigene Grammatik → Vergleich der Sprache bis maxLen (ggf. rechtsregulär) ---------- */
+  const GRAMMATIK = {
+    modul: 'grammatik',
+    oeffentlich(a) {
+      const x = a.daten;
+      return { id: x.id, nr: a.nr, stufe: x.stufe, titel: x.titel, aufgabe: x.aufgabe, alphabet: x.alphabet, beispiele: x.beispiele, maxLen: x.maxLen ?? 8, regulaer: !!x.regulaer, tippsAnzahl: a.tipps.length };
+    },
+    /** antwort: { grammatik: Text, start? } */
+    pruefe(a, antwort) {
+      return pruefeGrammatikChallenge(a.daten, antwort);
+    },
+    loesungsteil(a) {
+      return { musterloesung: a.daten.musterloesung };
+    },
+    abzeichen({ alleGeloest }) {
+      return ['grammatik-erste', ...(alleGeloest ? ['grammatik-alle'] : [])];
+    }
+  };
+  grammatikD.GRAMMATIK_CHALLENGES.forEach((x, i) => {
+    liste.push({ id: `grammatik:${x.id}`, typ: GRAMMATIK, modul: 'grammatik', nr: i + 1, titel: x.titel, stufe: x.stufe, punkte: PUNKTE_STUFE[x.stufe], levels: [12, 13, 15], daten: x, tipps: x.tipp ? [x.tipp] : [] });
   });
 
   const map = new Map(liste.map((a) => [a.id, a]));

@@ -7,7 +7,7 @@ import { mealy, runMealy, mealyEquivalent } from './mealy.js';
 import { tokenize as tokenizeWort, isEpsilon } from './tokenize.js';
 import { nfa, runNFA, epsilonClosure, subsetConstruction } from './nfa.js';
 import { pda, runPDA, successors, initialConfig, runToTable, matchesConfigSequence } from './pda.js';
-import { parseGrammar, derive, symbolsToString, tokenizeWord } from './grammar.js';
+import { parseGrammar, derive, symbolsToString, tokenizeWord, languageUpTo, isRightRegular } from './grammar.js';
 import { enumerateWords, wordToString } from './tokenize.js';
 
 /**
@@ -424,4 +424,30 @@ export function rallyeLoesung(grammatik, ziel, sep = '') {
   const g = parseGrammar(grammatik);
   const r = derive(g, ziel);
   return { ableitung: r.derivation ? r.derivation.map((d) => symbolsToString(d.form, sep)) : null, schritte: r.derivation ? r.derivation.length - 1 : null };
+}
+
+/* ───────────── Grammatik-Tester ───────────── */
+
+/**
+ * Grammatik gegen die Zielsprache: alle Wörter über Σ bis maxLen mit dem Prädikat vergleichen; bei regulaer zusätzlich
+ * rechtsreguläre Form verlangt. c = { alphabet, maxLen, regulaer, pruefe }. antwort = { grammatik: Text, start? }.
+ */
+export function pruefeGrammatikChallenge(c, antwort) {
+  const text = antwort?.grammatik;
+  if (typeof text !== 'string' || !text.trim() || text.length > 4000) throw ungueltig400('Die Grammatik fehlt.');
+  let g = parseGrammar(text);
+  const start = antwort.start;
+  if (g.ok && typeof start === 'string' && g.nonterminals.includes(start) && start !== g.start) g = parseGrammar(`${text}\nStart: ${start}`);
+  if (!g.ok) throw ungueltig400(`Die Grammatik hat Fehler: ${g.errors.join(' ')}`);
+  const maxLen = c.maxLen ?? 8;
+  const fremd = g.terminals.filter((t) => !c.alphabet.includes(t));
+  if (fremd.length) return { ok: false, rueckmeldung: { richtig: false, grund: 'alphabet', fremd } };
+  const lang = languageUpTo(g, maxLen, { maxNodes: 60000 });
+  const have = new Set(lang.words.map((w) => w.join('\u0001')));
+  let zuviel = null; let fehlt = null;
+  for (const w of lang.words) if (!c.pruefe(w)) { zuviel = w; break; }
+  if (!zuviel) for (const w of enumerateWords(c.alphabet, maxLen)) if (c.pruefe(w) && !have.has(w.join('\u0001'))) { fehlt = w; break; }
+  if (zuviel || fehlt) return { ok: false, rueckmeldung: { richtig: false, grund: 'sprache', zuviel, fehlt, vollstaendig: lang.complete } };
+  if (c.regulaer) { const rr = isRightRegular(g); if (!rr.regular) return { ok: false, rueckmeldung: { richtig: false, grund: 'regulaer', violations: rr.violations.slice(0, 6) } }; }
+  return { ok: true, rueckmeldung: { richtig: true, anzahl: lang.words.length, maxLen, regulaer: !!c.regulaer } };
 }
