@@ -55,6 +55,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ Fallen-Profil P1–P10 (1.14.0): Feld `fallen` je Aufgabentyp, Fallen-Profil des Kurses (Fehlversuche, Lösung angesehen, betroffene Schüler) wie Algo Quest, Spalte und CSV „Fallen“
 - ✅ Fallen je Quizfrage (1.15.0): alle 87 Fragen zugeordnet (`QUIZ_FALLEN` in `inhalte/quiz.js`), im ersten Durchgang falsch beantwortete Fragen zählen im Fallen-Profil
 - ✅ Fallen-Nummern in den Materialien (1.16.0): jeder Warnkasten der Lehrkraft-Handreichungen und Merkblätter nennt seine Fallen („Abitur-Fallen: P2 … · P7 …“), Merkblatt M12 mit der Übersicht „Die zehn Abitur-Fallen“
+- ✅ PR 8 (1.18.0): Rangliste für Schüler (gesamt/je Welt), Beamer-Board über Zufallslink, Urkunden zum Drucken – wie Algo Quest, je Kurs einschaltbar
 - ✅ PR 7 (1.12.0): Kurs-Einstellungen – Level-Art je Kurs (Pflicht/Vertiefung/Bonus/Später, nur Anzeige: Deep-Links bleiben offen), Auftrag der Lehrkraft auf der Startseite, Grundkurs: eA-Level „freiwillig“; Datenschutzhinweise (`docs/DATENSCHUTZ.md`, `#/datenschutz`) auf dem Stand des Verbunds; Löschung über die Verbund-API vollständig getestet (jede Tabelle mit Konto-Bezug); Abnahme-Checkliste `docs/ABNAHME.md`
 
 ## Phase 6 – Materialien ↔ Plattform
@@ -66,5 +67,5 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 
 ## Ideen (später)
 - IServ-SSO (Sache des Portals)
-- Wettbewerbe/Klassen-Challenges (anonymisierte Bestenliste im Kurs)
+- Klassen-Challenges (Vorschlag an Frank, siehe Antwort vom 14.10.)
 - Lehrkraft-Editor für eigene Baukasten-Challenges und Quizfragen

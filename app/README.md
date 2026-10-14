@@ -69,12 +69,15 @@ docker build -t automatenlab . && docker run --rm -p 8080:80 automatenlab
 | `#/datenschutz` | Datenschutzhinweise der Plattform mit Link auf die zentrale Erklärung des Portals – auch `BASE_URL/datenschutz` |
 | `#/lehrkraft` | Bereich für Lehrkräfte, Aufbau wie Algo Quest: Meine Kurse – auch `BASE_URL/lehrer`. Kursseite `#/lehrkraft?kurs=<Kurs-ID>&tab=schueler\|beitritt\|auswertung\|rangliste\|einstellungen` (Kurs-ID wie `k:12`, ohne `tab` = Schüler) |
 | `#/lehrkraft?teil=aufgaben` | Lehrkraft-Bereich: Aufgaben der Welten nach Level (mit Link ins Modul und „Vorschau mit Lösung“) |
+| `#/lehrkraft?teil=urkunden&kurs=<Kurs-ID>` | Lehrkraft-Bereich: Urkunden des Kurses zum Drucken (A4, eine Seite je Schüler; wie Algo Quest) |
+| `#/rangliste` · `#/rangliste?welt=A` … `?welt=D` | Rangliste der eigenen Kurse (gesamt bzw. je Welt) – nur wenn die Lehrkraft sie eingeschaltet hat, sonst ein Hinweis |
+| `#/board` | Beamer-Board eines Kurses (öffentlich): Top 15, Fortschritt je Welt, letzte Abzeichen – nur mit dem zufälligen Link aus den Kurs-Einstellungen (`?t=…`, auch `BASE_URL/board/…`), sonst ein Hinweis |
 
 **Vorschau für Lehrkräfte:** An jede Aufgaben-Route lässt sich `&vorschau=1` anhängen (Aufgabe mit eingesetzter Lösung) oder `&vorschau=ohne` (so, wie Schüler beginnen) – nur für Lehrkräfte, nichts wird gespeichert, keine Punkte. Beispiel: `#/turing?challenge=1&vorschau=1`. Für alle anderen Rollen wird der Parameter ignoriert.
 
-**Anmeldung:** Ohne Sitzung sind nur die Übersicht, `#/gast` mit den Demo-Aufgaben (Liste in `js/data/gast.js`), `#/themen` und `#/datenschutz` offen. Jede andere Route leitet still zur Anmeldung beim Portal InfoLabs und danach genau auf diese Route zurück – die QR-Codes bleiben gültig. Level-Quiz, Sprach-Detektiv und Automaten-Baukasten werden auf dem Server geprüft (Lösungen in `../inhalte/`, nie ausgeliefert).
+**Anmeldung:** Ohne Sitzung sind nur die Übersicht, `#/gast` mit den Demo-Aufgaben (Liste in `js/data/gast.js`), `#/themen`, `#/datenschutz` und das Beamer-Board `#/board` offen. Jede andere Route leitet still zur Anmeldung beim Portal InfoLabs und danach genau auf diese Route zurück – die QR-Codes bleiben gültig. Level-Quiz, Sprach-Detektiv und Automaten-Baukasten werden auf dem Server geprüft (Lösungen in `../inhalte/`, nie ausgeliefert).
 
-Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/gast` (Gastmodus), `/themen`, `/niveaus` (Niveau-Übersicht), `/material`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; Material-Dateien unter `/material/<schueler|lehrkraft|original>/<datei>` und `/material/zip/<akte>.zip` (Rechte nach Rolle); `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
+Server-Pfade nach dem Vertrag des Verbunds (ergänzt, ändern keine Hash-Route): `/board/<Link>` (Beamer-Board, → `#/board?t=<Link>`), `/gast` (Gastmodus), `/themen`, `/niveaus` (Niveau-Übersicht), `/material`, `/lehrer`, `/datenschutz` leiten auf die Hash-Routen; Material-Dateien unter `/material/<schueler|lehrkraft|original>/<datei>` und `/material/zip/<akte>.zip` (Rechte nach Rolle); `/healthz` und `/api/plattform` (Manifest) für das Portal; Anmeldung über das Portal: `/sso/start?ziel=<pfad>` (z. B. `ziel=%2F%23%2Farena`), `/sso/ende` (Rücksprung des Portals), `/abmelden`, `/abmelden/ueberall`.
 
 Baukasten-Challenges (`?level=n` / `?aufgabe=id`):
 

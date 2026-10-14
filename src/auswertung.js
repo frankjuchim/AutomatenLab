@@ -11,6 +11,8 @@
 // Jede Aufgabe zählt zu genau einem Level (hauptLevel): dem ersten ihrer Level; das Welt-Quiz (Exit-Ticket einer ganzen
 // Welt) zum letzten Level der Welt – sonst verzerrten Aufgaben mit mehreren Leveln die Matrix.
 
+const crypto = require('node:crypto');
+
 const KURSARTEN = ['eA', 'gA'];
 const LEVEL_ARTEN = ['pflicht', 'vertiefung', 'bonus', 'spaeter'];
 const AUFTRAG_MAX = 400;
@@ -34,7 +36,10 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
     const levelArt = {};
     for (const n of LEVELS) levelArt[n] = LEVEL_ARTEN.includes(e.levelArt?.[n]) ? e.levelArt[n] : levelInfo.get(n).typ || 'pflicht';
     const auftrag = e.auftrag && typeof e.auftrag.text === 'string' && e.auftrag.text.trim() ? { text: e.auftrag.text, level: Array.isArray(e.auftrag.level) ? e.auftrag.level : [], at: e.auftrag.at ?? null } : null;
-    return { kursart: KURSARTEN.includes(e.kursart) ? e.kursart : 'eA', levelArt, auftrag };
+    // Rangliste für Schüler und Beamer-Board (PR 8, wie Algo Quest): beide standardmäßig aus. Das Board ist ohne
+    // Anmeldung unter /board/<token> erreichbar – ein zufälliger Link statt des Kurscodes, den die Plattform nicht kennt.
+    const beamer = { aktiv: !!(e.beamer && e.beamer.aktiv && e.beamer.token), token: typeof e.beamer?.token === 'string' ? e.beamer.token : null };
+    return { kursart: KURSARTEN.includes(e.kursart) ? e.kursart : 'eA', levelArt, auftrag, scoreboard: e.scoreboard === true, beamer };
   }
 
   /** Einstellungen eines Kurses ändern (nur bekannte Felder, geprüft). */
@@ -62,8 +67,19 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
         e.auftrag = { text, level: level.sort((a, b) => a - b), at: iso() };
       }
     }
+    if (body && body.scoreboard !== undefined) {
+      if (typeof body.scoreboard !== 'boolean') throw ungueltig('Die Einstellung zur Rangliste passt nicht.');
+      e.scoreboard = body.scoreboard;
+    }
+    if (body && body.beamer !== undefined) {
+      const b = body.beamer;
+      if (!b || typeof b !== 'object' || typeof b.aktiv !== 'boolean' || (b.neu !== undefined && typeof b.neu !== 'boolean')) throw ungueltig('Die Einstellung zum Beamer-Board passt nicht.');
+      // neuer Link beim ersten Einschalten oder auf Wunsch („Neuen Link erzeugen“ – der alte gilt dann nicht mehr)
+      const token = !e.beamer.token || b.neu ? crypto.randomBytes(12).toString('base64url') : e.beamer.token;
+      e.beamer = { aktiv: b.aktiv, token };
+    }
     db.prepare('UPDATE kurse SET einstellungen = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(e), iso(), kurs.id);
-    return e;
+    return einstellungen({ einstellungen: JSON.stringify(e) });
   }
 
   const imUmfang = (kursart) => (n) => {
@@ -264,10 +280,109 @@ function createAuswertung(ctx, { konten, katalog, aufgaben, training = null }) {
 
   /** Für Schüler: Einstellungen ihrer Kurse (nur, was die Startseite braucht). */
   function meineKurse(sub) {
-    return konten.kurseVon(sub).filter((k) => k.rolle === 'mitglied').map((k) => ({ id: k.id, name: k.name, ...einstellungen(konten.kurs(k.id)) }));
+    return konten.kurseVon(sub).filter((k) => k.rolle === 'mitglied').map((k) => {
+      const { beamer, ...e } = einstellungen(konten.kurs(k.id)); // der Board-Link bleibt bei der Lehrkraft
+      return { id: k.id, name: k.name, ...e };
+    });
   }
 
-  return { kursUebersicht, schueler, kursAuswertung, einstellungen, einstellungenSetzen, meineKurse, export: export_, KURSARTEN, LEVEL_ARTEN };
+  /* ---------- Rangliste, Beamer-Board, Urkunden (PR 8, wie Algo Quest) ---------- */
+
+  const WELTEN = katalog.welten.map((w) => w.kennung);
+  const weltVon = (a) => levelInfo.get(hauptLevel(a))?.welt ?? null;
+
+  /** Platz wie Algo Quest: gleiche Punkte, gleicher Platz; bei Gleichstand nach Namen sortiert. */
+  function mitPlatz(zeilen) {
+    const sortiert = [...zeilen].sort((x, y) => y.punkte - x.punkte || x.name.localeCompare(y.name, 'de'));
+    return sortiert.map((z) => ({ ...z, platz: 1 + sortiert.filter((y) => y.punkte > z.punkte).length }));
+  }
+
+  /** Punkte je Schüler: gesamt (Aufgaben + Training) oder nur die Aufgaben einer Welt (ohne Training). */
+  function punkteListe(kurs, welt) {
+    const s = schueler(kurs);
+    if (!welt) return s.map((z) => ({ sub: z.sub, name: z.name, punkte: z.punkte, abzeichen: z.abzeichen, geloest: z.geloest }));
+    const fp = fortschrittVon(s.map((z) => z.sub));
+    const inWelt = new Set(liste.filter((a) => weltVon(a) === welt).map((a) => a.id));
+    return s.map((z) => {
+      const rows = [...fp.get(z.sub).values()].filter((r) => inWelt.has(r.aufgabe_id));
+      return { sub: z.sub, name: z.name, punkte: rows.reduce((n, r) => n + r.punkte, 0), abzeichen: z.abzeichen, geloest: rows.filter(geloest).length };
+    });
+  }
+
+  /** Rangliste für Schüler: je eigenem Kurs mit eingeschalteter Rangliste; eigener Eintrag markiert, keine Konto-IDs. */
+  function rangliste(sub, welt = null) {
+    if (welt != null && !WELTEN.includes(welt)) throw Object.assign(new Error('Diese Welt gibt es nicht.'), { status: 400 });
+    const kurse = konten.kurseVon(sub).filter((k) => k.rolle === 'mitglied').map((k) => konten.kurs(k.id)).filter((k) => einstellungen(k).scoreboard);
+    return {
+      welt,
+      welten: katalog.welten.map((w) => ({ kennung: w.kennung, titel: w.titel })),
+      kurse: kurse.map((k) => ({
+        id: k.id,
+        name: k.name,
+        liste: mitPlatz(punkteListe(k, welt)).map(({ sub: s, ...z }) => ({ ...z, ...(s === sub ? { ich: true } : {}) }))
+      }))
+    };
+  }
+
+  /** Anteil der Level-Punkte im Kursumfang (je Schüler), optional nur für eine Welt. */
+  function levelAnteile(kurs, welt = null) {
+    const { kursart } = einstellungen(kurs);
+    const auswahl = umfangAufgaben(kursart).filter((a) => !welt || weltVon(a) === welt);
+    const max = auswahl.reduce((n, a) => n + a.punkte, 0);
+    const subs = konten.mitglieder(kurs.id).map((m) => m.sub);
+    const fp = fortschrittVon(subs);
+    return new Map(subs.map((s) => [s, max ? Math.min(1, auswahl.reduce((n, a) => n + (fp.get(s).get(a.id)?.punkte ?? 0), 0) / max) : 0]));
+  }
+
+  /** Letzte Erfolge der Kursmitglieder (Abzeichen), Text mit dem aktuellen Anzeigenamen. */
+  function erfolge(kurs, n = 8) {
+    const m = konten.mitglieder(kurs.id);
+    if (!m.length) return [];
+    const namen = new Map(m.map((x) => [x.sub, x.name]));
+    return db.prepare(`SELECT sub, schluessel, at FROM abzeichen WHERE sub IN (${m.map(() => '?').join(',')}) ORDER BY at DESC, schluessel LIMIT ?`).all(...m.map((x) => x.sub), n)
+      .map((r) => ({ text: `${namen.get(r.sub)} hat das Abzeichen „${aufgaben?.abzeichen?.get(r.schluessel)?.titel ?? r.schluessel}“ erhalten`, at: r.at }));
+  }
+
+  /** Beamer-Board (öffentlich über den zufälligen Link, nur wenn eingeschaltet): Top 15, Fortschritt je Welt, Erfolge. */
+  function board(token) {
+    const nichtDa = () => Object.assign(new Error('Kein Beamer-Board unter dieser Adresse.'), { status: 404 });
+    if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{16}$/.test(token)) throw nichtDa();
+    const kurs = db.prepare("SELECT * FROM kurse WHERE aktiv = 1 AND json_extract(einstellungen, '$.beamer.token') = ?").get(token);
+    if (!kurs || !einstellungen(kurs).beamer.aktiv) throw nichtDa();
+    const { kursart } = einstellungen(kurs);
+    const welten = katalog.welten.filter((w) => umfangAufgaben(kursart).some((a) => weltVon(a) === w.kennung)).map((w) => {
+      const anteile = [...levelAnteile(kurs, w.kennung).values()];
+      return { kennung: w.kennung, titel: w.titel, farbe: w.farbe, anteil: anteile.length ? Math.round((1000 * anteile.reduce((a, b) => a + b, 0)) / anteile.length) / 1000 : 0 };
+    });
+    return {
+      kurs: { name: kurs.name },
+      schueler: konten.mitglieder(kurs.id).length,
+      liste: mitPlatz(punkteListe(kurs)).slice(0, 15).map(({ sub, ...z }) => z),
+      welten,
+      erfolge: erfolge(kurs),
+      stand: iso()
+    };
+  }
+
+  // Ränge der Urkunde nach dem Anteil der Level-Punkte im Kursumfang (Schwellen wie Algo Quest)
+  const RAENGE = ['Startzustand', 'Zwischenzustand', 'Übergangsprofi', 'Endzustand in Sicht', 'Akzeptiert!'];
+  const SCHWELLEN = [0, 0.1, 0.3, 0.55, 0.8];
+  const rangVon = (anteil) => RAENGE[SCHWELLEN.reduce((r, x, i) => (anteil >= x ? i : r), 0)];
+
+  /** Urkunden eines Kurses: je Schüler Name, Rang, Punkte, gelöst, Platz, Abzeichen – gedruckt im Browser. */
+  function urkunden(kurs) {
+    const anteile = levelAnteile(kurs);
+    const zeilen = mitPlatz(punkteListe(kurs));
+    const titel = (sub) => db.prepare('SELECT schluessel FROM abzeichen WHERE sub = ? ORDER BY at').all(sub).map((r) => aufgaben?.abzeichen?.get(r.schluessel)?.titel ?? r.schluessel);
+    return {
+      kurs: { id: kurs.id, name: kurs.name, kursart: einstellungen(kurs).kursart },
+      raenge: RAENGE,
+      anzahl: zeilen.length,
+      schueler: zeilen.map((z) => ({ id: z.sub, name: z.name, punkte: z.punkte, geloest: z.geloest, platz: z.platz, anteil: Math.round(100 * (anteile.get(z.sub) ?? 0)) / 100, rang: rangVon(anteile.get(z.sub) ?? 0), abzeichen: titel(z.sub) }))
+    };
+  }
+
+  return { kursUebersicht, schueler, kursAuswertung, einstellungen, einstellungenSetzen, meineKurse, rangliste, board, urkunden, export: export_, KURSARTEN, LEVEL_ARTEN, RAENGE };
 }
 
 module.exports = { createAuswertung, KURSARTEN, LEVEL_ARTEN, hauptLevel };

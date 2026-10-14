@@ -27,9 +27,10 @@ export const GAST = [
  *  materials/scripts/export_pdf.mjs schreibt das als `demo` in verzeichnis.json, der Server (src/material.js) prüft es. */
 export const GAST_MATERIAL = { akten: ['level-1'], stufen: ['schueler', 'lehrkraft'] };
 
-/** Darf ein Gast diese Route öffnen? (Startseite, Themen, Datenschutz, Gastseite sind immer frei.) */
+/** Darf ein Gast diese Route öffnen? (Startseite, Themen, Datenschutz, Gastseite und das Beamer-Board sind immer frei.) */
 export function gastErlaubt(route, params) {
   if (['', 'gast', 'themen', 'datenschutz'].includes(route)) return true;
+  if (route === 'board' && [...params.keys()].every((k) => k === 't')) return true; // Beamer-Board: der Server prüft den Link
   if (route === 'material' && [...params.keys()].length === 0) return true; // nur die Material-Demo (Server prüft)
   return GAST.some((g) => g.route === route
     && Object.entries(g.params).every(([k, v]) => params.get(k) === v)

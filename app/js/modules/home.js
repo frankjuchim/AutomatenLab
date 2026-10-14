@@ -140,6 +140,8 @@ export default {
       const auftraege = kurse.filter((k) => k.auftrag);
       auftragLevel = new Set(auftraege.flatMap((k) => k.auftrag.level ?? []));
       for (const n of ALL_LEVELS) zeichneLevel(n);
+      // Rangliste, wenn eine Lehrkraft sie für einen der Kurse eingeschaltet hat (PR 8)
+      if (kurse.some((k) => k.scoreboard)) auftragSlot.after(h('p', { class: 'rangliste-link' }, h('a', { class: 'btn', href: ctx.link('rangliste') }, '🏆 Rangliste deines Kurses')));
       if (auftraege.length) clear(auftragSlot, h('section', { class: 'auftrag', 'aria-labelledby': 'auftrag-h' },
         h('h2', { id: 'auftrag-h' }, auftraege.length === 1 ? 'Auftrag deiner Lehrkraft' : 'Aufträge deiner Lehrkräfte'),
         auftraege.map((k) => h('div', { class: 'auftrag-eintrag' },
