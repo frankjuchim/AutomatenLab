@@ -113,3 +113,21 @@ test('Kursänderung: umbenennen, sperren (Mitglieder verlieren Zugang), entsperr
   assert.equal((await aendern({ aktiv: 'nein' })).status, 400);
   assert.equal((await aendern({ name: 'X' }, 'abc')).status, 404);
 });
+
+test('v1.3: kurs-aendern für einen unbekannten Kurs → 200 { ok: true }, Kurs mit Standard-Einstellungen angelegt', async () => {
+  const app = await H.verbundApp();
+  const aendern = (id, body) => mit(app, 'post', `/api/verbund/kurse/${id}`, H.verbundToken(app.now, 'kurs-aendern')).send(body);
+  const r = await aendern('k%3A501', { name: 'GK Informatik 12' });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body, { ok: true });
+  const k = app.locals.svc.konten.kurs('k:501');
+  assert.equal(k.name, 'GK Informatik 12');
+  assert.equal(k.aktiv, 1);
+  assert.equal(k.einstellungen || '{}', '{}', 'Standard-Einstellungen');
+  // auch nur gesperrt (ohne Namen): angelegt, gesperrt, nicht 404
+  const r2 = await aendern('k%3A502', { aktiv: false });
+  assert.deepEqual([r2.status, r2.body], [200, { ok: true }]);
+  assert.equal(app.locals.svc.konten.kurs('k:502').aktiv, 0);
+  // erneuter Auftrag (Wiederholung des Portals) bleibt 200
+  assert.equal((await aendern('k%3A501', { name: 'GK Informatik 12' })).status, 200);
+});
