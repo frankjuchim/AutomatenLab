@@ -493,7 +493,7 @@ export default {
 
     /** Pool des Bosses einer Welt (aufklappbar, lädt beim Öffnen; richtige Antwort markiert). */
     function bossPool(welt) {
-      if (!['A', 'B', 'C'].includes(welt)) return null;
+      if (!['A', 'B', 'C', 'D'].includes(welt)) return null;
       const inhalt = h('div', null, h('p', { class: 'muted' }, 'Lade …'));
       let geladen = false;
       return h('details', { class: 'panel lk-karte lk-boss-pool', ontoggle: async (e) => {
@@ -507,7 +507,7 @@ export default {
             h('ol', { class: 'lk-boss-liste' }, p.aufgaben.map((a) => h('li', null,
               h('p', null, h('strong', null, a.frage.frage ?? a.frage.aussage), ' ', h('span', { class: 'muted klein' }, `${STUFE[a.stufe]} · ${a.punkte} P. · ${NIVEAUS[a.niveau]?.kurz ?? a.niveau}`), ' ',
                 a.fallen.map((x) => h('span', { class: 'lk-falle', title: FALLE[x]?.titel ?? x }, x))),
-              a.bild?.art === 'grammatik' ? h('pre', { class: 'boss-grammatik' }, a.bild.text) : a.bild ? h('p', { class: 'muted klein' }, `(mit abgebildetem ${{ dea: 'DEA', nea: 'NEA', mealy: 'Mealy-Automaten', nka: 'Kellerautomaten' }[a.bild.typ]})`) : null,
+              a.bild?.art === 'grammatik' ? h('pre', { class: 'boss-grammatik' }, a.bild.text) : a.bild ? h('p', { class: 'muted klein' }, `(mit abgebildetem ${{ dea: 'DEA', nea: 'NEA', mealy: 'Mealy-Automaten', nka: 'Kellerautomaten', tm: 'Turingmaschine' }[a.bild.typ]})`) : null,
               h('p', { class: 'lk-boss-antwort' }, '✓ ', antwort(a.frage)),
               a.frage.erklaerung ? h('p', { class: 'muted klein' }, a.frage.erklaerung) : null))));
         } catch (err) { clear(inhalt, h('p', { class: 'notice notice-error' }, err.message)); }

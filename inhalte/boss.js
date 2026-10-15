@@ -1,4 +1,4 @@
-// Boss-Kämpfe (#/boss?welt=A|B|C, wie die Bosse von Algo Quest): Am Ende jeder Welt eine Prüfung auf Zeit aus
+// Boss-Kämpfe (#/boss?welt=A|B|C|D, wie die Bosse von Algo Quest): Am Ende jeder Welt eine Prüfung auf Zeit aus
 // zufällig gezogenen Aufgaben – ohne Rückmeldung während des Kampfes, Auswertung erst am Ende.
 // Liegt in inhalte/ (nur Server, Vertrag InfoLabs §9): richtige Antworten, Erklärungen und Kontrollen kennt nur der Server.
 //
@@ -6,11 +6,15 @@
 //           pool (Aufgaben, nicht in Leveln – eigene Aufgaben, keine Original-Abituraufgaben)
 // Aufgabe:  id (BOSS-<Welt>-<nn>, nie ändern), stufe 1–3 (Punkte 10/20/30), niveau (alle | eA | plus), fallen (P1–P10),
 //           frage im Format des Level-Quiz (mc: ERSTE Option richtig; wf: erste Begründung richtig; zuordnung: Paare),
-//           bild (optional, Gegenstand der Aufgabe – wird gezeigt): { art: 'automat', typ: dea|nea|mealy|nka, automat }
+//           bild (optional, Gegenstand der Aufgabe – wird gezeigt): { art: 'automat', typ: dea|nea|mealy|nka|tm, automat }
 //           oder { art: 'grammatik', text },
 //           kontrolle (optional, nur für den Test test/boss.test.js): (E) => true, wenn die richtige Antwort laut
 //           Engine stimmt und jede falsche Option wirklich falsch ist.
 // Fachnotation nach PLAN.md Abschnitt 1 (Notation 2025).
+
+import { TURING_PROGRAMME } from '../app/js/data/turing.js';
+
+const TM = (id) => ({ art: 'automat', typ: 'tm', automat: TURING_PROGRAMME.find((p) => p.id === id).maschine });
 
 const mc = (frage, optionen, erklaerung) => ({ typ: 'mc', frage, optionen, erklaerung });
 const wf = (aussage, wahr, begruendungen, erklaerung) => ({ typ: 'wf', aussage, wahr, begruendungen, erklaerung });
@@ -334,6 +338,95 @@ export const BOSSE = {
           const p = [(w) => w.length % 2 === 0, (w) => { const n = w.length / 2; return n >= 1 && str(w) === 'a'.repeat(n) + 'b'.repeat(n); }, (w) => str(w) === [...w].reverse().join('')];
           return a.frage.paare.every(([, g], i) => p.every((q, j) => E.grammatikGleich(g, ['a', 'b'], q) === (i === j)));
         } },
+    ],
+  },
+  D: {
+    titel: 'Boss der Welt D: Die Turing-Maschinistin',
+    niveau: 'eA', dauerMin: 25, anzahl: 8, mix: { 1: 3, 2: 3, 3: 2 },
+    pool: [
+      { id: 'BOSS-D-01', stufe: 1, niveau: 'plus', fallen: ['P10'],
+        frage: mc('Was bedeutet die Kantenbeschriftung a / X, R an einer Turingmaschine?', [
+          'Steht a unter dem Kopf, wird X geschrieben und der Kopf geht ein Feld nach rechts.',
+          'Steht X unter dem Kopf, wird a geschrieben und der Kopf geht nach rechts.',
+          'Beim Lesen von a wird X ausgegeben (wie beim Mealy-Automaten).',
+          'Liegt a oben im Keller, wird X abgelegt.',
+        ], 'Notation „gelesen / geschrieben, Bewegung“ mit L, R oder N.') },
+      { id: 'BOSS-D-02', stufe: 1, niveau: 'plus', fallen: ['P8'], bild: TM('binaer-plus-1'),
+        frage: mc('Die abgebildete Turingmaschine startet mit dem Kopf auf der ersten Ziffer von 1011. Was steht nach dem Halten auf dem Band?', ['1100', '1010', '10000', '1011'],
+          'Sie läuft ans Ende, macht aus den Einsen am Ende Nullen (Übertrag) und aus der ersten 0 eine 1: 1011 + 1 = 1100.'),
+        kontrolle: (E, a) => a.frage.optionen.every((o, i) => (E.tmAusgabe(a.bild, '1011') === o) === (i === 0)) },
+      { id: 'BOSS-D-03', stufe: 1, niveau: 'plus', fallen: ['P10'],
+        frage: wf('Eine Turingmaschine darf ihr Band nur lesen, aber nicht beschreiben.', false, [
+          'Sie liest und schreibt an jeder Stelle und bewegt den Kopf in beide Richtungen – das Band ist zugleich Eingabe und unbegrenzter Speicher.',
+          'Das stimmt, schreiben darf nur der Kellerautomat.',
+          'Das stimmt, sonst wäre die Eingabe nach dem Lauf verloren.',
+        ]) },
+      { id: 'BOSS-D-04', stufe: 1, niveau: 'eA', fallen: ['P6'],
+        frage: mc('Eure Roboter-Sprache: Befehle VOR, LINKS und RECHTS, beliebig viele hintereinander, jeder mit Semikolon abgeschlossen. Welches Modell reicht zur Syntaxprüfung?', [
+          'Ein DEA – es muss nichts gezählt oder verschachtelt werden.',
+          'Ein Kellerautomat, weil die Programme beliebig lang sein können.',
+          'Eine Turingmaschine, weil es drei verschiedene Befehle gibt.',
+          'Ein Mealy-Automat, weil der Roboter etwas tut.',
+        ], 'Beliebig lang heißt nicht unbegrenzt zählen: Eine Wiederholung ohne Vergleich schafft ein DEA mit einer Schleife.') },
+      { id: 'BOSS-D-05', stufe: 1, niveau: 'eA', fallen: ['P10'],
+        frage: zu('Ordne jedem Teil eures Sprachprojekts das passende Werkzeug zu.', [
+          ['Syntax festlegen', 'Grammatik mit N, T, Startsymbol und Produktionsregeln'],
+          ['Syntax prüfen', 'Automat (DEA bzw. Kellerautomat)'],
+          ['Befehle in Ausgaben übersetzen', 'Mealy-Automat'],
+        ]) },
+      { id: 'BOSS-D-06', stufe: 2, niveau: 'eA', fallen: ['P9', 'P3'], bild: gram('S → fA\nA → vA | lA | rA | e'),
+        frage: mc('Die abgebildete Grammatik beschreibt Roboter-Programme (f = Start, v/l/r = Befehle, e = Ende). Welches Wort ist ableitbar?', ['fvvle', 'vfvle', 'fvlv', 'ffe'],
+          'Jedes Programm beginnt mit f, dann beliebig viele v, l, r und endet mit genau einem e.'),
+        kontrolle: (E, a) => a.frage.optionen.every((o, i) => E.ableitbar(a.bild.text, o) === (i === 0)) },
+      { id: 'BOSS-D-07', stufe: 2, niveau: 'eA', fallen: ['P6'], bild: gram('S → bSeS | ε'),
+        frage: mc('Die abgebildete Grammatik beschreibt Blöcke (b = Beginn, e = Ende), die beliebig verschachtelt sein dürfen. Welche Aussage stimmt?', [
+          'Die Sprache ist nicht regulär: Ein DEA müsste die Verschachtelungstiefe unbegrenzt zählen; ein Kellerautomat reicht.',
+          'Die Sprache ist regulär, weil es nur zwei Terminale gibt.',
+          'Für die Syntaxprüfung braucht man eine Turingmaschine.',
+          'Die Sprache ist regulär, denn die Grammatik hat nur eine Regel für S.',
+        ], 'Mit den Präfixen b, bb, bbb, … und der passenden Anzahl e zeigt das Schubfachprinzip: kein DEA.'),
+        kontrolle: (E, a) => E.grammatikGleich(a.bild.text, ['b', 'e'], (w) => { let d = 0; for (const c of w) { d += c === 'b' ? 1 : -1; if (d < 0) return false; } return d === 0; }) },
+      { id: 'BOSS-D-08', stufe: 2, niveau: 'plus', fallen: ['P2'], bild: TM('anbncn'),
+        frage: mc('Welches Wort akzeptiert die abgebildete Turingmaschine?', ['aabbcc', 'aabbc', 'abcabc', 'acb'],
+          'In jeder Runde wird je ein a, b und c markiert (X, Y, Z). Akzeptiert wird, wenn am Ende nur noch Y und Z übrig sind.'),
+        kontrolle: (E, a) => a.frage.optionen.every((o, i) => E.tmAkzeptiert(a.bild, o) === (i === 0)) },
+      { id: 'BOSS-D-09', stufe: 2, niveau: 'plus', fallen: ['P10'],
+        frage: mc('Warum kann es kein Programm H geben, das für jedes Programm P und jede Eingabe entscheidet, ob P anhält?', [
+          'Mit H ließe sich ein Programm bauen, das genau dann anhält, wenn H sagt, dass es nicht anhält – auf sich selbst angewendet ein Widerspruch.',
+          'Weil Programme beliebig lange laufen können und man nicht lange genug warten kann.',
+          'Weil Computer zu wenig Speicher haben.',
+          'Weil jedes Programm irgendwann anhält und die Frage daher sinnlos ist.',
+        ], 'Das ist die Diagonalisierung beim Halteproblem: Unentscheidbarkeit ist keine Frage von Zeit oder Speicher.') },
+      { id: 'BOSS-D-10', stufe: 2, niveau: 'eA', fallen: ['P6'],
+        frage: wf('Begrenzt man die Klammertiefe in eurer Sprache auf 10, reicht zur Syntaxprüfung ein DEA.', true, [
+          'Mit einer Obergrenze ist das Zählen endlich: Zustände für die Tiefen 0 bis 10 (und ein Fehlerzustand) genügen.',
+          'Nein, Klammern brauchen immer einen Kellerautomaten.',
+          'Nein, dafür braucht man eine Turingmaschine.',
+        ]) },
+      { id: 'BOSS-D-11', stufe: 3, niveau: 'plus', fallen: ['P8'], bild: TM('unaer-plus'),
+        frage: mc('Die abgebildete Turingmaschine (unärer Addierer) startet auf 11+1. Was steht nach dem Halten auf dem Band?', ['111', '11+1', '1111', '11'],
+          'Das + wird zur 1 (1111), am Ende wird eine 1 gelöscht: 111 = 2 + 1.'),
+        kontrolle: (E, a) => a.frage.optionen.every((o, i) => (E.tmAusgabe(a.bild, '11+1') === o) === (i === 0)) },
+      { id: 'BOSS-D-12', stufe: 3, niveau: 'plus', fallen: ['P8'], bild: TM('biber-2'),
+        frage: mc('Der abgebildete Fleißige Biber startet auf dem leeren Band. Wie viele Einsen stehen auf dem Band, wenn er hält?', ['4', '2', '3', '6'],
+          'Er hält nach 6 Schritten mit 4 Einsen – mehr schafft keine haltende Maschine mit 2 Zuständen.'),
+        kontrolle: (E, a) => a.frage.optionen.every((o, i) => (E.tmEinsen(a.bild) === Number(o)) === (i === 0)) },
+      { id: 'BOSS-D-13', stufe: 3, niveau: 'eA', fallen: ['P9', 'P3'],
+        frage: mc('Welche rechtsreguläre Grammatik erzeugt genau die Befehlsfolgen aus v und l, die mit genau einem e enden?', ['S → vS | lS | e', 'S → Sv | Sl | e', 'S → vS | lS | ε', 'S → vSe | lSe | e'],
+          'S → Sv | Sl | e erzeugt e am Anfang, mit ε fehlt das e, vSe | lSe erzeugt mehrere e.'),
+        kontrolle: grammatikOptionen(['v', 'l', 'e'], (w) => w.length >= 1 && w.at(-1) === 'e' && w.slice(0, -1).every((x) => x === 'v' || x === 'l')) },
+      { id: 'BOSS-D-14', stufe: 3, niveau: 'plus', fallen: ['P6'],
+        frage: zu('Ordne jeder Sprache die schwächste Maschine zu, die sie erkennt.', [
+          ['Binärzahlen ohne führende Null', 'DEA'],
+          ['korrekt verschachtelte Blöcke aus b und e', 'Kellerautomat'],
+          ['{aⁿbⁿcⁿ | n ≥ 1}', 'Turingmaschine'],
+        ]) },
+      { id: 'BOSS-D-15', stufe: 3, niveau: 'plus', fallen: ['P10'],
+        frage: wf('Die Church-Turing-These ist ein mathematisch bewiesener Satz.', false, [
+          '„Berechenbar“ im intuitiven Sinn lässt sich nicht formal fassen – die These wird dadurch gestützt, dass alle bekannten Berechnungsmodelle gleich mächtig sind.',
+          'Doch, Turing hat sie 1936 bewiesen.',
+          'Doch, sie folgt aus dem Halteproblem.',
+        ]) },
     ],
   },
 };

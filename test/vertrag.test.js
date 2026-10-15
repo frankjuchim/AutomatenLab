@@ -31,7 +31,7 @@ test('Manifest: Welten 1–4 mit Kennung A–D, Umfang aus den Inhalten, keine K
   assert.deepEqual(m.welten.map((w) => [w.nr, w.kennung]), [[1, 'A'], [2, 'B'], [3, 'C'], [4, 'D']]);
   assert.equal(m.umfang.welten, 4);
   assert.equal(m.umfang.level, 16);
-  assert.equal(m.umfang.bosse, 3);
+  assert.equal(m.umfang.bosse, 4); // Boss-Kämpfe A–D (#/boss)
   assert.ok(m.umfang.aufgaben > 100);
   assert.equal(m.welten.reduce((n, w) => n + w.level, 0), 16);
   const text = JSON.stringify(m);

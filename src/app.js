@@ -206,7 +206,7 @@ function createApp(opts) {
       ...(sso.aktiv ? { ssoStart: '/sso/start', ssoEnde: '/sso/ende' } : {})
     },
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
-    umfang: katalog.umfang,
+    umfang: { ...katalog.umfang, ...(boss ? { bosse: boss.info().length } : {}) },
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
     faehigkeiten: ['gast', 'themen', 'training', ...(boss ? ['boss'] : []), 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', 'challenges', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
