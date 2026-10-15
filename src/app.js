@@ -15,6 +15,7 @@ const { createAuswertung } = require('./auswertung');
 const { createBoss } = require('./boss');
 const { createEigene } = require('./eigene');
 const { createChallenges } = require('./challenges');
+const { createLive } = require('./live');
 const { createLernen } = require('./lernen');
 const { createTraining } = require('./training');
 const { ssoRoutes } = require('./routes/sso');
@@ -136,7 +137,8 @@ function createApp(opts) {
   const eigene = opts.aufgaben?.typen ? createEigene(ctx, { aufgaben: opts.aufgaben, konten }) : null;
   const challenges = opts.aufgaben ? createChallenges(ctx, { konten, aufgaben: opts.aufgaben, eigene }) : null;
   auswertung.challengesFuerBoard = (kursId) => (challenges ? challenges.fuerBoard(kursId) : []);
-  const svc = { konten, auswertung, training, boss, eigene, challenges, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training, bossPunkte, eigene }) };
+  const live = opts.aufgaben ? createLive(ctx, { konten, aufgaben: opts.aufgaben }) : null;
+  const svc = { konten, auswertung, training, boss, eigene, challenges, live, lernen: createLernen(ctx, { aufgaben: opts.aufgaben, training, bossPunkte, eigene }) };
 
   const app = express();
   app.disable('x-powered-by');
@@ -157,7 +159,8 @@ function createApp(opts) {
     next();
   });
   // gzip wie bisher (Graphviz 1,2 MB → ca. 470 KB)
-  app.use(compression());
+  // Server-Sent Events der Live-Runden nicht puffern (sonst kämen Ereignisse erst gesammelt an)
+  app.use(compression({ filter: (req, res) => !String(res.getHeader('Content-Type') || '').startsWith('text/event-stream') && compression.filter(req, res) }));
 
   // Sitzung lesen (signiertes Cookie {k: sub, g: session_gen}); gelöschte Konten sind sofort abgemeldet
   app.use((req, res, next) => {
@@ -209,7 +212,7 @@ function createApp(opts) {
     umfang: { ...katalog.umfang, ...(boss ? { bosse: boss.info().length } : {}) },
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
     // Nur Namen aus der Liste in Vertrag §7 (v1.3); Klassen-Challenges zählen zu „scoreboard“/„beamer“.
-    faehigkeiten: ['gast', 'themen', 'training', ...(boss ? ['boss'] : []), 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
+    faehigkeiten: ['gast', 'themen', 'training', ...(boss ? ['boss'] : []), 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', ...(live ? ['live'] : []), ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
 
   app.get('/api/plattform', (req, res) => {
