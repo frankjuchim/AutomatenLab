@@ -1,7 +1,7 @@
 'use strict';
 // AutomatenLab-Server: liefert die Web-App aus app/ unverändert aus (Cache- und Sicherheitsregeln wie bisher
 // app/nginx.conf), dazu Healthcheck und Manifest nach dem Vertrag des Plattform-Verbunds InfoLabs
-// (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.2).
+// (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.3).
 
 const path = require('node:path');
 const express = require('express');
@@ -26,7 +26,7 @@ const { createMaterial } = require('./material');
 const APP_DIR = path.join(__dirname, '..', 'app');
 const MATERIAL_DIR = process.env.MATERIAL_DIR || path.join(__dirname, '..', 'materials', 'pdf');
 const VERSION = require('../package.json').version;
-const VERTRAG = '1.2';
+const VERTRAG = '1.3';
 const PLATTFORM_ID_STANDARD = 'automatenlab';
 
 // Content-Security-Policy wie bisher in app/nginx.conf: nur eigene Dateien; Graphviz läuft als WASM
@@ -208,7 +208,8 @@ function createApp(opts) {
     auth: { modus: sso.aktiv ? authModus : 'lokal', portal: portalUrl || null, sso: sso.aktiv },
     umfang: { ...katalog.umfang, ...(boss ? { bosse: boss.info().length } : {}) },
     welten: katalog.welten.map((w) => ({ nr: w.nr, kennung: w.kennung, titel: w.titel, farbe: w.farbe, level: w.level })),
-    faehigkeiten: ['gast', 'themen', 'training', ...(boss ? ['boss'] : []), 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', 'challenges', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
+    // Nur Namen aus der Liste in Vertrag §7 (v1.3); Klassen-Challenges zählen zu „scoreboard“/„beamer“.
+    faehigkeiten: ['gast', 'themen', 'training', ...(boss ? ['boss'] : []), 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', ...(material.anzahl() ? ['lehrkraft-materialien'] : [])]
   });
 
   app.get('/api/plattform', (req, res) => {

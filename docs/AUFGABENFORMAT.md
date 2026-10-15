@@ -1,6 +1,6 @@
 # Aufgabenformat von AutomatenLab
 
-Vertrag des Plattform-Verbunds (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.2) §9: Lösungen,
+Vertrag des Plattform-Verbunds (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, Version 1.3) §9: Lösungen,
 Erklärungen und nicht abgerufene Tipps bleiben auf dem Server, geprüft wird nur dort, Punkte vergibt nur der Server.
 AutomatenLab nutzt statt der Block-Aufgaben von Algo Quest **eigene Interaktionen** (Simulatoren, Automaten-Editor,
 Abi-Tabellen). Sie werden hier beschrieben, wie §9 es für neue Interaktionen vorsieht.

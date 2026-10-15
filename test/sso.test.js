@@ -117,19 +117,103 @@ test('state fehlt, ≠ Cookie oder Cookie fehlt → 401; state ist nur einmal ve
   assert.equal((await agent.get('/sso/ende').query({ token: H.ssoToken(app.now), state })).status, 401, 'state verbraucht');
 });
 
-test('fehler=keine_berechtigung → verständliche Seite, fehler=abgebrochen → Startseite; keine Sitzung', async () => {
+test('fehler=keine_berechtigung → 403, rollenneutraler Text (v1.3), Link zum Portal, keine Sitzung; abgebrochen → Startseite', async () => {
   const app = await H.verbundApp();
   const a = await H.ssoStart(app);
   const r = await a.agent.get('/sso/ende').query({ fehler: 'keine_berechtigung', state: a.state });
   assert.equal(r.status, 403);
-  assert.match(r.text, /Kein Zugang/);
-  assert.match(r.text, /nicht freigeschaltet/);
+  const text = r.text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert.ok(
+    text.includes(
+      'Kein Zugang. Diese Plattform ist für dieses Konto noch nicht freigeschaltet. ' +
+        'Schülerinnen und Schüler: Die Lehrkraft muss die Plattform im Portal für den Kurs freischalten. ' +
+        'Lehrkräfte: Die Freischaltung der Plattform erteilt die Administration im Portal; danach die Plattform beim Kurs ankreuzen.'
+    ),
+    text
+  );
+  assert.ok(r.text.includes(`href="${H.PORTAL}/"`), 'Link zurück zum Portal');
+  assert.doesNotMatch(r.text, /Deine Lehrkraft|<script/, 'rollenneutral, ohne Skripte');
+  assert.doesNotMatch((r.headers['set-cookie'] || []).join(';'), /al_s=[^;]/, 'keine Sitzung gesetzt');
   assert.equal((await a.agent.get('/api/sitzung')).body.konto, null);
   const b = await H.ssoStart(app);
   const r2 = await b.agent.get('/sso/ende').query({ fehler: 'abgebrochen', state: b.state });
   assert.equal(r2.status, 302);
   assert.equal(r2.headers.location, '/');
   assert.equal((await b.agent.get('/api/sitzung')).body.konto, null);
+});
+
+/* ---------- Einstieg aus dem Portal (Vertrag v1.3 §5, INTEGRATION.md §3.1/§3.2) ---------- */
+
+test('v1.3: /sso/start mit bestehender Sitzung → 302 zum Portal (nicht direkt auf ziel), Sitzung bleibt', async () => {
+  const app = await H.verbundApp();
+  const agent = await H.angemeldet(app);
+  const r = await agent.get('/sso/start').query({ ziel: '/#/baukasten?level=3' });
+  assert.equal(r.status, 302);
+  const u = new URL(r.headers.location);
+  assert.equal(u.origin + u.pathname, `${H.PORTAL}/sso/autorisieren`);
+  assert.equal(u.searchParams.get('ziel'), '/#/baukasten?level=3');
+  assert.doesNotMatch(r.headers['set-cookie'].join(';'), /al_s=/, 'Sitzung wird beim Start nicht angefasst');
+  assert.equal((await agent.get('/api/sitzung')).body.konto.sub, 's:1042');
+});
+
+test('v1.3: bestehende Sitzung + fehlgeschlagener Rücksprung → 401 bzw. Fehlerseite, alte Sitzung gilt weiter', async () => {
+  const app = await H.verbundApp();
+  const agent = await H.angemeldet(app);
+  const verbraucht = H.ssoToken(app.now, { name: 'Neu A.' });
+  {
+    const r = await agent.get('/sso/start');
+    const state = new URL(r.headers.location).searchParams.get('state');
+    assert.equal((await agent.get('/sso/ende').query({ token: verbraucht, state })).status, 302); // Token einmal verwendet
+  }
+  const faelle = {
+    'falsche Signatur': (st) => ({ token: H.ssoToken(app.now, { name: 'Neu B.' }, { schluessel: H.fremdSchluessel }), state: st }),
+    'falsches aud': (st) => ({ token: H.ssoToken(app.now, { aud: 'algoquest', name: 'Neu B.' }), state: st }),
+    'falsches iss': (st) => ({ token: H.ssoToken(app.now, { iss: 'https://boese.example', name: 'Neu B.' }), state: st }),
+    'kaputtes Token': (st) => ({ token: 'abc.def.ghi', state: st }),
+    'wiederverwendet': (st) => ({ token: verbraucht, state: st }),
+    'state falsch': (st) => ({ token: H.ssoToken(app.now, { name: 'Neu B.' }), state: st + 'x' }),
+    'state fehlt': () => ({ token: H.ssoToken(app.now, { name: 'Neu B.' }) }),
+    'fehler=keine_berechtigung': (st) => ({ fehler: 'keine_berechtigung', state: st }),
+    'fehler=abgebrochen': (st) => ({ fehler: 'abgebrochen', state: st })
+  };
+  for (const [fall, query] of Object.entries(faelle)) {
+    const r = await agent.get('/sso/start');
+    const state = new URL(r.headers.location).searchParams.get('state');
+    const e = await agent.get('/sso/ende').query(query(state));
+    const erwartet = fall === 'fehler=keine_berechtigung' ? 403 : fall === 'fehler=abgebrochen' ? 302 : 401;
+    assert.equal(e.status, erwartet, fall);
+    assert.doesNotMatch((e.headers['set-cookie'] || []).join(';'), /al_s=/, `${fall}: Sitzungs-Cookie unverändert`);
+    const k = (await agent.get('/api/sitzung')).body.konto;
+    assert.equal(k && k.sub, 's:1042', `${fall}: alte Sitzung gilt weiter`);
+    assert.equal(k.name, 'Neu A.', `${fall}: Konto unverändert`);
+  }
+});
+
+test('v1.3: Schüler tritt im Portal einem zweiten Kurs bei, erneut /sso/start → Plattform kennt beide Kurse; fehlt ein Kurs, entfällt nur die Mitgliedschaft', async () => {
+  const app = await H.verbundApp();
+  const agent = await H.angemeldet(app);
+  assert.deepEqual((await agent.get('/api/sitzung')).body.konto.kurse.map((k) => k.id), ['k:17']);
+  const zweiKurse = [
+    { id: 'k:17', name: 'LK Informatik 13', rolle: 'mitglied' },
+    { id: 'k:18', name: 'AG Automaten', rolle: 'mitglied' }
+  ];
+  const ueberPortal = async (kurse) => {
+    const r = await agent.get('/sso/start').query({ ziel: '/' });
+    assert.equal(r.status, 302);
+    const state = new URL(r.headers.location).searchParams.get('state');
+    const e = await agent.get('/sso/ende').query({ token: H.ssoToken(app.now, { kurse }), state, ziel: '/' });
+    assert.equal(e.status, 302);
+    return (await agent.get('/api/sitzung')).body.konto;
+  };
+  const k = await ueberPortal(zweiKurse);
+  assert.deepEqual(k.kurse.map((x) => x.id).sort(), ['k:17', 'k:18']);
+  // Kurs k:17 nicht mehr im Token → Mitgliedschaft entfällt, Konto und Kurs bleiben (Lernstand bis zur Löschung)
+  const db = app.locals.db;
+  const k2 = await ueberPortal([zweiKurse[1]]);
+  assert.deepEqual(k2.kurse.map((x) => x.id), ['k:18']);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM kurs_mitglieder WHERE sub = ? AND kurs_id = ?').get('s:1042', 'k:17').n, 0);
+  assert.ok(app.locals.svc.konten.kurs('k:17'), 'Kurs bleibt');
+  assert.ok(app.locals.svc.konten.konto('s:1042'), 'Konto bleibt');
 });
 
 test('ziel=//boese.example → Weiterleitung auf /', async () => {
