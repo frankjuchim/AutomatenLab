@@ -8,7 +8,7 @@
 | `ROADMAP.md` | Phasen 0–6 als Checklisten (→ GitHub-Issues) |
 | `ENTSCHEIDUNGEN.md` | Architekturentscheidungen (fortschreiben) |
 | `DEPLOYMENT.md` | CapRover (Webhook, `main` = live), GitHub-Prüfung, Backup |
-| `VERBUND.md` | **Anschluss an das Portal InfoLabs** (Vertrag v1.2): SSO, Manifest, Niveaus, Verbund-API, Konfiguration, Vertragsvorschläge |
+| `VERBUND.md` | **Anschluss an das Portal InfoLabs** (Vertrag v1.3): SSO, Manifest, Niveaus, Verbund-API, Konfiguration, Vertragsvorschläge |
 | `ALGOQUEST_VERGLEICH.md` | Analyse AlgoQuest, Empfehlungen für Server/Dashboard (Login-Teile überholt) |
 | `DATENSCHUTZ.md` | Welche Daten AutomatenLab im Verbund speichert, wer sie sieht, wann sie gelöscht werden |
 | `ABNAHME.md` | Checkliste für die Abnahme im echten Verbund (Gast, Schüler, Lehrkraft, Löschung) |

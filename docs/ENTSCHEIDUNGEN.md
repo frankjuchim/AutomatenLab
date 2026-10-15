@@ -2,6 +2,15 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-15 · Verbund-Vertrag 1.3 (1.23.0)
+AutomatenLab folgt Vertrag v1.3: `/sso/start` holt bei jedem Wechsel aus dem Portal ein frisches Token (neue Kurse sind
+sofort bekannt), eine bestehende Sitzung wird erst nach vollständiger Prüfung ersetzt; `keine_berechtigung` zeigt den
+rollenneutralen Text des Portals; Manifest `vertrag: "1.3"` mit `urls.ssoStart`. Die Fähigkeit `challenges` entfällt im
+Manifest, weil §7 nur bekannte Namen vorsieht – Vorschlag zur Aufnahme in `docs/VERBUND.md` §7. Die §9-Sandbox-Regel
+betrifft AutomatenLab nicht (keine Ausführung von Schüler-Code, nur Auswertung von Automaten als Daten mit Grenzen).
+Verworfen: `challenges` als eigene, nicht gelistete Fähigkeit behalten (Vertrag erlaubt neue Namen nur als Nebenversion
+des Vertrags).
+
 ## 2026-10-15 · Boss der Welt D, Editor-Ausbau, Abnahme-Hilfe (1.22.0)
 **Boss D** (Bonus, eA): 15 eigene Aufgaben zu Sprachdesign und Turingmaschine; Turingmaschinen erscheinen als Graph
 (`tmToGraph`), Bandinhalt, Akzeptanz und Einsen des Fleißigen Bibers werden gegen die Engine kontrolliert. Die

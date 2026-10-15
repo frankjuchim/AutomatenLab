@@ -1,7 +1,7 @@
 # AutomatenLab im Plattform-Verbund InfoLabs
 
 **Verbindlich ist der Vertrag des Plattform-Verbunds:
-https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.2).**
+https://github.com/frankjuchim/labs/blob/main/VERTRAG.md (Version 1.3).**
 Anschlussanleitung mit allen Testfällen: https://github.com/frankjuchim/labs/blob/main/docs/INTEGRATION.md.
 Das Repository `frankjuchim/labs` (Portal InfoLabs, https://labs.frankjuchim.de) wird von einer anderen Session
 gepflegt – aus diesem Repository heraus wird es **nur gelesen**, nie geändert. Abweichungen vom Vertrag werden nie
@@ -15,7 +15,9 @@ still gemacht, sondern als Textvorschlag für `VERTRAG.md` formuliert (§6 unten
   keine Datenübernahme (§11 Phase 2 entfällt).
 * **Anmeldung per Single Sign-on** (§5): `/sso/start` → Portal → `/sso/ende?token=…` (Ed25519-JWT, geprüft mit
   `src/jwt.js`, unverändert aus `frankjuchim/labs`). AutomatenLab legt Konten nach `sub` an (nur Anzeigename, Rolle,
-  Kurs-IDs) und setzt eine eigene Sitzung (Schüler ≤ 30 Tage, Lehrkräfte ≤ 8 h).
+  Kurs-IDs) und setzt eine eigene Sitzung (Schüler ≤ 30 Tage, Lehrkräfte ≤ 8 h). Ab v1.3 verlinkt das Portal über
+  `/sso/start` (Manifest `urls.ssoStart`); der Start holt **immer** ein frisches Token, auch mit bestehender Sitzung,
+  und ersetzt sie erst nach vollständiger Prüfung (bei jedem Fehler bleibt sie, wie sie war).
 * **Manifest** `GET /api/plattform` (§7) und **`/healthz`** (§6), geprüft mit `scripts/vertrag_pruefen.js`
   (unverändert aus `frankjuchim/labs`) in den Tests.
 * **Verbund-API** (§6): `POST /api/verbund/loeschen`, `GET /api/verbund/kurse/:kursId/uebersicht`,
@@ -135,6 +137,28 @@ Keller-Labor, Ableitungs-Rallye, Grammatik-Tester, Turing-Labor und der Chomsky-
 Aufgaben. Format, IDs, Punkte und API: `docs/AUFGABENFORMAT.md`.
 
 ## 7. Weitere Vertragspunkte
+
+* **v1.3 – Einstieg aus dem Portal, Fähigkeiten, Sandbox-Regel:** umgesetzt (1.23.0).
+  - §5: `/sso/start` startet immer neu (auch mit Sitzung, nie direkt auf `ziel`); `/sso/ende` ersetzt eine bestehende
+    Sitzung erst nach Prüfung von state, Signatur, `iss`, `aud`, Laufzeit, `jti` und Inhalt; Kurse, die nicht mehr im
+    Token stehen, verlieren die Mitgliedschaft (Lernstand bleibt bis zur Löschung durch das Portal).
+  - `fehler=keine_berechtigung`: 403, rollenneutraler Text aus `INTEGRATION.md` §3.2, Link „Zurück zum Portal“, keine
+    Sitzung gesetzt oder geändert (`KEIN_ZUGANG` in `src/routes/sso.js`).
+  - §6: `kurs-aendern` für einen unbekannten Kurs legt ihn mit Standard-Einstellungen an und antwortet `200 { ok: true }`
+    (galt schon vorher, jetzt mit eigenem Test).
+  - §7: Manifest `vertrag: "1.3"`, `urls.ssoStart: "/sso/start"` (mit eingerichteter Portal-Anmeldung), Fähigkeiten nur
+    aus der Liste in §7. Die Klassen-Challenges laufen nicht mehr als eigene Fähigkeit `challenges` (kein Name aus §7);
+    sie gehören zu Rangliste/Board (`scoreboard`, `beamer`). Vorschlag für eine spätere Nebenversion (für die
+    Portal-Session): `challenges` (Klassen-Challenges mit Einzel- und Team-Wertung im Kurs, ohne Auswirkung auf
+    Lab-Punkte außer Abzeichen) in die Liste der bekannten Fähigkeiten aufnehmen.
+  - §12: `scripts/vertrag_pruefen.js` unverändert in der Fassung v1.3 (`pruefeSsoStart`); `test/vertrag.test.js` prüft
+    `pruefeManifest` leer und `pruefeSsoStart` ohne Fehler und Hinweise gegen den laufenden Server.
+  - §9 Sandbox-Regel: **trifft nicht zu.** AutomatenLab führt keinen Code und keine SQL-Abfragen von Schülerinnen und
+    Schülern aus (kein `eval`, kein `vm`, keine Kindprozesse). Eingereichte Automaten, Grammatiken, Keller- und
+    Turingtabellen sind Daten, die die Engine (`app/js/engine`) mit festen Grenzen auswertet: Anfragen ≤ 100 kB,
+    Automaten ≤ 20 000 Zeichen und ≤ 40 Zustände, Turing-Läufe ≤ 3000 Schritte, Sprachaufzählung ≤ 60 000 Knoten,
+    Rate-Limits für Prüfen und Boss-Kampf. Die Auswertung hat keinen Zugriff auf die Datenbank; Prüfantworten enthalten
+    vor dem Lösen keine Lösungsdaten (`test/loesungen.test.js`). Manifest daher ohne `sql-konsole`.
 
 * **v1.2 – Anforderungsniveaus (§7, §9):** umgesetzt. Manifest `vertrag: "1.2"`, `kurs: "Informatik eA und gA,
   Niedersachsen, Abitur ab 2027"`, `niveaus: ["eA", "gA"]`, `urls.niveaus: "/niveaus"`. Der Vertrag nennt als Beispiel
