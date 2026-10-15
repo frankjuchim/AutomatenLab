@@ -269,7 +269,7 @@ export default {
         h('h3', null, '⚔️ Boss-Ergebnisse (bester Versuch)'),
         tabelle(['Name', ...b.welten.map((w) => `Boss ${w.welt}`)], b.zeilen.map((z) => h('tr', null,
           h('th', { scope: 'row' }, z.name),
-          z.werte.map((w) => h('td', { class: 'zahl' }, w ? `${w.punkte}/${w.max} (${Math.round((100 * w.punkte) / w.max)} %)${w.besiegt ? ' 🏆' : ''} · ${w.versuche}×` : '–'))))),
+          z.werte.map((w) => h('td', null, w ? `${w.punkte}/${w.max} (${Math.round((100 * w.punkte) / w.max)} %)${w.besiegt ? ' 🏆' : ''} · ${w.versuche}×` : '–'))))),
         h('p', { class: 'muted klein' }, '🏆 = besiegt (ab 50 %). n× = Zahl der Kämpfe. Die Boss-Punkte zählen zu den Punkten (nur der beste Versuch je Welt).'));
     }
 
@@ -551,7 +551,7 @@ export default {
       const id = kursId ?? (kurse.length === 1 ? kurse[0].id : null);
       const link = (p = {}) => `#/lehrkraft?${new URLSearchParams({ teil: 'eigene', ...(id ? { kurs: id } : {}), ...p })}`;
       const kopf = [h('h2', null, '✏️ Eigene Aufgaben'),
-        h('p', { class: 'lead' }, 'Erstellen Sie eigene Quizfragen und Baukasten-Challenges für einen Kurs. Ihre Schülerinnen und Schüler sehen freigegebene Aufgaben auf der Startseite unter „Aufgaben deiner Lehrkraft“. Geprüft wird auf dem Server – Lösungen erreichen den Browser erst nach der Antwort. Eigene Aufgaben geben keine Punkte; Ergebnisse sehen Sie in der Liste.')];
+        h('p', { class: 'lead' }, 'Erstellen Sie eigene Quizfragen, Baukasten-Challenges, Detektiv-Fälle und Grammatik-Challenges für einen Kurs. Ihre Schülerinnen und Schüler sehen freigegebene Aufgaben auf der Startseite unter „Aufgaben deiner Lehrkraft“. Geprüft wird auf dem Server – Lösungen erreichen den Browser erst nach der Antwort. Eigene Aufgaben geben keine Punkte; Ergebnisse sehen Sie in der Liste.')];
       if (!kurse.length) { seite(...kopf, h('p', { class: 'notice' }, 'Noch kein Kurs mit AutomatenLab – legen Sie im Portal einen Kurs an.')); return; }
       if (!id) {
         seite(...kopf, h('div', { class: 'panel lk-karte' }, h('h3', null, 'Kurs wählen'),
@@ -563,7 +563,7 @@ export default {
       const kursWahl = kurse.length > 1 ? h('p', null, 'Kurs: ', kurse.map((k, i) => [i ? ' · ' : '', k.id === id ? h('strong', null, k.name) : h('a', { href: `#/lehrkraft?${new URLSearchParams({ teil: 'eigene', kurs: k.id })}` }, k.name)])) : h('p', null, 'Kurs: ', h('strong', null, kurs.name));
       const neuArt = ctx.params.get('neu');
       const nr = ctx.params.get('aufgabe');
-      if (neuArt === 'quiz' || neuArt === 'baukasten') { editor(kopf, kursWahl, id, link, { art: neuArt, titel: '', aktiv: false, daten: null }); return; }
+      if (['quiz', 'baukasten', 'detektiv', 'grammatik'].includes(neuArt)) { editor(kopf, kursWahl, id, link, { art: neuArt, titel: '', aktiv: false, daten: null }); return; }
       if (nr) { const x = await api('GET', `/api/lehrer/eigene/${encodeURIComponent(nr)}`); if (aktiv) editor(kopf, kursWahl, id, link, x); return; }
 
       const liste = await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/eigene`);
@@ -571,13 +571,18 @@ export default {
       const status = h('p', { class: 'lk-status', 'aria-live': 'polite' });
       const zeilen = liste.map((x) => h('tr', null,
         h('td', null, h('strong', null, x.titel)),
-        h('td', null, x.art === 'quiz' ? `Quiz (${x.fragen} ${x.fragen === 1 ? 'Frage' : 'Fragen'})` : `Baukasten (${STUFE[x.stufe] ?? '–'})`),
+        h('td', null, x.art === 'quiz' ? `Quiz (${x.fragen} ${x.fragen === 1 ? 'Frage' : 'Fragen'})` : x.art === 'detektiv' ? 'Detektiv-Fall' : `${x.art === 'grammatik' ? 'Grammatik' : 'Baukasten'} (${STUFE[x.stufe] ?? '–'})`),
         h('td', null, x.aktiv ? h('span', { class: 'niveau-pille niveau-alle' }, 'freigegeben') : h('span', { class: 'muted' }, 'Entwurf')),
         h('td', { class: 'zahl' }, String(x.versucht)),
         h('td', { class: 'zahl' }, String(x.geloest)),
         h('td', { class: 'lk-aktionen' },
           h('a', { class: 'btn btn-small', href: link({ aufgabe: String(x.nr) }) }, 'Bearbeiten'),
           h('a', { class: 'btn btn-small', href: `${x.link}&vorschau=1` }, 'Vorschau'),
+          kurse.length > 1 ? h('select', { class: 'btn btn-small', 'aria-label': `„${x.titel}“ in einen anderen Kurs kopieren`, onchange: async (e) => {
+            const ziel = e.target.value; e.target.value = '';
+            if (!ziel) return;
+            try { await api('POST', `/api/lehrer/eigene/${x.nr}/kopieren`, { kurs: ziel }); status.textContent = `„${x.titel}“ wurde als Entwurf in ${kurse.find((k) => k.id === ziel)?.name} kopiert.`; } catch (err) { status.textContent = err.message; }
+          } }, h('option', { value: '' }, 'Kopieren nach …'), kurse.filter((k) => k.id !== id).map((k) => h('option', { value: k.id }, k.name))) : null,
           h('button', { type: 'button', class: 'btn btn-small', onclick: async () => {
             try { await api('PATCH', `/api/lehrer/eigene/${x.nr}`, { aktiv: !x.aktiv }); eigeneSeite(konto); } catch (e) { status.textContent = e.message; }
           } }, x.aktiv ? 'Zurückziehen' : 'Freigeben'),
@@ -588,7 +593,9 @@ export default {
       seite(...kopf, kursWahl,
         h('p', { class: 'start-actions' },
           h('a', { class: 'btn btn-primary', href: link({ neu: 'quiz' }) }, '＋ Quiz'),
-          h('a', { class: 'btn btn-primary', href: link({ neu: 'baukasten' }) }, '＋ Baukasten-Challenge')),
+          h('a', { class: 'btn btn-primary', href: link({ neu: 'baukasten' }) }, '＋ Baukasten-Challenge'),
+          h('a', { class: 'btn btn-primary', href: link({ neu: 'detektiv' }) }, '＋ Detektiv-Fall'),
+          h('a', { class: 'btn btn-primary', href: link({ neu: 'grammatik' }) }, '＋ Grammatik-Challenge')),
         h('div', { class: 'panel lk-karte' },
           h('h3', null, `Aufgaben im Kurs ${kurs.name} (${liste.length})`),
           liste.length ? tabelle(['Titel', 'Art', 'Status', 'versucht', 'gelöst', ''], zeilen) : h('p', { class: 'muted' }, 'Noch keine eigenen Aufgaben.'),
@@ -635,6 +642,57 @@ export default {
           const basis = { typ: f.typ, richtig, ...(f.erklaerung?.trim() ? { erklaerung: f.erklaerung.trim() } : {}) };
           return f.typ === 'mc' ? { ...basis, frage: f.frage, optionen: liste.map((o) => o.t) } : { ...basis, aussage: f.aussage, wahr: f.wahr, begruendungen: liste.map((o) => o.t) };
         }) });
+      } else if (x.art === 'detektiv') {
+        const d = x.daten ?? { automat: null, optionen: ['', '', '', ''], richtig: 0, erklaerung: '' };
+        const optionen = [...(d.optionen ?? []), '', '', '', ''].slice(0, 4);
+        let richtig = d.richtig ?? 0;
+        const startAlphabet = d.automat?.alphabet ?? ['a', 'b'];
+        const alphabet = h('input', { type: 'text', id: 'ed-alphabet', value: startAlphabet.join(', '), maxlength: 40 });
+        const edBox = h('div');
+        const graphBox = h('div', { class: 'ed-graph' });
+        const gv = new GraphView(graphBox, { label: 'Automat des Falls' });
+        const zeigeGraph = (ed) => { try { gv.render(ed.toDFA()); } catch { /* unvollständig */ } };
+        const ed = new DfaEditor(edBox, { alphabet: startAlphabet, value: d.automat, onChange: zeigeGraph });
+        zeigeGraph(ed);
+        const erklaerung = h('textarea', { id: 'ed-erklaerung', rows: 2, maxlength: 400, placeholder: 'z. B. Bedeutung der Zustände – erscheint nach dem Lösen' }, d.erklaerung ?? '');
+        inhalt = [
+          h('p', null, h('label', { for: 'ed-alphabet' }, 'Eingabealphabet Σ (durch Kommas getrennt) '), alphabet, ' ',
+            h('button', { type: 'button', class: 'btn btn-small', onclick: () => ed.setAlphabet(alphabet.value.split(',').map((t) => t.trim()).filter(Boolean)) }, 'Übernehmen')),
+          h('h4', null, 'Automat des Falls (DEA – Schülerinnen und Schüler sehen ihn und können Wörter testen)'),
+          edBox, graphBox,
+          h('h4', null, 'Vier Beschreibungen – markieren Sie die, die genau zur Sprache passt'),
+          h('p', { class: 'muted klein' }, 'Ohne Prüfprädikat gibt es bei einer falschen Wahl kein Gegenbeispiel, nur „passt nicht“. Gute falsche Beschreibungen unterscheiden sich schon bei kurzen Wörtern.'),
+          [0, 1, 2, 3].map((j) => h('div', { class: 'ed-option' },
+            h('input', { type: 'radio', name: 'ed-det-richtig', checked: richtig === j, 'aria-label': `Beschreibung ${j + 1} ist richtig`, onchange: () => { richtig = j; } }),
+            h('input', { type: 'text', maxlength: 200, value: optionen[j], placeholder: `Beschreibung ${j + 1}`, 'aria-label': `Beschreibung ${j + 1}`, oninput: (e) => { optionen[j] = e.target.value; } }))),
+          h('label', { for: 'ed-erklaerung' }, 'Erklärung nach dem Lösen (optional)'), erklaerung];
+        sammle = () => ({ automat: ed.toJSON(), optionen: optionen.map((t) => t.trim()), richtig, erklaerung: erklaerung.value });
+      } else if (x.art === 'grammatik') {
+        const d = x.daten ?? { aufgabe: '', stufe: 2, alphabet: ['a', 'b'], referenz: '', regulaer: false, tipps: [] };
+        const stufe = h('select', { id: 'ed-stufe' }, [1, 2, 3].map((n) => h('option', { value: String(n), selected: d.stufe === n }, STUFE[n])));
+        const aufgabe = h('textarea', { id: 'ed-aufgabe', rows: 3, maxlength: 800, placeholder: 'z. B. „Entwirf eine Grammatik für L = {aⁿbⁿ | n ≥ 1} über Σ = {a, b}.“' }, d.aufgabe ?? '');
+        const alphabet = h('input', { type: 'text', id: 'ed-alphabet', value: (d.alphabet ?? []).join(', '), maxlength: 30 });
+        const referenz = h('textarea', { id: 'ed-referenz', rows: 4, maxlength: 1000, class: 'ed-mono', placeholder: 'S → aSb | ab' }, d.referenz ?? '');
+        const regulaer = h('input', { type: 'checkbox', id: 'ed-regulaer', checked: !!d.regulaer });
+        const vorschau = h('p', { class: 'muted klein', 'aria-live': 'polite' });
+        const tipps = h('textarea', { id: 'ed-tipps', rows: 3, maxlength: 950, placeholder: 'ein Tipp je Zeile, höchstens drei' }, (d.tipps ?? []).join('\n'));
+        const testen = async () => {
+          const G = await import('../engine/grammar.js');
+          const g = G.parseGrammar(referenz.value);
+          if (!g.ok) { vorschau.textContent = `Fehler: ${g.errors.join(' ')}`; return; }
+          const w = G.shortestWords(g, { count: 8, maxLen: 8 });
+          vorschau.textContent = `Kürzeste Wörter: ${w.map((x) => (x.length ? x.join('') : 'ε')).join(', ') || '–'}${G.isRightRegular(g).regular ? ' · rechtsregulär' : ''}`;
+        };
+        inhalt = [
+          h('p', null, h('label', { for: 'ed-stufe' }, 'Stufe '), stufe),
+          h('label', { for: 'ed-aufgabe' }, 'Aufgabentext (Du-Ansprache)'), aufgabe,
+          h('label', { for: 'ed-alphabet' }, 'Terminale Σ (je ein Zeichen, durch Kommas getrennt)'), alphabet,
+          h('label', { for: 'ed-referenz' }, 'Mustergrammatik (Startsymbol S, Pfeil →, Alternativen mit |, ε für das leere Wort)'), referenz,
+          h('p', null, h('button', { type: 'button', class: 'btn btn-small', onclick: testen }, 'Mustergrammatik testen')), vorschau,
+          h('label', { class: 'check', for: 'ed-regulaer' }, regulaer, ' Rechtsreguläre Grammatik verlangen'),
+          h('p', { class: 'muted klein' }, 'Geprüft wird die Sprache bis zu einer Wortlänge (Σ mit 2 Zeichen: 8, mit 3: 6, sonst 5): Jede Grammatik, die bis dahin dieselben Wörter erzeugt, gilt als richtig. Bei einem Fehler sehen Ihre Schülerinnen und Schüler ein Wort, das zu viel oder zu wenig erzeugt wird.'),
+          h('label', { for: 'ed-tipps' }, 'Tipps (optional)'), tipps];
+        sammle = () => ({ aufgabe: aufgabe.value, stufe: Number(stufe.value), alphabet: alphabet.value.split(',').map((t) => t.trim()).filter(Boolean), referenz: referenz.value, regulaer: regulaer.checked, tipps: tipps.value.split('\n').map((t) => t.trim()).filter(Boolean).slice(0, 3) });
       } else {
         const d = x.daten ?? { aufgabe: '', stufe: 1, referenz: null, tipps: [] };
         const stufe = h('select', { id: 'ed-stufe' }, [1, 2, 3].map((n) => h('option', { value: String(n), selected: d.stufe === n }, STUFE[n])));
@@ -679,7 +737,7 @@ export default {
           x.nr ? h('a', { class: 'btn', href: `${x.link}&vorschau=1` }, 'Vorschau') : null,
           h('a', { class: 'btn', href: link() }, 'Zur Liste')),
         status);
-      seite(...kopf, kursWahl, h('div', { class: 'panel lk-karte' }, h('h3', null, x.nr ? `Bearbeiten: ${x.titel}` : x.art === 'quiz' ? 'Neues Quiz' : 'Neue Baukasten-Challenge'), form));
+      seite(...kopf, kursWahl, h('div', { class: 'panel lk-karte' }, h('h3', null, x.nr ? `Bearbeiten: ${x.titel}` : { quiz: 'Neues Quiz', baukasten: 'Neue Baukasten-Challenge', detektiv: 'Neuer Detektiv-Fall', grammatik: 'Neue Grammatik-Challenge' }[x.art]), form));
     }
 
     /* ───────────── 🏅 Urkunden (wie Algo Quest: im Browser drucken, kein PDF auf dem Server) ───────────── */

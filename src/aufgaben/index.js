@@ -451,6 +451,7 @@ async function ladeAufgaben(secret) {
     }
   };
   const { tm } = await lade(path.join(ENGINE, 'turing.js'));
+  const grammatikEngine = await lade(path.join(ENGINE, 'grammar.js'));
   turingC.TURING_CHALLENGES.forEach((x, i) => {
     const programm = turingP.TURING_PROGRAMME.find((p) => p.id === x.programm);
     const T = tm(programm.maschine);
@@ -510,7 +511,14 @@ async function ladeAufgaben(secret) {
   const typen = {
     quiz: { ...QUIZ, modul: 'eigen', abzeichen: () => [] },
     baukasten: { ...BAUKASTEN, modul: 'eigen', abzeichen: () => [] },
-    normalizeDFA
+    // Detektiv: Beschreibungen der Lehrkraft haben kein Prädikat – falsch ist falsch, ohne Gegenbeispiel
+    detektiv: { ...DETEKTIV, modul: 'eigen', abzeichen: () => [], pruefe(a, antwort) {
+      const j = a.daten.optionen.findIndex((_, k) => h.oid(a.id, k) === (antwort && antwort.wahl));
+      if (j < 0) throw fehler(400, 'Bitte wähle eine Beschreibung.');
+      return j === 0 ? { ok: true, rueckmeldung: { richtig: true } } : { ok: false, rueckmeldung: { richtig: false, gegenbeispiel: null } };
+    } },
+    grammatik: { ...GRAMMATIK, modul: 'eigen', abzeichen: () => [] },
+    normalizeDFA, parseGrammar: grammatikEngine.parseGrammar, languageUpTo: grammatikEngine.languageUpTo, isRightRegular: grammatikEngine.isRightRegular
   };
   return { liste, map, module: new Set([...liste.map((a) => a.modul), 'arena', 'sortierer']), STUFEN: baukasten.STUFEN, abzeichen: new Map(badgesM.BADGES.map((b) => [b.id, b])), training, fallen: fallenM.FALLEN, boss, typen };
 }

@@ -191,6 +191,26 @@ const MIGRATIONEN = [
     PRIMARY KEY (challenge_id, sub)
   );
   CREATE INDEX idx_challenge_teams_sub ON challenge_teams(sub);
+  `,
+  `
+  -- Aufgaben-Editor, Ausbau (PR 12): weitere Aufgabenarten Detektiv-Fall und Grammatik-Challenge. CHECK lässt sich in
+  -- SQLite nicht ändern – Tabelle neu anlegen und Daten übernehmen (IDs bleiben, damit „eigen:<id>“ gültig bleibt).
+  CREATE TABLE eigene_aufgaben_neu (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    kurs_id    TEXT NOT NULL REFERENCES kurse(id) ON DELETE CASCADE,
+    autor_sub  TEXT,
+    art        TEXT NOT NULL CHECK (art IN ('quiz', 'baukasten', 'detektiv', 'grammatik')),
+    titel      TEXT NOT NULL,
+    daten      TEXT NOT NULL,
+    aktiv      INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  INSERT INTO eigene_aufgaben_neu (id, kurs_id, autor_sub, art, titel, daten, aktiv, created_at, updated_at)
+    SELECT id, kurs_id, autor_sub, art, titel, daten, aktiv, created_at, updated_at FROM eigene_aufgaben;
+  DROP TABLE eigene_aufgaben;
+  ALTER TABLE eigene_aufgaben_neu RENAME TO eigene_aufgaben;
+  CREATE INDEX idx_eigene_kurs ON eigene_aufgaben(kurs_id);
   `
 ];
 

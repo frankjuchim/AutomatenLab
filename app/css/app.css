@@ -968,3 +968,4 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 @media print {
   .druck-urkunden .lk-kurskopf, .druck-urkunden .lk-reiter, .druck-urkunden .lk-krumen, .druck-urkunden .lk-nav { display: none !important; }
 }
+.ed-mono { font-family: var(--mono); }

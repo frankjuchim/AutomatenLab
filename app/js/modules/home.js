@@ -146,8 +146,8 @@ export default {
         auftragSlot.after(h('section', { class: 'eigene-aufgaben panel', 'aria-labelledby': 'eigene-h' },
           h('h2', { id: 'eigene-h' }, '✏️ Aufgaben deiner Lehrkraft'),
           h('ul', { class: 'eigene-liste' }, eigene.map((x) => h('li', { class: x.status === 'geloest' ? 'is-geloest' : null },
-            h('a', { href: x.link }, x.art === 'quiz' ? '❓ ' : '🧩 ', x.titel),
-            h('span', { class: 'muted klein' }, ` · ${x.art === 'quiz' ? 'Quiz' : 'Baukasten'}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
+            h('a', { href: x.link }, { quiz: '❓ ', baukasten: '🧩 ', detektiv: '🔍 ', grammatik: '📝 ' }[x.art] ?? '', x.titel),
+            h('span', { class: 'muted klein' }, ` · ${{ quiz: 'Quiz', baukasten: 'Baukasten', detektiv: 'Sprach-Detektiv', grammatik: 'Grammatik' }[x.art] ?? ''}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
           h('p', { class: 'muted klein' }, 'Diese Aufgaben hat deine Lehrkraft selbst erstellt. Sie geben keine Punkte – üben lohnt sich trotzdem.')));
       }).catch(() => {});
       // Klassen-Challenges (PR 11): Hinweis, solange eine läuft oder geplant ist

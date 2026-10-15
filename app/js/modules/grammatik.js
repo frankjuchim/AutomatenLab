@@ -26,6 +26,13 @@ export default {
     const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
     clear(el, h('p', { class: 'muted' }, 'Lade …'));
     (async () => {
+      // Challenge der Lehrkraft (Aufgaben-Editor, #/grammatik?eigen=<nr>), ohne Punkte
+      const eigen = p.get('eigen');
+      if (!q.demo && /^\d{1,9}$/.test(eigen ?? '')) {
+        const d = await q.aufgabe(`eigen:${eigen}`);
+        if (aktiv) aufraeumen = editor({ ...d.aufgabe, aufgabeId: `eigen:${eigen}`, nr: 0, eigen: true, zustand: d.zustand, loesung: d.loesung ?? null });
+        return;
+      }
       CHALLENGES = await q.liste('grammatik');
       if (!aktiv) return;
       const n = Number(p.get('challenge'));
@@ -56,7 +63,7 @@ export default {
     }
 
     function editor(c) {
-      ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
+      ctx.setSubtitle(c ? (q.demo ? `Demo-Challenge: ${c.titel} (ohne Punkte)` : c.eigen ? `Aufgabe deiner Lehrkraft: ${c.titel} (ohne Punkte)` : `Challenge ${c.nr}: ${c.titel}`) : 'Freier Modus');
       let zustand = c?.zustand ?? null;
       let loesung = c?.loesung ?? null;
       // Vorschau für Lehrkräfte (?vorschau=1): Lösung gleich einsetzen, sobald die Aufgabe aufgebaut ist
@@ -220,7 +227,7 @@ export default {
         else if (res.grund === 'regulaer') body = h('div', null, h('p', null, 'Die Sprache stimmt – aber die Grammatik ist noch nicht rechtsregulär. Diese Regeln stören:'), h('ul', null, res.violations.slice(0, 5).map((v) => h('li', null, h('code', { class: 'word' }, v.rule), ` – ${v.reason}`))));
         else body = h('p', null, res.zuviel ? `Deine Grammatik erzeugt ${show(res.zuviel)} – das gehört nicht zur Sprache.` : `Deine Grammatik erzeugt ${show(res.fehlt)} nicht – das gehört aber zur Sprache.`);
         clear(checkResult, h('div', { class: 'notice notice-error' }, h('p', null, h('strong', null, 'Noch nicht. ')), body,
-          h('p', { class: 'muted' }, !q.demo && zustand?.status === 'offen' ? `Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : `Versuch ${attempts}.`),
+          h('p', { class: 'muted' }, !q.demo && !c.eigen && zustand?.status === 'offen' ? `Versuch ${zustand.fehlversuche} – jetzt noch ${zustand.moeglich} Punkte möglich.` : `Versuch ${attempts}.`),
           attempts >= 3 ? h('p', null, h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: () => aufdecken() }, 'Musterlösung zeigen')) : null));
       }
       /** „Musterlösung zeigen“: danach gibt es für diese Challenge keine Punkte mehr. */
@@ -243,7 +250,7 @@ export default {
           : c.tippsAnzahl ? h('button', { type: 'button', class: 'btn btn-small btn-ghost', onclick: async () => {
             try { zustand = (await q.tipp(c.aufgabeId)).zustand; } catch (e) { ctx.toast(e.message, { type: 'error' }); return; }
             zeigeTipp();
-          } }, q.demo || zustand?.status !== 'offen' ? 'Tipp anzeigen' : 'Tipp anzeigen (kostet Punkte)') : null);
+          } }, q.demo || c.eigen || zustand?.status !== 'offen' ? 'Tipp anzeigen' : 'Tipp anzeigen (kostet Punkte)') : null);
       }
       if (c) zeigeTipp();
 

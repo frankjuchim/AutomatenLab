@@ -2,6 +2,18 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-15 · Boss der Welt D, Editor-Ausbau, Abnahme-Hilfe (1.22.0)
+**Boss D** (Bonus, eA): 15 eigene Aufgaben zu Sprachdesign und Turingmaschine; Turingmaschinen erscheinen als Graph
+(`tmToGraph`), Bandinhalt, Akzeptanz und Einsen des Fleißigen Bibers werden gegen die Engine kontrolliert. Die
+Boss-Level der Materialien (DS06, DS10, DS14) bleiben unverändert; für die App gibt es `APP_BOSS_NIVEAU` (A–D).
+Das Manifest nennt jetzt `umfang.bosse = 4` (Bosse der App). **Editor:** zwei weitere Aufgabenarten –
+**Detektiv-Fall** (Automat im Editor, vier Beschreibungen, die markierte ist richtig; ohne Prüfprädikat gibt es bei
+falscher Wahl kein Gegenbeispiel) und **Grammatik-Challenge** (Mustergrammatik; geprüft wird die Sprache bis Länge 8
+bei |Σ| = 2, 6 bei 3, sonst 5; optional „rechtsregulär verlangen“) – sowie **Kopieren** in einen anderen eigenen Kurs
+(als Entwurf, ohne Ergebnisse). Migration 10 legt `eigene_aufgaben` mit erweitertem CHECK neu an, IDs bleiben.
+**Abnahme-Hilfe:** `qa/abnahme.mjs` baut einen Beispielkurs mit Fantasie-Schülern auf und speichert 31 Screenshots nach
+`docs/abnahme/` (verkleinert auf 256 Farben); `docs/ABNAHME.md` verlinkt sie je Schritt.
+
 ## 2026-10-14 · Klassen-Challenges (1.21.0)
 Frank: „Beides wählbar, nur Challenge-Liste“. Die Lehrkraft legt im Kurs (Reiter 🎯 Challenges) eine Challenge an:
 Titel, Zeitraum (höchstens 60 Tage), was zählt – **Training** (richtige Antworten in beendeten Runden von Arena,

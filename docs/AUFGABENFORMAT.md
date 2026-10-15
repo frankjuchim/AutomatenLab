@@ -195,7 +195,10 @@ Schreibende Anfragen nur mit gleicher Herkunft und als JSON; höchstens 120 Prü
 5. Lösungstexte in `test/loesungen.test.js` aufnehmen, `test/lernen.test.js` um den Ablauf ergänzen.
 
 ## Eigene Aufgaben der Lehrkräfte (Aufgaben-Editor)
-* ID `eigen:<nr>` (Tabelle `eigene_aufgaben`, `src/eigene.js`), Deep-Links `#/quiz?eigen=<nr>`, `#/baukasten?eigen=<nr>`.
+* ID `eigen:<nr>` (Tabelle `eigene_aufgaben`, `src/eigene.js`), Deep-Links `#/quiz?eigen=<nr>`, `#/baukasten?eigen=<nr>`,
+  `#/detektiv?eigen=<nr>`, `#/grammatik?eigen=<nr>`.
+* Detektiv: Automat + vier Beschreibungen (erste richtig gespeichert), falsche Wahl ohne Gegenbeispiel; Grammatik:
+  Mustergrammatik, Prädikat = Wortmenge der Mustergrammatik bis zur Vergleichslänge (8/6/5 je nach |Σ|).
 * Quiz: Fragen im Format des Level-Quiz (erste Option bzw. Begründung richtig, gespeichert in der Datenbank);
   Baukasten: Musterautomat als DEA, Beispiele aus dem Automaten (bis zu vier kürzeste Wörter je Seite).
 * Prüfung wie Level-Quiz bzw. Baukasten, aber **0 Punkte und keine Abzeichen**; Zugriff nur für Mitglieder des Kurses
