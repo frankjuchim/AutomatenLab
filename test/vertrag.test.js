@@ -1,11 +1,11 @@
 'use strict';
-// Vertrag des Plattform-Verbunds InfoLabs (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, v1.2):
+// Vertrag des Plattform-Verbunds InfoLabs (https://github.com/frankjuchim/labs/blob/main/VERTRAG.md, v1.3):
 // Manifest §7, Healthcheck §6, Pflicht-URLs. scripts/vertrag_pruefen.js ist eine unveränderte Kopie aus frankjuchim/labs.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const H = require('./helpers');
-const { pruefeManifest } = require('../scripts/vertrag_pruefen');
+const { pruefeManifest, pruefeSsoStart } = require('../scripts/vertrag_pruefen');
 
 test('Manifest erfüllt den Vertrag (pruefeManifest ohne Fehler), öffentlich mit CORS *', async () => {
   const app = await H.makeApp();
@@ -14,7 +14,7 @@ test('Manifest erfüllt den Vertrag (pruefeManifest ohne Fehler), öffentlich mi
   assert.equal(r.headers['access-control-allow-origin'], '*');
   assert.deepEqual(pruefeManifest(r.body), []);
   assert.equal(r.body.id, 'automatenlab');
-  assert.equal(r.body.vertrag, '1.2');
+  assert.equal(r.body.vertrag, '1.3');
   // v1.2 (§7, §9): für eA und gA, Niveau-Übersicht ohne Anmeldung
   assert.equal(r.body.kurs, 'Informatik eA und gA, Niedersachsen, Abitur ab 2027');
   assert.deepEqual(r.body.niveaus, ['eA', 'gA']);
@@ -23,6 +23,34 @@ test('Manifest erfüllt den Vertrag (pruefeManifest ohne Fehler), öffentlich mi
   assert.equal(r.body.auth.portal, 'https://labs.example');
   assert.ok(r.body.faehigkeiten.includes('gast'));
   assert.ok(r.body.faehigkeiten.includes('training'), 'Training (Arena, Unterscheide!) wie Algo Quest');
+});
+
+// Bekannte Fähigkeiten nach Vertrag §7 (v1.3)
+const FAEHIGKEITEN_V13 = ['gast', 'themen', 'lehrkraft-materialien', 'boss', 'training', 'warmup', 'scoreboard', 'beamer', 'urkunden', 'fallen-profil', 'sql-konsole', 'live'];
+
+test('v1.3: Fähigkeiten nur mit Namen aus §7; mit Portal-Anmeldung urls.ssoStart /sso/start und ssoEnde', async () => {
+  const app = await H.verbundApp();
+  const m = (await request(app).get('/api/plattform')).body;
+  assert.deepEqual(pruefeManifest(m), []);
+  assert.equal(m.auth.modus, 'portal');
+  assert.equal(m.urls.ssoStart, '/sso/start');
+  assert.equal(m.urls.ssoEnde, '/sso/ende');
+  assert.deepEqual(m.faehigkeiten.filter((f) => !FAEHIGKEITEN_V13.includes(f)), []);
+  assert.ok(!m.faehigkeiten.includes('sql-konsole'), 'AutomatenLab führt keinen Schüler-Code und keine SQL-Abfragen aus');
+});
+
+test('v1.3: pruefeSsoStart gegen den laufenden Server ohne Fehler und ohne Hinweise', async () => {
+  const app = await H.verbundApp();
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((ok) => server.once('listening', ok));
+  try {
+    const basis = `http://127.0.0.1:${server.address().port}`;
+    const m = await (await fetch(basis + '/api/plattform')).json();
+    assert.deepEqual(pruefeManifest(m), []);
+    assert.deepEqual(await pruefeSsoStart(basis, m), { fehler: [], hinweise: [] });
+  } finally {
+    await new Promise((ok) => server.close(ok));
+  }
 });
 
 test('Manifest: Welten 1–4 mit Kennung A–D, Umfang aus den Inhalten, keine Kurs- oder Lösungsdaten', async () => {
