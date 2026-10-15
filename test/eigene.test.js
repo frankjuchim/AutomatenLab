@@ -133,3 +133,50 @@ test('Rechte: Schüler und Gäste dürfen nichts verwalten; höchstens 60 Aufgab
   for (let i = 0; i < 60; i++) ins.run();
   assert.match((await neu(lk, QUIZ)).body.error, /Höchstens 60/);
 });
+
+test('Detektiv-Fall und Grammatik-Challenge der Lehrkraft; Kopieren in einen anderen Kurs (als Entwurf)', async () => {
+  const app = await H.verbundApp();
+  const lk = await H.angemeldet(app, { sub: 'l:5', rolle: 'lehrkraft', name: 'Frau Beispiel', kurse: [{ id: 'k:17', name: 'LK', rolle: 'lehrkraft' }, { id: 'k:18', name: 'GK', rolle: 'lehrkraft' }] });
+  const mika = await H.angemeldet(app);
+  const neu = (body) => lk.post('/api/lehrer/kurse/k%3A17/eigene').set(ORIGIN).send({ aktiv: true, ...body });
+  // Detektiv: vier Beschreibungen, die markierte ist richtig
+  const det = await neu({ art: 'detektiv', titel: 'Der Schlusspunkt', daten: { automat: ENDET_B, optionen: ['beginnt mit b', 'endet auf b', 'enthält b', 'genau ein b'], richtig: 1, erklaerung: 'S1 heißt: zuletzt b gelesen.' } });
+  assert.equal(det.status, 201, JSON.stringify(det.body));
+  assert.equal(det.body.link, `#/detektiv?eigen=${det.body.nr}`);
+  const a = (await mika.get(`/api/aufgaben/${encodeURIComponent(det.body.id)}`)).body;
+  assert.deepEqual(a.aufgabe.automat, ENDET_B);
+  assert.equal(a.aufgabe.optionen.length, 4);
+  assert.doesNotMatch(JSON.stringify(a), /S1 heißt/);
+  const falsch = a.aufgabe.optionen.find((o) => o.text === 'enthält b');
+  const p1 = (await mika.post(`/api/aufgaben/${encodeURIComponent(det.body.id)}/pruefen`).set(ORIGIN).send({ antwort: { wahl: falsch.id } })).body;
+  assert.deepEqual([p1.ok, p1.rueckmeldung.gegenbeispiel], [false, null]);
+  const richtig = a.aufgabe.optionen.find((o) => o.text === 'endet auf b');
+  const p2 = (await mika.post(`/api/aufgaben/${encodeURIComponent(det.body.id)}/pruefen`).set(ORIGIN).send({ antwort: { wahl: richtig.id } })).body;
+  assert.deepEqual([p2.ok, p2.geloest, p2.punkteErhalten], [true, true, 0]);
+  assert.match(JSON.stringify(p2.loesung), /S1 heißt/);
+  // Grammatik: Sprache der Mustergrammatik bis Länge 8 (|Σ| = 2)
+  const gr = await neu({ art: 'grammatik', titel: 'aⁿbⁿ', daten: { aufgabe: 'Entwirf eine Grammatik für {aⁿbⁿ | n ≥ 1} über Σ = {a, b}.', stufe: 2, alphabet: ['a', 'b'], referenz: 'S → aSb | ab', tipps: ['Außen a und b.'] } });
+  assert.equal(gr.status, 201, JSON.stringify(gr.body));
+  assert.equal(gr.body.link, `#/grammatik?eigen=${gr.body.nr}`);
+  const g = (await mika.get(`/api/aufgaben/${encodeURIComponent(gr.body.id)}`)).body;
+  assert.deepEqual(g.aufgabe.alphabet, ['a', 'b']);
+  assert.deepEqual(g.aufgabe.beispiele.ja.slice(0, 2), ['ab', 'aabb']);
+  assert.doesNotMatch(JSON.stringify(g), /aSb/);
+  const zuviel = (await mika.post(`/api/aufgaben/${encodeURIComponent(gr.body.id)}/pruefen`).set(ORIGIN).send({ antwort: { grammatik: 'S → aSb | ε' } })).body;
+  assert.equal(zuviel.ok, false);
+  assert.deepEqual(zuviel.rueckmeldung.zuviel, []);
+  const ok = (await mika.post(`/api/aufgaben/${encodeURIComponent(gr.body.id)}/pruefen`).set(ORIGIN).send({ antwort: { grammatik: 'S → aA\nA → Sb | b' } })).body;
+  assert.equal(ok.ok, true);
+  // Fehler in der Mustergrammatik
+  const fehler = async (daten) => (await neu({ art: 'grammatik', titel: 'Test', daten: { aufgabe: 'Eine Aufgabe mit Text.', stufe: 1, alphabet: ['a', 'b'], ...daten } })).body.error;
+  assert.match(await fehler({ referenz: 'S → aSc' }), /außerhalb/);
+  assert.match(await fehler({ referenz: 'S → aSb | ab', regulaer: true }), /nicht rechtsregulär/);
+  assert.match(await fehler({ referenz: 'S → → a' }), /Fehler/);
+  assert.match((await neu({ art: 'detektiv', titel: 'Test', daten: { automat: ENDET_B, optionen: ['a', 'b', 'c'], richtig: 0 } })).body.error, /genau vier/);
+  // Kopieren: Entwurf im anderen Kurs, ohne Ergebnisse; fremder Kurs 404
+  const k = await lk.post(`/api/lehrer/eigene/${det.body.nr}/kopieren`).set(ORIGIN).send({ kurs: 'k:18' });
+  assert.equal(k.status, 201);
+  assert.deepEqual([k.body.kurs, k.body.aktiv, k.body.versucht, k.body.titel], ['k:18', false, 0, 'Der Schlusspunkt']);
+  assert.equal((await lk.post(`/api/lehrer/eigene/${det.body.nr}/kopieren`).set(ORIGIN).send({ kurs: 'k:99' })).status, 404);
+  assert.equal((await mika.post(`/api/lehrer/eigene/${det.body.nr}/kopieren`).set(ORIGIN).send({ kurs: 'k:18' })).status, 403);
+});

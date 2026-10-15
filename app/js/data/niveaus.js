@@ -32,6 +32,9 @@ export const LEVEL_NIVEAU_HINWEIS = {
 /** Boss-Level je Welt (Abi-artige Übung am Ende der Welt). */
 export const BOSS_NIVEAU = { A: 'alle', B: 'eA', C: 'eA' };
 
+/** Boss-Kämpfe der App (#/boss): wie die Boss-Level, dazu ein Bonus-Boss für Welt D (Sprachdesign, Turingmaschine). */
+export const APP_BOSS_NIVEAU = { ...BOSS_NIVEAU, D: 'eA' };
+
 /** Niveau je App-Modul; „je Level“ = Aufgaben haben das Niveau ihres Levels. */
 export const MODUL_NIVEAU = {
   arena: 'alle', detektiv: 'alle', baukasten: 'alle', minimierer: 'plus', mealy: 'alle',

@@ -13,7 +13,7 @@ import { progress } from '../core/progress.js';
 import { api } from '../core/api.js';
 import { sitzung, anmeldeLink } from '../core/sitzung.js';
 import { heroAutomat } from '../components/hero-automat.js';
-import { LEVEL_NIVEAU, MODUL_NIVEAU, NIVEAUS, BOSS_NIVEAU } from '../data/niveaus.js';
+import { LEVEL_NIVEAU, MODUL_NIVEAU, NIVEAUS, APP_BOSS_NIVEAU } from '../data/niveaus.js';
 import { niveauEtikett, niveauPille } from '../components/niveau.js';
 import { materialLinks } from '../components/material-links.js';
 
@@ -146,8 +146,8 @@ export default {
         auftragSlot.after(h('section', { class: 'eigene-aufgaben panel', 'aria-labelledby': 'eigene-h' },
           h('h2', { id: 'eigene-h' }, '✏️ Aufgaben deiner Lehrkraft'),
           h('ul', { class: 'eigene-liste' }, eigene.map((x) => h('li', { class: x.status === 'geloest' ? 'is-geloest' : null },
-            h('a', { href: x.link }, x.art === 'quiz' ? '❓ ' : '🧩 ', x.titel),
-            h('span', { class: 'muted klein' }, ` · ${x.art === 'quiz' ? 'Quiz' : 'Baukasten'}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
+            h('a', { href: x.link }, { quiz: '❓ ', baukasten: '🧩 ', detektiv: '🔍 ', grammatik: '📝 ' }[x.art] ?? '', x.titel),
+            h('span', { class: 'muted klein' }, ` · ${{ quiz: 'Quiz', baukasten: 'Baukasten', detektiv: 'Sprach-Detektiv', grammatik: 'Grammatik' }[x.art] ?? ''}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
           h('p', { class: 'muted klein' }, 'Diese Aufgaben hat deine Lehrkraft selbst erstellt. Sie geben keine Punkte – üben lohnt sich trotzdem.')));
       }).catch(() => {});
       // Klassen-Challenges (PR 11): Hinweis, solange eine läuft oder geplant ist
@@ -190,10 +190,10 @@ export default {
         grid.append(tile);
         if (m.load && STATUS[m.route]) STATUS[m.route]().then((text) => { status.textContent = text; }).catch(() => {});
       }
-      // Boss-Kampf am Ende der Welten A–C (PR 9, wie Algo Quest) – nur mit Anmeldung
-      if (BOSS_NIVEAU[g.id]) grid.append(h('li', { class: ['tile', 'is-ready', 'tile-boss'], 'data-welt': g.id },
+      // Boss-Kampf am Ende der Welten A–D (PR 9/12, wie Algo Quest) – nur mit Anmeldung
+      if (APP_BOSS_NIVEAU[g.id]) grid.append(h('li', { class: ['tile', 'is-ready', 'tile-boss'], 'data-welt': g.id },
         h('a', { class: 'tile-link', href: ctx.link('boss', { welt: g.id }) },
-          h('span', { class: 'tile-title' }, `⚔️ Boss der Welt ${g.id}`, ' ', niveauPille(BOSS_NIVEAU[g.id])),
+          h('span', { class: 'tile-title' }, `⚔️ Boss der Welt ${g.id}`, ' ', niveauPille(APP_BOSS_NIVEAU[g.id])),
           h('span', { class: 'tile-blurb' }, 'Prüfung auf Zeit: zufällige Aufgaben im Abitur-Stil, Auswertung am Ende. Ab 50 % ist der Boss besiegt.'),
           h('span', { class: 'tile-foot' }, h('span', { class: 'tile-levels' }, 'Ende der Welt'), h('span', { class: 'tile-status' }, 'mit Anmeldung')))));
       const slot = h('div', { class: 'welt-material-slot' });

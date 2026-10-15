@@ -97,5 +97,5 @@ test('Manifest nennt Rangliste, Beamer-Board, Urkunden, Fallen-Profil und Bosse'
   const app = await H.verbundApp();
   const f = (await request(app).get('/api/plattform')).body.faehigkeiten;
   for (const x of ['scoreboard', 'beamer', 'urkunden', 'fallen-profil', 'boss']) assert.ok(f.includes(x), x);
-  assert.equal((await request(app).get('/api/plattform')).body.umfang.bosse, 3);
+  assert.equal((await request(app).get('/api/plattform')).body.umfang.bosse, 4);
 });

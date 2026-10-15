@@ -49,6 +49,7 @@ test('Matrix: erwarteter Status je Route und Rolle', async () => {
     ['post', '/api/lehrer/kurse/k%3A17/eigene', { gast: 401, schueler: 403, lehrkraft: 400, fremdeLehrkraft: 404, superadmin: 400 }],
     ['get', '/api/lehrer/eigene/999999', { gast: 401, schueler: 403, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
     ['patch', '/api/lehrer/eigene/999999', { gast: 401, schueler: 403, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
+    ['post', '/api/lehrer/eigene/999999/kopieren', { gast: 401, schueler: 403, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
     ['delete', '/api/lehrer/eigene/999999', { gast: 401, schueler: 403, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
     ['get', '/api/aufgaben/eigen%3A999999', { gast: 401, schueler: 404, lehrkraft: 404, fremdeLehrkraft: 404, superadmin: 404 }],
     ['get', '/api/challenges', { gast: 401, schueler: 200, lehrkraft: 200, fremdeLehrkraft: 200, superadmin: 200 }],

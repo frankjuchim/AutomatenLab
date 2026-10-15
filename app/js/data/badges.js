@@ -46,6 +46,7 @@ export const BADGES = [
   { id: 'boss-A', titel: 'Wächter besiegt', text: 'Den Boss der Welt A (endliche Automaten) besiegt.' },
   { id: 'boss-B', titel: 'Golem besiegt', text: 'Den Boss der Welt B (Grenzen und Keller) besiegt.' },
   { id: 'boss-C', titel: 'Sphinx besiegt', text: 'Den Boss der Welt C (formale Sprachen) besiegt.' },
+  { id: 'boss-D', titel: 'Maschinistin besiegt', text: 'Den Boss der Welt D (Sprachdesign und Turingmaschine) besiegt.' },
   { id: 'boss-makellos', titel: 'Makellos', text: 'Einen Boss-Kampf mit allen möglichen Punkten beendet.' },
   // Klassen-Challenges (PR 11): nach dem Ende vergeben, nur mit Wert > 0
   { id: 'challenge-sieg', titel: 'Challenge gewonnen', text: 'Platz 1 in einer Klassen-Challenge.' },

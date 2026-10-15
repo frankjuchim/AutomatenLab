@@ -18,7 +18,9 @@ export default {
     const fehler = (e) => { if (aktiv) clear(el, h('p', { class: 'notice notice-error' }, e.message)); };
     const n = Number(ctx.params.get('fall'));
     clear(el, h('p', { class: 'muted' }, 'Lade …'));
+    const eigen = ctx.params.get('eigen'); // Fall der Lehrkraft (Aufgaben-Editor), ohne Punkte
     if (q.demo) q.liste('detektiv').then((l) => aktiv && showCase(l[0].id)).catch(fehler);
+    else if (/^\d{1,9}$/.test(eigen ?? '')) showCase(`eigen:${eigen}`).catch(fehler);
     else if (n >= 1 && n <= ANZAHL) showCase(`detektiv:fall-${n}`).catch(fehler);
     else showList().catch(fehler);
     return () => { aktiv = false; aufraeumen?.(); };
@@ -42,12 +44,12 @@ export default {
       const daten = await q.aufgabe(id);
       if (!aktiv) return;
       const f = { ...daten.aufgabe, A: dfa(daten.aufgabe.automat) };
-      ctx.setSubtitle(q.demo ? `Demo-Fall: ${f.titel} (ohne Punkte)` : `Fall ${f.nr} von ${ANZAHL}: ${f.titel}`);
+      ctx.setSubtitle(q.demo ? `Demo-Fall: ${f.titel} (ohne Punkte)` : id.startsWith('eigen:') ? `Fall deiner Lehrkraft: ${f.titel} (ohne Punkte)` : `Fall ${f.nr} von ${ANZAHL}: ${f.titel}`);
       let solved = daten.zustand.status !== 'offen';
 
       const left = h('div', { class: 'case-lab panel' });
       const playerBox = h('div', { class: 'case-player' });
-      const rp = new RunPlayer(playerBox, { automat: f.A, label: q.demo ? 'Mystery-Automat (Demo)' : `Mystery-Automat für Fall ${f.nr}` });
+      const rp = new RunPlayer(playerBox, { automat: f.A, label: q.demo ? 'Mystery-Automat (Demo)' : f.nr ? `Mystery-Automat für Fall ${f.nr}` : 'Mystery-Automat deiner Lehrkraft' });
 
       const input = h('input', { type: 'text', id: 'testwort', class: 'word-input', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false',
         placeholder: f.A.alphabet.some((s) => s.length > 1) ? 'z. B. 10 20' : `z. B. ${f.vorschlaege?.[1] ?? f.A.alphabet.join('')}` });
@@ -100,7 +102,7 @@ export default {
       function zeigeGeloest(r, loesung) {
         solved = true;
         optButtons.forEach((x, i) => { x.disabled = true; if (f.optionen[i].id === loesung?.richtig) x.classList.add('is-correct'); });
-        const next = !q.demo && f.nr < ANZAHL ? f.nr + 1 : null;
+        const next = !q.demo && f.nr >= 1 && f.nr < ANZAHL ? f.nr + 1 : null;
         const versuche = r ? r.zustand.fehlversuche + 1 : null;
         clear(verdict, h('div', { class: 'notice notice-success' },
           h('p', null, h('strong', null, r ? 'Fall gelöst! ' : 'Schon gelöst. '), r ? (versuche === 1 ? 'Gleich im ersten Versuch.' : `Nach ${versuche} Versuchen.`) : ''),
@@ -148,7 +150,7 @@ export default {
         q.demo ? null : h('nav', { class: 'case-nav', 'aria-label': 'Fälle' },
           f.nr > 1 ? h('a', { class: 'btn btn-ghost', href: ctx.link('detektiv', { fall: f.nr - 1 }) }, `‹ Fall ${f.nr - 1}`) : h('span'),
           h('a', { class: 'btn btn-ghost', href: ctx.link('detektiv') }, 'Alle Fälle'),
-          f.nr < ANZAHL ? h('a', { class: 'btn btn-ghost', href: ctx.link('detektiv', { fall: f.nr + 1 }) }, `Fall ${f.nr + 1} ›`) : h('span')));
+          f.nr >= 1 && f.nr < ANZAHL ? h('a', { class: 'btn btn-ghost', href: ctx.link('detektiv', { fall: f.nr + 1 }) }, `Fall ${f.nr + 1} ›`) : h('span')));
       if (solved) zeigeGeloest(null, daten.loesung);
 
       rp.ready.then(() => { const first = f.vorschlaege?.[0] ?? ''; rp.load(first); });

@@ -10,8 +10,8 @@ const ENGINE = path.join(__dirname, '..', 'app', 'js', 'engine');
 const lade = (datei) => import(pathToFileURL(path.join(ENGINE, datei)).href);
 
 async function engine() {
-  const [D, N, M, P, G, K] = await Promise.all(['dfa.js', 'nfa.js', 'mealy.js', 'pda.js', 'grammar.js', 'markierung.js'].map(lade));
-  const automat = (bild) => ({ dea: D.dfa, nea: N.nfa, mealy: M.mealy, nka: P.pda }[bild.typ])(bild.automat);
+  const [D, N, M, P, G, K, TU] = await Promise.all(['dfa.js', 'nfa.js', 'mealy.js', 'pda.js', 'grammar.js', 'markierung.js', 'turing.js'].map(lade));
+  const automat = (bild) => ({ dea: D.dfa, nea: N.nfa, mealy: M.mealy, nka: P.pda, tm: TU.tm }[bild.typ])(bild.automat);
   const alphabet = (A) => A.inputAlphabet ?? A.alphabet;
   const woerter = (sigma, max) => {
     const out = [[]];
@@ -22,6 +22,7 @@ async function engine() {
     const A = automat(bild);
     if (bild.typ === 'dea') return D.runDFA(A, w).accepted;
     if (bild.typ === 'nea') return N.runNFA(A, w).accepted;
+    if (bild.typ === 'tm') return TU.runTM(A, w).accepted;
     const r = P.runPDA(A, w);
     assert.ok(!r.exhausted, 'Suchschranke des Kellerautomaten erreicht');
     return r.accepted;
@@ -29,8 +30,12 @@ async function engine() {
   const grammatik = (text) => { const g = G.parseGrammar(text); assert.ok(g.ok, g.errors?.join(' ')); return g; };
   /** Anzahl der Nerode-Klassen (Präfixe bis Länge lp, Fortsetzungen bis Länge ls) – für reguläre Sprachen = minimaler DEA. */
   const klassen = (sigma, p, lp = 6, ls = 6) => new Set(woerter(sigma, lp).map((u) => woerter(sigma, ls).map((v) => (p([...u, ...v]) ? 1 : 0)).join(''))).size;
+  const tmLauf = (bild, wort) => { const r = TU.runTM(automat(bild), wort); assert.ok(r.halted, 'Turingmaschine hält nicht'); return r; };
   return {
     akzeptiert,
+    tmAusgabe: (bild, wort) => tmLauf(bild, wort).output.join(''),
+    tmAkzeptiert: (bild, wort) => tmLauf(bild, wort).accepted,
+    tmEinsen: (bild) => TU.countOnes(tmLauf(bild, '').run.at(-1).config.tape),
     gleicheSprache: (bild, p) => woerter(alphabet(automat(bild)), 8).every((w) => akzeptiert(bild, w) === !!p(w)),
     mealyAusgabe: (bild, wort) => M.runMealy(automat(bild), [...wort]).output,
     minimal: (spec) => D.minimalStateCount(D.dfa(spec)),
@@ -62,15 +67,15 @@ async function engine() {
   };
 }
 
-test('Boss-Pool: je Welt A–C 15 eigene Aufgaben, Mix ziehbar, IDs eindeutig, Format wie das Level-Quiz', async () => {
+test('Boss-Pool: je Welt A–D 15 eigene Aufgaben, Mix ziehbar, IDs eindeutig, Format wie das Level-Quiz', async () => {
   const { BOSSE } = await import('../inhalte/boss.js');
   const { FALLEN } = await import('../app/js/data/fallen.js');
-  const { BOSS_NIVEAU } = await import('../app/js/data/niveaus.js');
+  const { APP_BOSS_NIVEAU } = await import('../app/js/data/niveaus.js');
   const fallen = new Set(FALLEN.map((f) => f.p));
   const ids = new Set();
-  assert.deepEqual(Object.keys(BOSSE), ['A', 'B', 'C']);
+  assert.deepEqual(Object.keys(BOSSE), ['A', 'B', 'C', 'D']);
   for (const [welt, b] of Object.entries(BOSSE)) {
-    assert.equal(b.niveau, BOSS_NIVEAU[welt], `Niveau des Bosses ${welt} wie in niveaus.js`);
+    assert.equal(b.niveau, APP_BOSS_NIVEAU[welt], `Niveau des Bosses ${welt} wie in niveaus.js`);
     assert.equal(b.pool.length, 15, welt);
     assert.equal(Object.values(b.mix).reduce((x, y) => x + y, 0), b.anzahl);
     for (const [st, n] of Object.entries(b.mix)) assert.ok(b.pool.filter((a) => a.stufe === Number(st)).length >= n, `${welt}: genug Aufgaben der Stufe ${st}`);
@@ -100,5 +105,5 @@ test('Boss-Pool: jede Kontrolle stimmt mit der Engine überein (richtige Option 
       n++;
     }
   }
-  assert.ok(n >= 25, `mindestens 25 Aufgaben mit Engine-Kontrolle (${n})`);
+  assert.ok(n >= 32, `mindestens 32 Aufgaben mit Engine-Kontrolle (${n})`);
 });

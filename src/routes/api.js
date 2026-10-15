@@ -157,6 +157,7 @@ function apiRoutes(app, h) {
   api.post('/lehrer/kurse/:id/eigene', nurLehrkraft, meinKurs, ohneEigene, begrenzt, (req, res) => res.status(201).json(svc.eigene.anlegen(req.konto, req.kurs.id, req.body || {})));
   api.get('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, (req, res) => res.json(svc.eigene.lesen(req.konto, req.params.nr)));
   api.patch('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, begrenzt, (req, res) => res.json(svc.eigene.aendern(req.konto, req.params.nr, req.body || {})));
+  api.post('/lehrer/eigene/:nr/kopieren', nurLehrkraft, ohneEigene, begrenzt, (req, res) => res.status(201).json(svc.eigene.kopieren(req.konto, req.params.nr, (req.body || {}).kurs)));
   api.delete('/lehrer/eigene/:nr', nurLehrkraft, ohneEigene, (req, res) => res.json(svc.eigene.loeschen(req.konto, req.params.nr)));
 
   // Klassen-Challenges (PR 11): Lehrkraft legt je Kurs an; Schüler sehen die ihres Kurses

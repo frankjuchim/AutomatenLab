@@ -1,6 +1,6 @@
 // Boss-Kämpfe (PR 9, wie die Bosse von Algo Quest): Prüfung auf Zeit am Ende der Welten A–C.
 //   #/boss              Übersicht der Bosse
-//   #/boss?welt=A       Boss einer Welt: Regeln, Freischaltung, bester Versuch, Start
+//   #/boss?welt=A       Boss einer Welt (A–D): Regeln, Freischaltung, bester Versuch, Start
 //   #/boss?kampf=<id>   laufender Kampf bzw. Auswertung
 // Während des Kampfes gibt es keine Rückmeldung: Antworten werden nur gespeichert (automatisch nach kurzer Pause und
 // beim Wechsel der Aufgabe), gewertet wird am Ende. Die Zeit kommt vom Server (Abweichung der Uhr wird ausgeglichen).
@@ -12,12 +12,13 @@ import { dfa } from '../engine/dfa.js';
 import { nfa } from '../engine/nfa.js';
 import { mealy } from '../engine/mealy.js';
 import { pda } from '../engine/pda.js';
+import { tm, tmToGraph } from '../engine/turing.js';
 import { toast } from '../components/toast.js';
 import { progress } from '../core/progress.js';
 
 const STUFE = { 1: 'Basis', 2: 'Standard', 3: 'Profi' };
 const TYP = { mc: 'Multiple Choice', wf: 'Wahr oder falsch – mit Begründung', zuordnung: 'Zuordnung' };
-const NORMAL = { dea: dfa, nea: nfa, mealy, nka: pda };
+const NORMAL = { dea: dfa, nea: nfa, mealy, nka: pda, tm: (x) => tmToGraph(tm(x)) };
 const uhrzeit = (iso) => new Date(iso).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 /** Gegenstand der Aufgabe: Automat als Graph oder Grammatik als Text. */
@@ -26,7 +27,7 @@ function bildVon(bild) {
   if (bild.art === 'grammatik') return h('pre', { class: 'boss-grammatik', 'aria-label': 'Grammatik' }, bild.text);
   const box = h('div', { class: 'boss-bild' });
   try {
-    const gv = new GraphView(box, { label: { dea: 'DEA', nea: 'NEA', mealy: 'Mealy-Automat', nka: 'Kellerautomat' }[bild.typ] });
+    const gv = new GraphView(box, { label: { dea: 'DEA', nea: 'NEA', mealy: 'Mealy-Automat', nka: 'Kellerautomat', tm: 'Turingmaschine' }[bild.typ] });
     gv.render(NORMAL[bild.typ](bild.automat));
   } catch (e) { console.error(e); }
   return box;

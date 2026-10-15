@@ -41,8 +41,8 @@ test('Freischaltung: auto erst ab 60 % der Level-Punkte, offen sofort, gesperrt 
   assert.equal((await mika.get('/api/boss/A')).body.frei, true);
   assert.equal((await lk.get('/api/boss/B')).body.frei, true, 'Lehrkräfte dürfen üben');
   assert.equal((await lk.patch('/api/lehrer/kurse/k%3A17').set(ORIGIN).send({ einstellungen: { boss: 'immer' } })).status, 400);
-  assert.equal((await mika.get('/api/boss/D')).status, 404);
-  assert.deepEqual((await mika.get('/api/boss')).body.bosse.map((b) => b.welt), ['A', 'B', 'C']);
+  assert.equal((await mika.get('/api/boss/E')).status, 404);
+  assert.deepEqual((await mika.get('/api/boss')).body.bosse.map((b) => b.welt), ['A', 'B', 'C', 'D']);
 });
 
 test('Kampf: Ziehen nach Mix, leichte zuerst, keine Lösungen; Antworten speichern ohne Rückmeldung; Wertung am Ende', async () => {
@@ -83,7 +83,7 @@ test('Kampf: Ziehen nach Mix, leichte zuerst, keine Lösungen; Antworten speiche
   const zeile = (await lk.get('/api/lehrer/kurse/k%3A17/schueler')).body.find((x) => x.sub === 's:1042');
   assert.deepEqual([zeile.punkte, zeile.bossPunkte], [e.punkte, e.punkte]);
   const aw = (await lk.get('/api/lehrer/kurse/k%3A17/auswertung')).body.boss;
-  assert.deepEqual(aw.welten.map((w) => w.welt), ['A', 'B', 'C']);
+  assert.deepEqual(aw.welten.map((w) => w.welt), ['A', 'B', 'C', 'D']);
   assert.deepEqual(aw.zeilen.find((z) => z.sub === 's:1042').werte[0], { punkte: e.punkte, max: k.maxPunkte, versuche: 1, besiegt: true });
   assert.match((await lk.get('/api/lehrer/kurse/k%3A17/export.csv?art=uebersicht')).text, /davon Boss/);
 });
