@@ -138,6 +138,9 @@ Aufgaben. Format, IDs, Punkte und API: `docs/AUFGABENFORMAT.md`.
 
 ## 7. Weitere Vertragspunkte
 
+* **Fähigkeit `live` (§7, ab 1.24.0):** Live-Runden im Kurs über Server-Sent Events (`GET /api/live/<kurs>/strom`),
+  ohne Auswirkung auf Lab-Punkte, Lernstand, Ranglisten oder die Kursübersicht des Portals; nur im Arbeitsspeicher,
+  ohne Namen auf dem Beamer; `loeschen` räumt auch laufende Runden auf. Details: `docs/ENTSCHEIDUNGEN.md`.
 * **v1.3 – Einstieg aus dem Portal, Fähigkeiten, Sandbox-Regel:** umgesetzt (1.23.0).
   - §5: `/sso/start` startet immer neu (auch mit Sitzung, nie direkt auf `ziel`); `/sso/ende` ersetzt eine bestehende
     Sitzung erst nach Prüfung von state, Signatur, `iss`, `aud`, Laufzeit, `jti` und Inhalt; Kurse, die nicht mehr im

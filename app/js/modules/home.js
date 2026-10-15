@@ -150,6 +150,13 @@ export default {
             h('span', { class: 'muted klein' }, ` · ${{ quiz: 'Quiz', baukasten: 'Baukasten', detektiv: 'Sprach-Detektiv', grammatik: 'Grammatik' }[x.art] ?? ''}${kurse.length > 1 ? ` · ${x.kurs}` : ''}${x.status === 'geloest' ? ' · ✓ gelöst' : ''}`)))),
           h('p', { class: 'muted klein' }, 'Diese Aufgaben hat deine Lehrkraft selbst erstellt. Sie geben keine Punkte – üben lohnt sich trotzdem.')));
       }).catch(() => {});
+      // Live-Runde (Fähigkeit „live“): Hinweis, solange die Lehrkraft eine Runde im Kurs zeigt
+      api('GET', '/api/live').then((rs) => {
+        const offen = rs.filter((r) => r.rolle === 'mitglied');
+        if (!offen.length || !auftragSlot.isConnected) return;
+        auftragSlot.before(h('p', { class: 'notice live-hinweis' }, h('strong', null, '📡 Live-Runde läuft: '), offen.map((r) => r.titel).join(' · '), ' ',
+          h('a', { class: 'btn btn-primary btn-small', href: offen.length === 1 ? ctx.link('live', { kurs: offen[0].kurs }) : ctx.link('live') }, 'Mitmachen')));
+      }).catch(() => {});
       // Klassen-Challenges (PR 11): Hinweis, solange eine läuft oder geplant ist
       api('GET', '/api/challenges').then((cs) => {
         const offen = cs.filter((c) => c.phase !== 'beendet');

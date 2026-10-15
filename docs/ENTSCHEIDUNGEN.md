@@ -2,6 +2,22 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-15 · Live-Runden (1.24.0, Fähigkeit „live“)
+Frank wünscht „so etwas passend zum AutomatenLab“ zur Vertragsfähigkeit `live` (Vertrag v1.3 §7: Live-Runden im Kurs
+über Server-Sent Events, ohne Auswirkung auf Lab-Punkte). Umsetzung als Klassen-Quiz: Die Lehrkraft startet im Reiter
+📡 Live eine Runde (5/8/10 Fragen aus dem Level-Quiz einer Welt, der Akzeptor-Arena Stufe 1–3 oder dem
+Chomsky-Sortierer; 15–60 s je Frage oder ohne Zeitlimit) und zeigt `#/live?kurs=…` auf dem Beamer; sie schaltet weiter
+und deckt auf. Schüler antworten am Gerät (Startseite „📡 Live-Runde“). **Flüchtig im Arbeitsspeicher** (keine Tabelle,
+keine Migration): Eine Live-Runde ist eine Unterrichtsminute, kein Lernstand; nach dem Schließen oder 3 h ohne Aktion
+ist sie weg, Löschaufträge des Portals räumen sofort auf. Folge: Ein Neustart des Servers (Deploy) beendet laufende
+Runden – Deploys nicht während des Unterrichts (gilt ohnehin). **Ohne Namen auf dem Beamer** (nur Verteilungen);
+jede und jeder sieht das eigene Ergebnis und Rundenpunkte (100 je richtige Antwort + bis zu 50 für Schnelligkeit),
+die nirgends gespeichert werden. Antwort-Kennungen werden erst nach dem Mischen vergeben, die richtige Antwort geht
+erst beim Aufdecken an die Geräte (§9). Server-Sent Events statt Polling (wie im Vertrag genannt); `compression`
+lässt `text/event-stream` aus, `X-Accel-Buffering: no` für den Proxy. Verworfen: Speicherung in SQLite (unnötige
+Personendaten), Rangliste mit Namen auf dem Beamer (Bloßstellung; die Rangliste bleibt die freiwillige Kurs-Rangliste),
+WebSockets (zusätzliche Abhängigkeit, Proxy-Konfiguration).
+
 ## 2026-10-15 · Verbund-Vertrag 1.3 (1.23.0)
 AutomatenLab folgt Vertrag v1.3: `/sso/start` holt bei jedem Wechsel aus dem Portal ein frisches Token (neue Kurse sind
 sofort bekannt), eine bestehende Sitzung wird erst nach vollständiger Prüfung ersetzt; `keine_berechtigung` zeigt den

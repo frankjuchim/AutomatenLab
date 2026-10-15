@@ -24,6 +24,7 @@ const SPECIAL = {
   rangliste: () => import('./modules/rangliste.js'), // Rangliste der eigenen Kurse (wenn die Lehrkraft sie einschaltet)
   challenge: () => import('./modules/challenge.js'), // Klassen-Challenges der eigenen Kurse (nur angemeldet)
   boss: () => import('./modules/boss.js'), // Boss-Kämpfe der Welten A–C (nur angemeldet)
+  live: () => import('./modules/live.js'), // Live-Runden im Kurs (nur angemeldet; Lehrkraft: Beamer mit Steuerung)
   board: () => import('./modules/board.js'), // Beamer-Board, öffentlich nur über den Link der Lehrkraft (/board/<link>)
 };
 

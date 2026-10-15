@@ -3,8 +3,8 @@
 //   Navigation  📚 Kurse · 📖 Aufgaben · 📂 Materialien · 🗺️ Themen · ⌂ Portal
 //   #/lehrkraft                          Meine Kurse (Tabelle, „Öffnen“)
 //   #/lehrkraft?kurs=<id>&tab=<reiter>   Kursseite mit Reitern 👥 Schüler · 🔗 Beitritt · 📊 Auswertung · 🏆 Rangliste ·
-//                                        🎯 Challenges · ⚙️ Einstellungen (reiter: schueler | beitritt | auswertung | rangliste |
-//                                        challenges [&challenge=<nr>] | einstellungen)
+//                                        🎯 Challenges · 📡 Live · ⚙️ Einstellungen (reiter: schueler | beitritt | auswertung |
+//                                        rangliste | challenges [&challenge=<nr>] | live | einstellungen)
 //   #/lehrkraft?teil=aufgaben            Aufgaben der Welten (nach Level, mit Link ins Modul)
 //   #/lehrkraft?teil=urkunden&kurs=<id>  Urkunden des Kurses zum Drucken (wie Algo Quest)
 //   #/lehrkraft?teil=eigene[&kurs=<id>][&neu=quiz|baukasten|&aufgabe=<nr>]  Aufgaben-Editor: eigene Aufgaben je Kurs
@@ -27,6 +27,7 @@ const REITER = [
   ['auswertung', '📊 Auswertung'],
   ['rangliste', '🏆 Rangliste'],
   ['challenges', '🎯 Challenges'],
+  ['live', '📡 Live'],
   ['einstellungen', '⚙️ Einstellungen'],
 ];
 const KURSART = { eA: 'Leistungskurs (eA)', gA: 'Grundkurs (gA)' };
@@ -166,12 +167,52 @@ export default {
         else if (tab === 'beitritt') zeige(...reiterBeitritt(kurs));
         else if (tab === 'auswertung') zeige(...reiterAuswertung(id, await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/auswertung`)));
         else if (tab === 'challenges') zeige(...(await reiterChallenges(id, kurs)));
+        else if (tab === 'live') zeige(...reiterLive(id, await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/live`)));
         else if (tab === 'rangliste') zeige(...reiterRangliste(await api('GET', `/api/lehrer/kurse/${encodeURIComponent(id)}/schueler`), kurs));
         else zeige(...reiterEinstellungen(id, kurs));
       } catch (e) {
         if (e.status === 401) { location.replace(anmeldeLink(location.pathname + location.hash)); return; }
         zeige(h('p', { class: 'notice notice-error' }, e.message));
       }
+    }
+
+    /* 📡 Live-Runden (Fähigkeit „live“): Klassen-Quiz in Echtzeit, ohne Punkte */
+    function reiterLive(id, laufend) {
+      const zurRunde = `#/live?${new URLSearchParams({ kurs: id })}`;
+      const erklaerung = h('p', { class: 'muted' }, 'Eine Live-Runde ist ein Klassen-Quiz in Echtzeit: Die Fragen erscheinen auf dem Beamer, Ihre Schülerinnen und Schüler antworten am eigenen Gerät (Startseite „📡 Live-Runde“). Sie schalten von Frage zu Frage weiter und decken die Lösung auf. Auf dem Beamer stehen nur Zahlen, keine Namen; jede und jeder sieht das eigene Ergebnis. Live-Runden zählen nicht für Punkte, Lernstand oder Rangliste und werden nicht gespeichert.');
+      if (laufend.aktiv) {
+        return [h('div', { class: 'panel lk-karte' },
+          h('h3', null, `📡 ${laufend.titel}`),
+          h('p', null, laufend.phase === 'ende' ? 'Die Runde ist zu Ende – das Ergebnis steht noch auf dem Beamer.' : laufend.phase === 'lobby' ? `Wartet auf den Start · ${laufend.teilnehmer} dabei` : `Frage ${laufend.nr + 1} von ${laufend.anzahl} · ${laufend.teilnehmer} dabei`),
+          h('p', { class: 'lk-aktionen' },
+            h('a', { class: 'btn btn-primary', href: zurRunde }, 'Auf dem Beamer öffnen'),
+            h('button', { type: 'button', class: 'btn btn-ghost', onclick: async () => {
+              await api('POST', `/api/lehrer/kurse/${encodeURIComponent(id)}/live/beenden`, {});
+              kursSeite(id, 'live');
+            } }, 'Runde beenden'))), erklaerung];
+      }
+      const meldung = h('p', { class: 'notice notice-error', hidden: true, role: 'alert' });
+      const feld = (label, auswahl) => [h('label', { for: auswahl.id }, label), auswahl];
+      const quelle = h('select', { id: 'live-quelle' },
+        h('optgroup', { label: 'Level-Quiz' }, ['A', 'B', 'C', 'D'].map((w) => h('option', { value: `quiz:${w}` }, `Level-Quiz Welt ${w}`))),
+        h('optgroup', { label: 'Akzeptor-Arena' }, [1, 2, 3].map((s) => h('option', { value: `arena:${s}` }, `Akzeptor-Arena Stufe ${s} (${STUFE[s]})`))),
+        h('option', { value: 'sortierer' }, 'Chomsky-Sortierer'));
+      const anzahl = h('select', { id: 'live-anzahl' }, [5, 8, 10].map((n) => h('option', { value: String(n), selected: n === 8 }, `${n} Fragen`)));
+      const sekunden = h('select', { id: 'live-sekunden' }, [15, 20, 30, 45, 60, 0].map((n) => h('option', { value: String(n), selected: n === 30 }, n ? `${n} Sekunden` : 'ohne Zeitlimit')));
+      const starten = async (ev) => {
+        ev.preventDefault();
+        meldung.hidden = true;
+        const [art, wert] = quelle.value.split(':');
+        try {
+          await api('POST', `/api/lehrer/kurse/${encodeURIComponent(id)}/live`, { art, ...(art === 'quiz' ? { welt: wert } : art === 'arena' ? { stufe: Number(wert) } : {}), anzahl: Number(anzahl.value), sekunden: Number(sekunden.value) });
+          ctx.navigate('live', { kurs: id });
+        } catch (e) { meldung.textContent = e.message; meldung.hidden = false; }
+      };
+      return [h('form', { class: 'panel lk-karte lk-form ed-form', onsubmit: starten },
+        h('h3', null, 'Neue Live-Runde'),
+        ...feld('Fragen aus', quelle), ...feld('Anzahl', anzahl), ...feld('Zeit je Frage', sekunden),
+        meldung,
+        h('p', null, h('button', { type: 'submit', class: 'btn btn-primary' }, '📡 Live-Runde starten'))), erklaerung];
     }
 
     const leer = () => h('p', { class: 'notice' }, 'Noch niemand in diesem Kurs. Ihre Schülerinnen und Schüler treten dem Kurs im Portal mit dem Kurscode bei und öffnen AutomatenLab einmal – dann erscheinen sie hier (siehe Reiter „Beitritt“).');

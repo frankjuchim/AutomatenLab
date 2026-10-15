@@ -35,6 +35,7 @@ Smartphone-Format, Lehrkraft-Ansichten am Desktop.
   → [Übersicht](abnahme/09-schueler-boss-uebersicht.png) · [Kampf mit Uhr](abnahme/10-schueler-boss-kampf.png) · [Auswertung](abnahme/11-schueler-boss-auswertung.png)
 - [ ] Aufgaben der Lehrkraft lösen (Detektiv-Fall, Quiz, Grammatik): keine Punkte, aber „gelöst“.
   → [Detektiv-Fall](abnahme/12-schueler-detektiv-der-lehrkraft.png) · [Quiz](abnahme/13-schueler-quiz-der-lehrkraft.png)
+- [ ] 📡 Live-Runde (Lehrkraft startet sie, siehe unten): Hinweis auf der Startseite, „Mitmachen“, Frage am Handy beantworten, nach dem Aufdecken richtig/falsch, am Ende das eigene Ergebnis.
 - [ ] Anderes Gerät: Lernstand ist derselbe.
 
 ## Als Lehrkraft (`/lehrer`)
@@ -49,6 +50,7 @@ Smartphone-Format, Lehrkraft-Ansichten am Desktop.
   → [Einstellungen](abnahme/22-lehrkraft-einstellungen.png) · [Beamer-Board](abnahme/31-beamer-board.png)
 - [ ] 🎯 Challenges: eine Team-Challenge (Sortierer) und eine Einzel-Challenge (zwei Aufgaben) anlegen; Zwischenstand ansehen; auf dem Board erscheint die laufende Challenge; „Jetzt beenden“ → Abzeichen, Sieger-Urkunden drucken.
   → [Challenges](abnahme/20-lehrkraft-challenges.png) · [Zwischenstand](abnahme/21-lehrkraft-challenge-zwischenstand.png)
+- [ ] 📡 Live: eine Runde (z. B. Akzeptor-Arena Stufe 1, 5 Fragen, 30 s) starten, „Auf dem Beamer öffnen“, Teilnehmerzahl steigt, „Erste Frage“ → Antworten zählen hoch → „Auflösen“ zeigt Verteilung und richtige Antwort, keine Namen; am Ende Ergebnisübersicht, „Runde schließen“. Lab-Punkte der Schüler bleiben unverändert.
 - [ ] 🏅 Urkunden: Vorschau prüfen, als PDF drucken (A4, eine Seite je Schüler).
   → [Urkunden](abnahme/23-lehrkraft-urkunden.png)
 - [ ] 📖 Aufgaben: „Vorschau mit Lösung“ bei drei Modulen öffnen (z. B. Turing, Keller, Quiz) – Lösung eingesetzt, „Ohne Lösung ausprobieren“ geht, der eigene Lernstand bleibt leer. Boss-Pool einer Welt aufklappen (mit richtigen Antworten).

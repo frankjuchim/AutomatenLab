@@ -42,8 +42,15 @@ function verbundRoutes(app, h) {
   // Alle Daten eines Kontos bzw. Kurses löschen – idempotent, innerhalb der Anfrage (§10)
   r.post('/loeschen', token('loeschen'), nurJson, (req, res) => {
     const b = req.body || {};
-    if (typeof b.sub === 'string' && svc.konten.SUB.test(b.sub)) return res.json({ geloescht: svc.konten.loescheKonto(b.sub) });
-    if (typeof b.kurs === 'string' && svc.konten.KURS.test(b.kurs)) return res.json({ geloescht: svc.konten.loescheKurs(b.kurs) });
+    // Live-Runden liegen nur im Arbeitsspeicher – dort ebenfalls sofort vergessen
+    if (typeof b.sub === 'string' && svc.konten.SUB.test(b.sub)) {
+      svc.live?.vergissKonto(b.sub);
+      return res.json({ geloescht: svc.konten.loescheKonto(b.sub) });
+    }
+    if (typeof b.kurs === 'string' && svc.konten.KURS.test(b.kurs)) {
+      svc.live?.vergissKurs(b.kurs);
+      return res.json({ geloescht: svc.konten.loescheKurs(b.kurs) });
+    }
     res.status(400).json({ error: 'sub oder kurs fehlt.' });
   });
 

@@ -170,6 +170,28 @@ function apiRoutes(app, h) {
   api.post('/lehrer/challenges/:cid/beenden', nurLehrkraft, ohneChallenges, (req, res) => res.json(svc.challenges.beenden(req.konto, req.params.cid)));
   api.delete('/lehrer/challenges/:cid', nurLehrkraft, ohneChallenges, (req, res) => res.json(svc.challenges.loeschen(req.konto, req.params.cid)));
 
+  // Live-Runden (Fähigkeit „live“): Lehrkraft steuert je Kurs, Mitglieder antworten; Aktualisierung per Server-Sent Events
+  const limitStrom = new S.Limiter({ max: 30, windowMs: 60 * 1000 });
+  const ohneLive = (req, res, next) => (svc.live ? next() : res.status(404).json({ error: 'Live-Runden gibt es hier nicht.' }));
+  const kursParam = (req, res, next) => (svc.konten.KURS.test(String(req.params.kurs)) ? next() : res.status(404).json({ error: 'Diesen Kurs gibt es nicht.' }));
+  api.get('/live', nurAngemeldet, ohneLive, (req, res) => res.json(svc.live.meine(req.konto.sub)));
+  api.get('/live/:kurs', nurAngemeldet, ohneLive, kursParam, (req, res) => res.json(svc.live.zustand(req.konto, req.params.kurs)));
+  api.post('/live/:kurs/antwort', nurAngemeldet, ohneLive, kursParam, begrenzt, (req, res) => res.json(svc.live.antworten(req.konto, req.params.kurs, req.body || {})));
+  api.get('/live/:kurs/strom', nurAngemeldet, ohneLive, kursParam, (req, res) => {
+    svc.live.zustand(req.konto, req.params.kurs); // wirft 404, wenn das Konto nicht zum Kurs gehört
+    if (!limitStrom.take('k:' + req.konto.sub)) return res.status(429).json({ error: 'Zu viele Verbindungen. Bitte warte einen Moment.' });
+    const weg = svc.live.abonnieren(req.konto, req.params.kurs, res, () => {
+      res.status(200).set({ 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
+      res.flushHeaders();
+      res.write('retry: 3000\n\n');
+    });
+    req.on('close', weg);
+  });
+  api.get('/lehrer/kurse/:id/live', nurLehrkraft, meinKurs, ohneLive, (req, res) => res.json(svc.live.fuerLehrkraft(req.kurs.id)));
+  api.post('/lehrer/kurse/:id/live', nurLehrkraft, meinKurs, ohneLive, begrenzt, (req, res) => res.status(201).json(svc.live.starten(req.kurs.id, req.body || {})));
+  api.post('/lehrer/kurse/:id/live/weiter', nurLehrkraft, meinKurs, ohneLive, begrenzt, (req, res) => res.json(svc.live.weiter(req.kurs.id)));
+  api.post('/lehrer/kurse/:id/live/beenden', nurLehrkraft, meinKurs, ohneLive, (req, res) => res.json(svc.live.beenden(req.kurs.id)));
+
   app.use('/api', api);
 }
 

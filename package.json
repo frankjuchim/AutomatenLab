@@ -1,6 +1,6 @@
 {
   "name": "automatenlab",
-  "version": "1.23.0",
+  "version": "1.24.0",
   "private": true,
   "description": "AutomatenLab – Plattform des Verbunds InfoLabs für Automaten und formale Sprachen (Informatik Sek II) mit Web-App, Server und Unterrichtsmaterial",
   "main": "src/server.js",
