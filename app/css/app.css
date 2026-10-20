@@ -112,7 +112,7 @@ kbd { display: inline-block; min-width: 1.8em; padding: 0.05em 0.4em; border: 1.
 .brand .glyph circle + circle { fill: var(--ocker-fill); stroke: none; }
 .brand-name { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; }
 .header-tools { display: flex; align-items: center; gap: 0.5rem; }
-.points-chip { display: inline-flex; align-items: baseline; gap: 0.15rem; color: #fff; text-decoration: none; padding: 0.35rem 0.8rem; border-radius: 999px; background: rgba(255,255,255,0.14); min-height: 36px; align-items: center; }
+.points-chip { display: inline-flex; align-items: baseline; gap: 0.15rem; color: #fff; text-decoration: none; padding: 0.35rem 0.8rem; border-radius: 999px; background: rgba(255,255,255,0.14); min-height: var(--touch); box-sizing: border-box; align-items: center; }
 .points-chip:hover { color: #fff; background: rgba(255,255,255,0.22); }
 .points-value { font-weight: 800; font-variant-numeric: tabular-nums; }
 .points-label { font-size: var(--fs-s); }
@@ -141,7 +141,7 @@ main:focus { outline: none; box-shadow: none; }
 .btn-primary:hover { background: var(--teal-deep); color: #fff; }
 .btn-ghost { border-color: transparent; background: transparent; }
 .btn-ghost:hover { background: rgba(14, 100, 85, 0.08); }
-.btn-small { min-height: 38px; padding: 0.3rem 0.8rem; font-size: var(--fs-s); }
+.btn-small { min-height: var(--touch); padding: 0.3rem 0.8rem; font-size: var(--fs-s); }
 .btn-large { min-height: 54px; padding: 0.6rem 1.6rem; font-size: var(--fs-l); }
 .btn-icon { min-width: var(--touch); padding: 0; font-size: 1.05rem; }
 .btn-danger-ghost { border-color: var(--reject); color: var(--reject); background: transparent; }
@@ -161,7 +161,7 @@ label { font-weight: 700; }
 .input-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.3rem; }
 .field-msg { min-height: 1.2em; font-size: var(--fs-s); color: var(--reject); margin: 0.3rem 0 0.4rem; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.chip { font-family: var(--mono); font-size: 1rem; min-height: 40px; min-width: 44px; padding: 0.2rem 0.75rem; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip { font-family: var(--mono); font-size: 1rem; min-height: var(--touch); min-width: 44px; padding: 0.2rem 0.75rem; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
 .chip:hover { border-color: var(--teal); background: var(--teal-mist); }
 
 /* ───────── Flächen & Hinweise ───────── */
@@ -485,6 +485,8 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .state-name { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; width: 5.5rem; min-height: var(--touch); padding: 0.2rem 0.5rem; border: 2px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink); }
 .state-name:focus { border-color: var(--teal); outline: none; box-shadow: 0 0 0 3px var(--teal-soft); }
 .col-flag input { width: 1.4rem; height: 1.4rem; accent-color: var(--teal); cursor: pointer; }
+/* ganze Zelle als Tippfläche (iPad): Label umschließt das Kästchen, mindestens 44 × 44 px */
+.flag-hit { display: inline-flex; align-items: center; justify-content: center; min-width: var(--touch); min-height: var(--touch); cursor: pointer; }
 .delta-select { font-family: var(--mono); font-weight: 700; min-width: 5rem; padding: 0.2rem 0.4rem; }
 .delta-select.is-empty { color: var(--ink-2); border-style: dashed; }
 .editor-actions { margin: 0.8rem 0 0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -666,6 +668,7 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .themen-level > li { padding: 0.7rem 1rem; border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); }
 .themen-level-kopf { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: center; }
 .themen-module { margin: 0.35rem 0 0; }
+.themen-module a, .themen td > a { display: inline-flex; align-items: center; min-height: var(--touch); }
 .themen-hinweis { margin: 0.3rem 0 0; font-size: var(--fs-s); color: var(--ink-2); }
 
 /* ───────── Zusätzliches Material (#/material) ───────── */
@@ -689,7 +692,7 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .material-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; }
 .material-links li::before { content: '📄 '; font-size: 0.9em; }
 .material-links li.material-gesperrt::before { content: none; }
-.material-link { font-weight: 700; display: inline-block; min-height: 32px; padding: 0.15rem 0; }
+.material-link { font-weight: 700; display: inline-flex; align-items: center; min-height: var(--touch); padding: 0.15rem 0; }
 .material-link-lk { font-weight: 400; font-size: var(--fs-s); }
 .material-gesperrt { color: var(--ink-2); }
 .material-groesse { font-weight: 400; font-size: 0.78rem; opacity: 0.85; }
@@ -723,9 +726,10 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 
 /* ───── Kopfzeile: Portal, Anmelden, Kontomenü (Vertrag InfoLabs §5/§9) ───── */
 .konto-tools { display: contents; }
-.site-header .header-btn { color: #fff; min-height: var(--touch); padding: 0 0.7rem; border-color: rgba(255,255,255,0.5); background: transparent; text-decoration: none; display: inline-flex; align-items: center; }
+.site-header .header-btn { color: #fff; min-height: var(--touch); min-width: var(--touch); justify-content: center; box-sizing: border-box; padding: 0 0.7rem; border-color: rgba(255,255,255,0.5); background: transparent; text-decoration: none; display: inline-flex; align-items: center; }
 .site-header .header-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
 .site-header .header-login { border-color: #fff; font-weight: 700; }
+.site-header .header-themen[aria-current='page'] { background: rgba(255,255,255,0.2); border-color: #fff; }
 .konto-menu { position: relative; }
 .konto-menu > summary { list-style: none; cursor: pointer; }
 .konto-menu > summary::-webkit-details-marker { display: none; }
@@ -735,6 +739,12 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .konto-liste a { display: block; padding: 0.6rem 0.8rem; color: var(--ink); text-decoration: none; border-radius: 6px; min-height: var(--touch); box-sizing: border-box; }
 .konto-liste a:hover, .konto-liste a:focus-visible { background: var(--teal-mist); }
 @media (max-width: 600px) { .header-btn-text { display: none; } .konto-name { max-width: 6.5rem; } }
+/* iPad mini hochkant (744 px) mit Kontomenü: Beschriftungen von Themen/Portal weglassen, Symbole bleiben */
+@media (max-width: 800px) { .site-header:has(.konto-menu) .header-btn-text { display: none; } }
+/* Touch (iPad): Aufklapper, Textlinks allein im Absatz, Links in Tabellen groß genug zum Antippen */
+summary { min-height: var(--touch); display: list-item; line-height: var(--touch); }
+.konto-menu > summary { line-height: normal; }
+.link-allein, .lk-tabelle td > a:only-child { display: inline-flex; align-items: center; min-height: var(--touch); }
 .kurs-liste { list-style: none; padding: 0; display: grid; gap: 0.6rem; }
 .kurs-liste > li { padding: 0.8rem 1rem; border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--teal-soft); }
 @media (max-width: 480px) {

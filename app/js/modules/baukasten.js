@@ -69,7 +69,7 @@ export default {
           })));
       });
       clear(el,
-        onlyStufe ? h('p', null, h('a', { href: ctx.link('baukasten') }, 'Alle Stufen anzeigen')) : null,
+        onlyStufe ? h('p', null, h('a', { class: 'link-allein', href: ctx.link('baukasten') }, 'Alle Stufen anzeigen')) : null,
         ...sections,
         h('section', { class: 'stufe-section sandbox-teaser panel' },
           h('h2', null, 'Freier Modus'),

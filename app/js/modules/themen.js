@@ -81,7 +81,7 @@ function niveauUebersicht(ctx, bereit) {
     for (const n of w.levels) sp[LEVEL_NIVEAU[n]].push(`Level ${n}: ${LEVELS[n]}`);
     if (BOSS_NIVEAU[w.id]) sp[BOSS_NIVEAU[w.id]].push(`Boss-Level ${w.id}`);
     for (const m of bereit.filter((x) => x.world === w.id)) {
-      if (MODUL_NIVEAU[m.route] && sp[MODUL_NIVEAU[m.route]]) sp[MODUL_NIVEAU[m.route]].push(h('a', { href: ctx.link(m.route) }, m.title));
+      if (MODUL_NIVEAU[m.route] && sp[MODUL_NIVEAU[m.route]]) sp[MODUL_NIVEAU[m.route]].push(h('a', { class: 'link-allein', href: ctx.link(m.route) }, m.title));
     }
     return h('tr', null, h('th', { scope: 'row' }, `Welt ${w.id}`, h('div', { class: 'muted klein' }, w.title)), ...NIVEAU_IDS.map((n) => zelle(sp[n])));
   });

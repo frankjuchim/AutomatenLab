@@ -308,7 +308,7 @@ export default {
       let idx = 0; let right = 0;
 
       const stage = h('div', { class: 'mz-u-stage' });
-      clear(el, only ? modeTabs(only, 'unterscheide') : h('p', null, h('a', { href: ctx.link('minimierer') }, '‹ Zur Aufgabenübersicht')),
+      clear(el, only ? modeTabs(only, 'unterscheide') : h('p', null, h('a', { class: 'back-link', href: ctx.link('minimierer') }, '‹ Zur Aufgabenübersicht')),
         h('p', { class: 'lead mz-u-lead' }, 'Unterscheidbar heißt: Es gibt ein Wort, das von einem der beiden Zustände in einen Endzustand führt, vom anderen aber nicht. Gibt es kein solches Wort, sind die Zustände äquivalent.'),
         stage,
         only ? caseNav(only, 'unterscheide') : null);

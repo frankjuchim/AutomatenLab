@@ -104,7 +104,7 @@
 .me-h2 { font-size: var(--fs-l); margin-bottom: 0.5rem; }
 .me-out { font-family: var(--mono); font-size: 1.15em; background: var(--ocker-soft); padding: 0 0.35em; border-radius: var(--r-s); }
 .me-examples { list-style: none; padding: 0; margin: 0.3rem 0 0; display: grid; gap: 0.3rem; }
-.me-edit { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; width: 6.5rem; min-height: 40px; padding: 0.2rem 0.5rem; border: 2px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink); }
+.me-edit { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; width: 6.5rem; min-height: var(--touch); padding: 0.2rem 0.5rem; border: 2px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink); }
 .me-edit:focus { border-color: var(--teal); outline: none; box-shadow: 0 0 0 3px var(--teal-soft); }
 .me-edit.is-changed { border-color: var(--ocker); background: var(--ocker-soft); }
 .me-edit.is-missing { outline: 3px dashed var(--ocker); outline-offset: 1px; }

@@ -51,7 +51,7 @@ export default {
             !sess.konto && sess.anmeldung ? h('a', { class: 'btn btn-primary', href: anmeldeLink('/#/material') }, 'Anmelden über InfoLabs') : null),
           m.akten.length ? null : h('p', { class: 'muted' }, 'Auf diesem Server sind noch keine Materialien hinterlegt.'),
           gruppen.map((g) => h('section', { class: 'material-gruppe' }, h('h2', null, g.titel), h('ul', { class: 'material-liste' }, g.akten.map(akte)))),
-          h('p', null, h('a', { href: ctx.link('gast') }, 'Weitere Demo-Aufgaben ausprobieren')));
+          h('p', null, h('a', { class: 'link-allein', href: ctx.link('gast') }, 'Weitere Demo-Aufgaben ausprobieren')));
         return;
       }
       seite(
@@ -61,7 +61,7 @@ export default {
         h('p', { class: 'notice' }, h('strong', null, 'Zusatzmaterial: '), 'Es zählt nicht für Punkte. ',
           lk ? 'Schülerinnen und Schüler sehen hier nur die Schülerfassungen – ohne Lösungen und ohne Lösungsfolien.' : 'Lösungen bekommst du von deiner Lehrkraft.',
           admin ? ' Als Admin laden Sie zusätzlich die Word- und PowerPoint-Originale herunter.' : ''),
-        lk ? h('p', null, h('a', { href: ctx.link('themen', { teil: 'niveaus' }) }, 'Welches Material ist für Grund- und Leistungskurs?')) : null,
+        lk ? h('p', null, h('a', { class: 'link-allein', href: ctx.link('themen', { teil: 'niveaus' }) }, 'Welches Material ist für Grund- und Leistungskurs?')) : null,
         m.akten.length ? null : h('p', { class: 'muted' }, 'Auf diesem Server sind noch keine Materialien hinterlegt.'),
         gruppen.map((g) => h('section', { class: 'material-gruppe' }, h('h2', null, g.titel), h('ul', { class: 'material-liste' }, g.akten.map(akte)))));
     }).catch((e) => {

@@ -20,7 +20,9 @@ Smartphone-Format, Lehrkraft-Ansichten am Desktop.
   → [Turing-Demo](abnahme/03-gast-turing-demo.png)
 - [ ] Ein QR-Code von einem Arbeitsblatt (z. B. `#/baukasten?level=3`) führt zur Portal-Anmeldung und danach genau zu dieser Aufgabe.
 
-## Als Schüler
+## Als Schüler (am iPad – so arbeiten die meisten)
+- [ ] Kopfzeile: „📚 Themen“ öffnet die Themenübersicht mit allen Leveln, Stationen und PDFs; das PDF eines Arbeitsblatts öffnet sich.
+- [ ] Hoch- und Querformat drehen: nichts ragt seitlich heraus, alles lässt sich mit dem Finger treffen (Baukasten: Endzustand-Zelle antippen).
 - [ ] Startseite: Auftrag der Lehrkraft oben, Hinweis auf die laufende Challenge, „Aufgaben deiner Lehrkraft“, Link zur Rangliste, Level-Karte mit den Einstellungen des Kurses.
   → [Startseite](abnahme/04-schueler-startseite.png) · [Aufgaben der Lehrkraft](abnahme/05-schueler-aufgaben-der-lehrkraft.png)
 - [ ] Aufgabe lösen (z. B. Baukasten Level 3): Punkte erscheinen, im Portal steigt die Kennzahl des Kurses.

@@ -49,12 +49,16 @@ function applyPrefs() {
   bigToggle.setAttribute('aria-pressed', String(on));
 }
 
+// „📚 Themen“ wie in Algo Quest: Themenübersicht mit allen Leveln, Stationen (Modulen) und PDFs – für alle Rollen
+const themenLink = h('a', { class: 'btn btn-ghost header-btn header-themen', href: '#/themen', title: 'Themen: alle Level, Stationen und Arbeitsblätter', 'aria-label': 'Themen und Arbeitsblätter' },
+  h('span', { 'aria-hidden': 'true' }, '📚'), h('span', { class: 'header-btn-text', 'aria-hidden': 'true' }, ' Themen'));
 const header = h('header', { class: 'site-header' },
   h('a', { class: 'brand', href: '#/', 'aria-label': 'AutomatenLab – zur Übersicht' },
     h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, h('span', { class: 'brand-arrow' }), stateGlyph({ accepting: true, size: 30 })),
     h('span', { class: 'brand-name' }, 'Automaten', h('span', { class: 'brand-lab' }, 'Lab'))),
   h('div', { class: 'header-tools' },
     h('a', { class: 'points-chip', href: '#/', title: 'Deine Punkte (nur auf diesem Gerät gespeichert)' }, pointsEl, h('span', { class: 'points-label' }, ' Punkte')),
+    themenLink,
     h('span', { class: 'konto-tools' }),
     bigToggle));
 const main = h('main', { id: 'main', tabindex: '-1' });
@@ -225,4 +229,7 @@ function renderNotFound(r) {
 }
 
 window.addEventListener('hashchange', route);
+const themenAktiv = () => { if (parseHash().route === 'themen') themenLink.setAttribute('aria-current', 'page'); else themenLink.removeAttribute('aria-current'); };
+window.addEventListener('hashchange', themenAktiv);
+themenAktiv();
 route();
