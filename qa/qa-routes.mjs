@@ -1,4 +1,4 @@
-// Abschluss-QA: ALLE Deep-Links aus app/README.md aufrufen (zwei Viewports), Konsolen-/Seitenfehler,
+// Abschluss-QA: ALLE Deep-Links aus app/README.md aufrufen (Desktop + iPad; QA_GERAET=ipad: drei iPad-Formate), Konsolen-/Seitenfehler,
 // externe/fehlgeschlagene Anfragen, horizontales Überlaufen, 404/„bald verfügbar“, leere Seiten und
 // „Deep-Link landet nur in der Übersicht“ erkennen; Screenshot je Route.
 // Aufruf: PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node qa-routes.mjs [baseUrl]
@@ -89,7 +89,8 @@ const results = []; const fails = [];
 const browser = await chromium.launch();
 const t0 = Date.now();
 for (const vp of VIEWPORTS) {
-  const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1, ...(QA_IPAD ? { hasTouch: true } : {}) });
+  const touch = vp.tag.startsWith('ipad'); // auch im Standardlauf: das iPad-Hochformat prüft Touch-Ziele mit
+  const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1, ...(touch ? { hasTouch: true } : {}) });
   await anmelden(ctx);
   const page = await ctx.newPage();
   const origin = new URL(BASE).origin;
@@ -145,7 +146,7 @@ for (const vp of VIEWPORTS) {
     if (info.error) probs.push('Fehlermeldung im Modul');
     if (info.len < 150) probs.push(`wenig Inhalt (${info.len} Zeichen)`);
     if (info.overflow > 1) probs.push(`horizontaler Überlauf ${info.overflow}px`);
-    if (QA_IPAD && info.klein.length) probs.push(`zu klein für Touch: ${[...new Set(info.klein)].slice(0, 6).join(', ')}${info.klein.length > 6 ? ` (+${info.klein.length - 6})` : ''}`);
+    if (touch && info.klein.length) probs.push(`zu klein für Touch: ${[...new Set(info.klein)].slice(0, 6).join(', ')}${info.klein.length > 6 ? ` (+${info.klein.length - 6})` : ''}`);
     if (!r.includes('?')) overviewText.set(route, await textOf());
     else if (overviewText.has(route) && route !== '' && !GLEICH_UEBERSICHT.has(r) && (await textOf()) === overviewText.get(route)) probs.push('Deep-Link zeigt nur die Modul-Übersicht');
     const name = `${vp.tag}-${r.replace(/^#\/?/, '').replace(/[?&=]/g, '_') || 'home'}`;
