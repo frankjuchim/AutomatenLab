@@ -16,6 +16,14 @@ const require = createRequire(import.meta.url);
 const QA_KEY = process.env.QA_PORTAL_KEY ? fs.readFileSync(process.env.QA_PORTAL_KEY, 'utf8') : null;
 const QA_PORTAL = process.env.QA_PORTAL ?? 'http://portal.test';
 const QA_GAST = process.env.QA_GAST === '1';
+// iPad-Prüfung (Schülerinnen und Schüler arbeiten meist am iPad): QA_GERAET=ipad prüft Hochformat, Querformat und
+// iPad mini mit Touch und meldet zusätzlich zu kleine Bedienelemente (< 44 × 44 px, Textlinks im Fließtext ausgenommen).
+// QA_ROLLE=schueler meldet sich als Schüler im QA-Kurs an (Lehrkraft-Seiten entfallen dann).
+const QA_IPAD = process.env.QA_GERAET === 'ipad';
+const QA_SCHUELER = process.env.QA_ROLLE === 'schueler';
+const VIEWPORTS = QA_IPAD
+  ? [{ w: 820, h: 1180, tag: 'ipad-hoch' }, { w: 1180, h: 820, tag: 'ipad-quer' }, { w: 744, h: 1133, tag: 'ipad-mini' }]
+  : [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipad' }];
 
 const BASE = process.argv[2] ?? 'http://localhost:8080/';
 const OUT = new URL('./shots-routes/', import.meta.url).pathname;
@@ -69,18 +77,19 @@ async function anmelden(ctx) {
   const start = await ctx.request.get(new URL('sso/start', BASE).href, { maxRedirects: 0 });
   const state = new URL(start.headers().location).searchParams.get('state');
   const iat = Math.floor(Date.now() / 1000);
-  const token = signiere({ iss: QA_PORTAL, aud: 'automatenlab', sub: 'l:900', rolle: 'lehrkraft', name: 'QA Lehrkraft', kurse: [{ id: 'k:900', name: 'QA-Kurs', rolle: 'lehrkraft' }], iat, exp: iat + 90, jti: crypto.randomBytes(16).toString('hex'), v: 1 }, QA_KEY);
+  const token = signiere({ iss: QA_PORTAL, aud: 'automatenlab', ...(QA_SCHUELER ? { sub: 's:901', rolle: 'schueler', name: 'QA Schüler', kurse: [{ id: 'k:900', name: 'QA-Kurs', rolle: 'mitglied' }] } : { sub: 'l:900', rolle: 'lehrkraft', name: 'QA Lehrkraft', kurse: [{ id: 'k:900', name: 'QA-Kurs', rolle: 'lehrkraft' }] }), iat, exp: iat + 90, jti: crypto.randomBytes(16).toString('hex'), v: 1 }, QA_KEY);
   const ende = await ctx.request.get(new URL(`sso/ende?token=${token}&state=${state}&ziel=%2F`, BASE).href, { maxRedirects: 0 });
   if (ende.status() !== 302) throw new Error(`QA-Anmeldung fehlgeschlagen (${ende.status()})`);
 }
 const FILTER = process.env.ROUTE_FILTER ? new RegExp(process.env.ROUTE_FILTER) : null;
-const ROUTES = [...routes].sort((a, b) => a.localeCompare(b)).filter((r) => !FILTER || FILTER.test(r));
+const ROUTES = [...routes].sort((a, b) => a.localeCompare(b)).filter((r) => !FILTER || FILTER.test(r))
+  .filter((r) => !(QA_SCHUELER && /^#\/lehrkraft/.test(r)));
 
 const results = []; const fails = [];
 const browser = await chromium.launch();
 const t0 = Date.now();
-for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipad' }]) {
-  const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1 });
+for (const vp of VIEWPORTS) {
+  const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1, ...(QA_IPAD ? { hasTouch: true } : {}) });
   await anmelden(ctx);
   const page = await ctx.newPage();
   const origin = new URL(BASE).origin;
@@ -117,6 +126,17 @@ for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipa
       svgs: document.querySelectorAll('main svg').length,
       soon: !!document.querySelector('.tile-soon, .coming-soon'),
       error: !!document.querySelector('main .notice-error') && /schiefgelaufen|nicht geladen/.test(document.querySelector('main').innerText),
+      // Bedienelemente kleiner als 44 × 44 px (WCAG 2.5.5 / Apple HIG); Textlinks im Fließtext sind ausgenommen
+      klein: [...document.querySelectorAll('header a, header button, header summary, main a, main button, main select, main input, main summary, main [role="button"], main [tabindex="0"]')]
+        .filter((e) => {
+          const r = e.getBoundingClientRect();
+          if (!r.width || !r.height || getComputedStyle(e).visibility === 'hidden') return false;
+          if (e.matches('input[type="checkbox"], input[type="radio"]')) { const l = e.closest('label'); if (l) { const lr = l.getBoundingClientRect(); return lr.height < 44; } }
+          if (e.matches('input[type="hidden"]') || e.closest('svg') || e.closest('.sr-only')) return false;
+          if (e.tagName === 'A' && !e.matches('.btn, [role="button"]') && e.closest('p, li, td, figcaption, dd') && (e.closest('p, li, td, figcaption, dd').innerText.trim().length > e.innerText.trim().length + 3)) return false;
+          return r.height < 43.5 || r.width < 43.5;
+        })
+        .map((e) => `${e.tagName.toLowerCase()}${e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).join('.') : ''}„${(e.innerText || e.getAttribute('aria-label') || e.value || '').trim().slice(0, 20)}“ ${Math.round(e.getBoundingClientRect().width)}×${Math.round(e.getBoundingClientRect().height)}`),
     }));
     const route = r.match(/^#\/([a-z]*)/)[1];
     const probs = [...errs];
@@ -125,6 +145,7 @@ for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipa
     if (info.error) probs.push('Fehlermeldung im Modul');
     if (info.len < 150) probs.push(`wenig Inhalt (${info.len} Zeichen)`);
     if (info.overflow > 1) probs.push(`horizontaler Überlauf ${info.overflow}px`);
+    if (QA_IPAD && info.klein.length) probs.push(`zu klein für Touch: ${[...new Set(info.klein)].slice(0, 6).join(', ')}${info.klein.length > 6 ? ` (+${info.klein.length - 6})` : ''}`);
     if (!r.includes('?')) overviewText.set(route, await textOf());
     else if (overviewText.has(route) && route !== '' && !GLEICH_UEBERSICHT.has(r) && (await textOf()) === overviewText.get(route)) probs.push('Deep-Link zeigt nur die Modul-Übersicht');
     const name = `${vp.tag}-${r.replace(/^#\/?/, '').replace(/[?&=]/g, '_') || 'home'}`;
@@ -136,6 +157,6 @@ for (const vp of [{ w: 1366, h: 768, tag: 'desk' }, { w: 820, h: 1180, tag: 'ipa
 }
 await browser.close();
 fs.writeFileSync(new URL('./qa-routes.log', import.meta.url), results.join('\n') + '\n');
-console.log(`${ROUTES.length} Routen × 2 Viewports = ${results.length} Aufrufe in ${Math.round((Date.now() - t0) / 1000)} s`);
+console.log(`${ROUTES.length} Routen × ${VIEWPORTS.length} Viewports = ${results.length} Aufrufe in ${Math.round((Date.now() - t0) / 1000)} s`);
 console.log(fails.length ? fails.join('\n') : 'Keine Fehler.');
 process.exit(fails.length ? 1 : 0);
