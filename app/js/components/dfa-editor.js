@@ -132,7 +132,7 @@ export class DfaEditor {
       alphabet.map((a) => h('th', { scope: 'col', class: 'col-sym' }, h('span', { class: 'sym' }, a))),
       h('th', { scope: 'col', class: 'col-del' }, h('span', { class: 'sr-only' }, 'Löschen')));
     const rows = states.map((s) => {
-      const nameInput = h('input', { type: 'text', class: 'state-name', value: s.name, 'aria-label': `Name von Zustand ${s.name}`, maxlength: 12,
+      const nameInput = h('input', { type: 'text', class: 'state-name', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', value: s.name, 'aria-label': `Name von Zustand ${s.name}`, maxlength: 12,
         onchange: (e) => this.rename(s.id, e.target.value, e.target),
         onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } } });
       return h('tr', { dataset: { id: s.id } },
