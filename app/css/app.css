@@ -726,6 +726,7 @@ code.word { background: var(--teal-mist); border-radius: var(--r-s); padding: 0.
 .site-header .header-btn { color: #fff; min-height: var(--touch); padding: 0 0.7rem; border-color: rgba(255,255,255,0.5); background: transparent; text-decoration: none; display: inline-flex; align-items: center; }
 .site-header .header-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
 .site-header .header-login { border-color: #fff; font-weight: 700; }
+.site-header .header-themen[aria-current='page'] { background: rgba(255,255,255,0.2); border-color: #fff; }
 .konto-menu { position: relative; }
 .konto-menu > summary { list-style: none; cursor: pointer; }
 .konto-menu > summary::-webkit-details-marker { display: none; }
