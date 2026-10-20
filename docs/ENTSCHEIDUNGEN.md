@@ -2,6 +2,16 @@
 
 Kurzformat: Datum · Entscheidung · Begründung · Alternativen. Neueste oben.
 
+## 2026-10-20 · iPad zuerst, Themen-Link in der Kopfzeile (1.25.0)
+Frank: Schülerinnen und Schüler arbeiten meist am iPad, nicht an großen Monitoren. Daher gilt für alle Ansichten:
+Hoch- und Querformat (820 × 1180, 1180 × 820) und iPad mini (744 × 1133) ohne seitliches Scrollen, Tippflächen
+mindestens 44 × 44 px (Knöpfe, Chips, PDF-Links, Aufklapper, Endzustand-Zellen im Baukasten als ganze Tippfläche),
+nichts nur per Hover oder Tastatur. Umgesetzt zentral im CSS (auch am Laptop etwas größere Ziele, wie im Portal
+verlangt). `qa/qa-routes.mjs` prüft Touch-Ziele im iPad-Format jetzt bei jedem Lauf (also auch in
+`qa/pruefung_lokal.sh`); `QA_GERAET=ipad QA_ROLLE=schueler` prüft alle drei iPad-Formate als Schüler,
+`qa/ipad-ablauf.mjs` spielt Abläufe mit Tippen durch. Kopfzeile: „📚 Themen“ wie in Algo Quest führt für alle Rollen
+zur Themenübersicht mit allen Leveln, Stationen und PDFs (`#/themen`); auf schmalen Geräten nur als Symbol.
+
 ## 2026-10-15 · Live-Runden (1.24.0, Fähigkeit „live“)
 Frank wünscht „so etwas passend zum AutomatenLab“ zur Vertragsfähigkeit `live` (Vertrag v1.3 §7: Live-Runden im Kurs
 über Server-Sent Events, ohne Auswirkung auf Lab-Punkte). Umsetzung als Klassen-Quiz: Die Lehrkraft startet im Reiter

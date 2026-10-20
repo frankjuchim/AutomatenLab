@@ -55,6 +55,7 @@ Doku nachgezogen. Merge nach `main` (= live) nur nach Freigabe, nicht während d
 - ✅ Fallen-Profil P1–P10 (1.14.0): Feld `fallen` je Aufgabentyp, Fallen-Profil des Kurses (Fehlversuche, Lösung angesehen, betroffene Schüler) wie Algo Quest, Spalte und CSV „Fallen“
 - ✅ Fallen je Quizfrage (1.15.0): alle 87 Fragen zugeordnet (`QUIZ_FALLEN` in `inhalte/quiz.js`), im ersten Durchgang falsch beantwortete Fragen zählen im Fallen-Profil
 - ✅ Fallen-Nummern in den Materialien (1.16.0): jeder Warnkasten der Lehrkraft-Handreichungen und Merkblätter nennt seine Fallen („Abitur-Fallen: P2 … · P7 …“), Merkblatt M12 mit der Übersicht „Die zehn Abitur-Fallen“
+- ✅ 1.25.0: „📚 Themen“ in der Kopfzeile (wie Algo Quest); alle Ansichten iPad-tauglich (Hoch, Quer, iPad mini, Tippflächen ≥ 44 px), iPad-Prüfung in der QA
 - ✅ 1.24.0: Live-Runden (Fähigkeit `live`, Vertrag v1.3 §7) – Klassen-Quiz in Echtzeit aus Level-Quiz, Akzeptor-Arena oder Chomsky-Sortierer; Beamer mit Steuerung, Antworten am Gerät, Server-Sent Events, ohne Punkte und ohne Namen
 - ✅ 1.23.0: Verbund-Vertrag 1.3 (SSO-Einstieg aus dem Portal, rollenneutrale Seite bei fehlender Freischaltung, Manifest)
 - ✅ PR 12 (1.22.0): Boss der Welt D (Sprachdesign, Turingmaschine), Editor mit Detektiv-Fällen, Grammatik-Challenges und Kopieren in andere Kurse, Abnahme-Hilfe mit Screenshots (`qa/abnahme.mjs`, `docs/abnahme/`)
