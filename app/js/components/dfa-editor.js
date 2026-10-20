@@ -137,10 +137,10 @@ export class DfaEditor {
         onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } } });
       return h('tr', { dataset: { id: s.id } },
         h('th', { scope: 'row' }, nameInput),
-        h('td', { class: 'col-flag' }, h('input', { type: 'radio', name: `${this.uid}-start`, checked: this.m.start === s.id, 'aria-label': `${s.name} ist Startzustand`,
-          onchange: () => { this.m.start = s.id; this._changed(); } })),
-        h('td', { class: 'col-flag' }, h('input', { type: 'checkbox', checked: this.m.accepting.has(s.id), 'aria-label': `${s.name} ist Endzustand`,
-          onchange: (e) => { if (e.target.checked) this.m.accepting.add(s.id); else this.m.accepting.delete(s.id); this._changed(); } })),
+        h('td', { class: 'col-flag' }, h('label', { class: 'flag-hit' }, h('input', { type: 'radio', name: `${this.uid}-start`, checked: this.m.start === s.id, 'aria-label': `${s.name} ist Startzustand`,
+          onchange: () => { this.m.start = s.id; this._changed(); } }))),
+        h('td', { class: 'col-flag' }, h('label', { class: 'flag-hit' }, h('input', { type: 'checkbox', checked: this.m.accepting.has(s.id), 'aria-label': `${s.name} ist Endzustand`,
+          onchange: (e) => { if (e.target.checked) this.m.accepting.add(s.id); else this.m.accepting.delete(s.id); this._changed(); } }))),
         alphabet.map((a) => {
           const cur = this.m.delta[s.id]?.[a] ?? '';
           return h('td', { class: 'col-sym' }, h('select', {

@@ -50,7 +50,7 @@
 .rule-group.is-active { border-color: var(--ocker); background: var(--ocker-soft); }
 .rule-lhs { font-weight: 700; font-size: 1.1rem; min-width: 3.5rem; }
 .rule-buttons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.rule-btn { font-family: var(--mono); font-size: 1.05rem; min-height: var(--touch); }
+.rule-btn { font-family: var(--mono); font-size: 1.05rem; min-height: var(--touch); min-width: var(--touch); }
 .rule-btn:disabled { opacity: 0.4; }
 .rule-btn.is-enabled { background: var(--surface); border-color: var(--ocker); color: var(--ink); }
 .rule-btn.is-enabled:hover { background: var(--ocker-fill); }
